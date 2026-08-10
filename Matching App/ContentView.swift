@@ -8,12 +8,18 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var auth: AuthManager
     var body: some View {
         VStack {
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
-            Text("Hello, world!")
+            Text("ログイン成功")
+            Button("ログアウト") {
+                Task {
+                    await auth.signOut()
+                }
+            }
         }
         .padding()
     }
@@ -22,3 +28,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+

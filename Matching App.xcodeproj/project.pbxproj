@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F0DEAEF630199F2E002CDF7B /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = F0DEAEF530199F2E002CDF7B /* Auth */; };
+		F0DEAEF830199F2E002CDF7B /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = F0DEAEF730199F2E002CDF7B /* Functions */; };
+		F0DEAEFA30199F2E002CDF7B /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = F0DEAEF930199F2E002CDF7B /* PostgREST */; };
+		F0DEAEFC30199F2E002CDF7B /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = F0DEAEFB30199F2E002CDF7B /* Realtime */; };
+		F0DEAEFE30199F2E002CDF7B /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = F0DEAEFD30199F2E002CDF7B /* Storage */; };
+		F0DEAF0030199F2E002CDF7B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F0DEAEFF30199F2E002CDF7B /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		F0DEAEE630199E6D002CDF7B /* Matching App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Matching App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +32,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F0DEAEFA30199F2E002CDF7B /* PostgREST in Frameworks */,
+				F0DEAEF830199F2E002CDF7B /* Functions in Frameworks */,
+				F0DEAF0030199F2E002CDF7B /* Supabase in Frameworks */,
+				F0DEAEF630199F2E002CDF7B /* Auth in Frameworks */,
+				F0DEAEFE30199F2E002CDF7B /* Storage in Frameworks */,
+				F0DEAEFC30199F2E002CDF7B /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +80,12 @@
 			);
 			name = "Matching App";
 			packageProductDependencies = (
+				F0DEAEF530199F2E002CDF7B /* Auth */,
+				F0DEAEF730199F2E002CDF7B /* Functions */,
+				F0DEAEF930199F2E002CDF7B /* PostgREST */,
+				F0DEAEFB30199F2E002CDF7B /* Realtime */,
+				F0DEAEFD30199F2E002CDF7B /* Storage */,
+				F0DEAEFF30199F2E002CDF7B /* Supabase */,
 			);
 			productName = "Matching App";
 			productReference = F0DEAEE630199E6D002CDF7B /* Matching App.app */;
@@ -94,6 +115,9 @@
 			);
 			mainGroup = F0DEAEDD30199E6D002CDF7B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F0DEAEE730199E6D002CDF7B /* Products */;
 			projectDirPath = "";
@@ -254,12 +278,12 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "キャンパスマッチ";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -298,12 +322,12 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "キャンパスマッチ";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -351,6 +375,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F0DEAEF530199F2E002CDF7B /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		F0DEAEF730199F2E002CDF7B /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		F0DEAEF930199F2E002CDF7B /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		F0DEAEFB30199F2E002CDF7B /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		F0DEAEFD30199F2E002CDF7B /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		F0DEAEFF30199F2E002CDF7B /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0DEAEF430199F2E002CDF7B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F0DEAEDE30199E6D002CDF7B /* Project object */;
 }

@@ -1,0 +1,409 @@
+//
+//  DiscoverView.swift
+//  Matching App
+//
+
+import SwiftUI
+
+struct DiscoverView: View {
+    @StateObject private var discoverManager = DiscoverManager()
+    @State private var showingFilterSheet = false
+    @State private var showingMissions = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                PrivateModeBanner()
+
+                boostedSection
+
+                HStack(spacing: 8) {
+                    FilterMenuButton(isActive: discoverManager.filter.isActive) {
+                        showingFilterSheet = true
+                    }
+                    Text("\(discoverManager.totalCandidateCount)人")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    SortMenuButton(sortOrder: $discoverManager.filter.sortOrder)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+                if discoverManager.candidates.isEmpty && !discoverManager.isLoading {
+                    Text("表示できるユーザーがいません")
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 60)
+                } else {
+                    let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 2)
+                    let firstBatch = Array(discoverManager.candidates.prefix(4))
+                    let restBatch = Array(discoverManager.candidates.dropFirst(4))
+
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(Array(firstBatch.enumerated()), id: \.element.id) { index, candidate in
+                            candidateCard(candidate: candidate, index: index)
+                        }
+                    }
+                    .padding()
+
+                    // 一番上には出さず、少しスクロールしてから見えるようにする。
+                    remindableSection
+
+                    if !restBatch.isEmpty {
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(Array(restBatch.enumerated()), id: \.element.id) { offset, candidate in
+                                candidateCard(candidate: candidate, index: offset + firstBatch.count)
+                            }
+                        }
+                        .padding()
+                    }
+
+                    if discoverManager.isLoadingMore {
+                        ProgressView()
+                            .padding(.vertical, 20)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+            .background(Color.appListBackground.ignoresSafeArea())
+            .refreshable {
+                await discoverManager.load()
+            }
+            .navigationTitle("探す")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingMissions = true
+                    } label: {
+                        Image(systemName: "checklist")
+                    }
+                }
+            }
+            .task {
+                await discoverManager.load()
+            }
+            .sheet(isPresented: $showingFilterSheet) {
+                FilterSheetView(filter: $discoverManager.filter) { draft in
+                    await discoverManager.previewCount(for: draft)
+                }
+            }
+            .sheet(isPresented: $showingMissions) {
+                DailyMissionsView()
+            }
+            .onChange(of: discoverManager.filter) { _, _ in
+                Task { await discoverManager.load() }
+            }
+        }
+    }
+
+    private var boostedSection: some View {
+        Group {
+            if !discoverManager.boostedProfiles.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bolt.fill")
+                            .foregroundStyle(Color.brandOrange)
+                        Text("アピール中のユーザー")
+                            .font(.subheadline.bold())
+                    }
+                    .padding(.horizontal)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(discoverManager.boostedProfiles) { profile in
+                                let index = discoverManager.candidates.firstIndex(where: { $0.id == profile.id }) ?? 0
+                                candidateCard(candidate: profile, index: index, width: 130, height: 160)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [Color.brandOrange.opacity(0.15), Color.brandPink.opacity(0.1)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+            }
+        }
+    }
+
+    private func candidateCard(candidate: Profile, index: Int, width: CGFloat? = nil, height: CGFloat = 180) -> some View {
+        NavigationLink {
+            SwipeableProfileView(profiles: discoverManager.candidates, startIndex: index) { profile, advance in
+                DiscoverLikeButton(discoverManager: discoverManager, candidate: profile, onHidden: advance)
+            }
+        } label: {
+            DiscoverCardView(profile: candidate, photoURL: discoverManager.candidatePhotoURLs[candidate.id], photoHeight: height)
+                .frame(width: width)
+        }
+        .buttonStyle(.plain)
+        .onAppear {
+            Task { await discoverManager.loadMoreCandidatesIfNeeded(currentItem: candidate) }
+        }
+    }
+
+    private var remindableSection: some View {
+        Group {
+            if !discoverManager.remindableProfiles.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("みてね!で気になるお相手に再アプローチしよう!")
+                        .font(.subheadline.bold())
+                        .padding(.horizontal)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(Array(discoverManager.remindableProfiles.enumerated()), id: \.element.id) { index, profile in
+                                RemindableCardView(discoverManager: discoverManager, profile: profile, startIndex: index)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [Color.purple.opacity(0.12), Color.brandPink.opacity(0.12)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .padding(.top, 12)
+            }
+        }
+    }
+}
+
+private struct RemindableCardView: View {
+    @ObservedObject var discoverManager: DiscoverManager
+    let profile: Profile
+    let startIndex: Int
+    @State private var isSending = false
+    @State private var showingSentConfirmation = false
+    @State private var showingInsufficientLikesAlert = false
+
+    private var alreadyReminded: Bool { discoverManager.remindedIds.contains(profile.id) }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            NavigationLink {
+                SwipeableProfileView(profiles: discoverManager.remindableProfiles, startIndex: startIndex) { p, advance in
+                    DiscoverLikeButton(discoverManager: discoverManager, candidate: p, onHidden: advance)
+                }
+            } label: {
+                AsyncImage(url: discoverManager.remindablePhotoURLs[profile.id]) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().scaledToFill()
+                    default:
+                        Color(.systemGray6)
+                    }
+                }
+                .frame(width: 130, height: 160)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                Task {
+                    isSending = true
+                    let success = await discoverManager.sendReminder(to: profile.id)
+                    isSending = false
+                    if success {
+                        showingSentConfirmation = true
+                        try? await Task.sleep(nanoseconds: 900_000_000)
+                        showingSentConfirmation = false
+                    } else {
+                        showingInsufficientLikesAlert = true
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: alreadyReminded ? "checkmark" : "eye.fill")
+                    Text(alreadyReminded ? "送信済み" : "みてね!")
+                }
+                .font(.caption.bold())
+                .frame(maxWidth: .infinity)
+                .frame(height: 32)
+                .background(alreadyReminded ? Color.gray : Color.purple)
+                .foregroundStyle(.white)
+                .clipShape(Capsule())
+            }
+            .disabled(isSending || alreadyReminded)
+        }
+        .frame(width: 130)
+        .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "\(DiscoverManager.reminderLikeCost)いいね使いました", icon: "bell.fill")
+        .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("マイページからいいねを増やしてください。")
+        }
+    }
+}
+
+private struct DiscoverCardView: View {
+    let profile: Profile
+    let photoURL: URL?
+    var photoHeight: CGFloat = 180
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ZStack(alignment: .topLeading) {
+                AsyncImage(url: photoURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().scaledToFill()
+                    default:
+                        Color(.systemGray6)
+                    }
+                }
+                .frame(height: photoHeight)
+                .frame(maxWidth: .infinity)
+                .clipped()
+
+                if profile.isBoosted {
+                    RibbonBadge(text: "アピール中", color: Color.brandOrange)
+                        .padding(.top, 10)
+                } else if let badge = profile.joinBadgeLabel {
+                    RibbonBadge(text: badge, color: Color.brandRed)
+                        .padding(.top, 10)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            HStack(spacing: 4) {
+                Text(profile.ageLabel)
+                    .font(.subheadline.bold())
+                if let major = profile.major, !major.isEmpty {
+                    Text(major)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            .padding(.horizontal, 2)
+        }
+    }
+}
+
+private struct DiscoverLikeButton: View {
+    @ObservedObject var discoverManager: DiscoverManager
+    let candidate: Profile
+    var onHidden: (() -> Void)? = nil
+    @Environment(\.dismiss) private var dismiss
+    @State private var isSending = false
+    @State private var showingPopularSheet = false
+    @State private var showingSentConfirmation = false
+    @State private var confirmationMessage = "いいねを送りました"
+    @State private var confirmationIcon = "heart.fill"
+    @State private var showingInsufficientLikesAlert = false
+
+    private var alreadyLiked: Bool { discoverManager.likedIds.contains(candidate.id) }
+    private var alreadyReminded: Bool { discoverManager.remindedIds.contains(candidate.id) }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button {
+                Task {
+                    await discoverManager.hideCandidate(candidate.id)
+                    if let onHidden {
+                        onHidden()
+                    } else {
+                        dismiss()
+                    }
+                }
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: "eye.slash.fill")
+                        .font(.callout)
+                    Text("非表示")
+                        .font(.caption2)
+                }
+                .frame(width: 60, height: 54)
+                .background(Color(.systemGray5))
+                .foregroundStyle(.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+
+            Button {
+                Task {
+                    if alreadyLiked {
+                        await sendReminderAndConfirm()
+                        return
+                    }
+                    isSending = true
+                    let count = await discoverManager.likeCount(for: candidate.id)
+                    isSending = false
+                    if count >= DiscoverManager.popularMemberThreshold {
+                        showingPopularSheet = true
+                    } else {
+                        await sendAndConfirm(isSpecial: false)
+                    }
+                }
+            } label: {
+                HStack {
+                    Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "heart.fill"))
+                    Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
+                        .bold()
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandRed))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+            }
+            .disabled(isSending || alreadyReminded)
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .sheet(isPresented: $showingPopularSheet) {
+            PopularMemberSheet(profile: candidate, photoURL: discoverManager.candidatePhotoURLs[candidate.id]) { useSpecial in
+                showingPopularSheet = false
+                Task { await sendAndConfirm(isSpecial: useSpecial) }
+            }
+        }
+        .sentConfirmationCover(isPresented: $showingSentConfirmation, message: confirmationMessage, icon: confirmationIcon)
+        .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("マイページからいいねを増やしてください。")
+        }
+    }
+
+    private func sendAndConfirm(isSpecial: Bool) async {
+        isSending = true
+        let success = await discoverManager.sendLike(to: candidate.id, isSpecial: isSpecial)
+        isSending = false
+        guard success else {
+            showingInsufficientLikesAlert = true
+            return
+        }
+        confirmationMessage = "いいねを送りました"
+        confirmationIcon = "heart.fill"
+        showingSentConfirmation = true
+        try? await Task.sleep(nanoseconds: 900_000_000)
+        showingSentConfirmation = false
+        dismiss()
+    }
+
+    private func sendReminderAndConfirm() async {
+        isSending = true
+        let success = await discoverManager.sendReminder(to: candidate.id)
+        isSending = false
+        guard success else {
+            showingInsufficientLikesAlert = true
+            return
+        }
+        confirmationMessage = "\(DiscoverManager.reminderLikeCost)いいね使いました"
+        confirmationIcon = "bell.fill"
+        showingSentConfirmation = true
+        try? await Task.sleep(nanoseconds: 900_000_000)
+        showingSentConfirmation = false
+        dismiss()
+    }
+}
+
+#Preview {
+    DiscoverView()
+}

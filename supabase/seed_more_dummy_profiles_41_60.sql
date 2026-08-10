@@ -1,0 +1,11 @@
+-- Supabase Dashboard > SQL Editor で一度だけ実行してください(このリポジトリでは実際には MCP 経由で適用済み)。
+-- 探す画面の絞り込み後の人数を増やすため、ダミープロフィールを20件追加(cmu.dummy41〜60)。
+-- auth.users → profiles(トリガーで自動生成) → 追加情報UPDATE → profile_photos、の順で
+-- 複数ステートメントに分けて実行する(同一ステートメント内だとMVCCスナップショットの都合で
+-- トリガーの副作用が見えず、以前ハマった実績があるため)。
+--
+-- 実際の投入内容はこのリポジトリでは MCP 経由で個別に実行したため、詳細な値は割愛。
+-- 同じ手順を再現する場合は、既存の seed_cmu_female_dummy_profiles.sql の形式を参考に、
+-- auth.users への insert → profiles の名前/生年月日/居住地/専攻/国籍/身長/タグライン等の update →
+-- profile_photos(dicebear avatar、3枚) → 飲酒/喫煙/体型/言語/返信ペース等のランダムupdate、
+-- の順で実行すること。
