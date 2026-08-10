@@ -45,14 +45,34 @@ final class AuthManager : ObservableObject {
     }
     func signUp(email: String, password: String, displayName: String) async {
         isLoading = true
+        errorMessage = nil
         do {
             try await supabase().auth.signUp(email: email, password: password, data: ["display_name": .string(displayName)])
             await checkSession()
         } catch let error {
-            errorMessage = error.localizedDescription
-
+            errorMessage = Self.describe(error)
+            print("sign up error: \(error)")
         }
         isLoading = false
+    }
+
+    /// サーバーから返るエラーコード・詳細メッセージを含めて具体的に表示する。
+    private static func describe(_ error: Error) -> String {
+        guard let authError = error as? AuthError else {
+            return error.localizedDescription
+        }
+        switch authError {
+        case .api(let message, let errorCode, _, _):
+            if errorCode == .emailExists || errorCode == .userAlreadyExists
+                || message.localizedCaseInsensitiveContains("already registered")
+                || message.localizedCaseInsensitiveContains("already exists")
+                || message.contains("既に登録") {
+                return "このメールアドレスは既に登録されています。ログインしてください。"
+            }
+            return "\(message)(コード: \(errorCode.rawValue))"
+        default:
+            return authError.message
+        }
     }
     func touchLastActive() async {
         guard let uid = currentUserId ?? supabase().auth.currentUser?.id else { return }
