@@ -68,7 +68,7 @@ struct MainTabView: View {
             Divider()
             HStack(spacing: 0) {
                 tabButton(.discover, icon: "magnifyingglass", label: "探す")
-                tabButton(.likes, icon: "heart.fill", label: "いいね")
+                tabButton(.likes, icon: "heart.fill", label: "グッド")
                 tabButton(.chat, icon: "message.fill", label: "トーク", badge: notificationManager.unreadCount)
                 tabButton(.myPage, icon: "person.fill", label: "マイページ", showDot: notificationManager.footprintsCount > 0)
             }
