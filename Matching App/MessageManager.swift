@@ -257,6 +257,10 @@ final class MessageManager: ObservableObject {
         guard let myId = supabase().auth.currentUser?.id else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        guard !NGWordFilter.containsNGWord(trimmed) else {
+            errorMessage = "使用できない表現が含まれているため送信できません"
+            return
+        }
         isSending = true
         defer { isSending = false }
         await sendTypingStatus(isTyping: false)

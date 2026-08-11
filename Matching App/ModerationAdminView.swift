@@ -100,7 +100,7 @@ private struct ReportRow: View {
                             .font(.caption.bold())
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color.brandRed, in: Capsule())
+                            .background(Color.brandBlue, in: Capsule())
                             .foregroundStyle(.white)
                     }
                     .disabled(isResolving)

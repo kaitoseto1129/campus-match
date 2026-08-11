@@ -36,6 +36,6 @@ struct RibbonBadge: View {
 }
 
 #Preview {
-    RibbonBadge(text: "今週入会", color: .brandRed)
+    RibbonBadge(text: "今週入会", color: .brandBlue)
         .padding()
 }

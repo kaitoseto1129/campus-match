@@ -156,7 +156,7 @@ struct FilterSheetView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(Color.brandRed)
+                    .background(Color.brandBlue)
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
                 }
@@ -172,7 +172,7 @@ struct FilterSheetView: View {
                 .foregroundStyle(.primary)
             Spacer()
             Text(value)
-                .foregroundStyle(Color.brandRed)
+                .foregroundStyle(Color.brandBlue)
                 .lineLimit(1)
             Image(systemName: "chevron.right")
                 .font(.caption)
@@ -239,13 +239,14 @@ private func multiSelectRow(title: String, isSelected: Bool, action: @escaping (
             Spacer()
             if isSelected {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(Color.brandRed)
+                    .foregroundStyle(Color.brandBlue)
             }
         }
         .contentShape(Rectangle())
     }
 }
 
+/// 居住地は「地方→都道府県」のように段階的に絞り込めるが、最終的に選べるのは1件だけ(単一選択)。
 private struct AreaFilterView: View {
     @Binding var draft: DiscoverFilter
     let universities: [University]
@@ -254,14 +255,18 @@ private struct AreaFilterView: View {
     var body: some View {
         Form {
             Section {
-                Picker("国", selection: $draft.areaCountry) {
-                    ForEach(residenceCountries, id: \.self) { country in
-                        Text(country).tag(country)
+                NavigationLink {
+                    CountrySelectView(selectedCountry: $draft.areaCountry, onChange: {
+                        draft.areas = []
+                        areaSearchText = ""
+                    })
+                } label: {
+                    HStack {
+                        Text("国")
+                        Spacer()
+                        Text(draft.areaCountry)
+                            .foregroundStyle(Color.brandBlue)
                     }
-                }
-                .pickerStyle(.segmented)
-                .onChange(of: draft.areaCountry) { _, _ in
-                    areaSearchText = ""
                 }
             }
 
@@ -273,16 +278,15 @@ private struct AreaFilterView: View {
                     Section("地方から選ぶ") {
                         ForEach(japanRegions, id: \.name) { region in
                             NavigationLink {
-                                PrefectureMultiSelectView(options: region.prefectures, title: region.name, searchPlaceholder: "都道府県を検索", selected: $draft.areas)
+                                PrefectureSingleSelectView(options: region.prefectures, title: region.name, searchPlaceholder: "都道府県を検索", selected: $draft.areas)
                             } label: {
                                 HStack {
                                     Text(region.name)
                                     Spacer()
-                                    let count = region.prefectures.filter { draft.areas.contains($0) }.count
-                                    if count > 0 {
-                                        Text("\(count)件選択中")
+                                    if let selected = draft.areas.first, region.prefectures.contains(selected) {
+                                        Text(selected)
                                             .font(.caption)
-                                            .foregroundStyle(Color.brandRed)
+                                            .foregroundStyle(Color.brandBlue)
                                     }
                                 }
                             }
@@ -292,12 +296,12 @@ private struct AreaFilterView: View {
                     Section {
                         ForEach(prefectures.filter { $0.contains(areaSearchText) }, id: \.self) { prefecture in
                             multiSelectRow(title: prefecture, isSelected: draft.areas.contains(prefecture)) {
-                                toggle(prefecture, in: &draft.areas)
+                                selectSingle(prefecture, in: &draft.areas)
                             }
                         }
                     }
                 }
-            } else {
+            } else if draft.areaCountry == "アメリカ" {
                 Section {
                     TextField("州を検索", text: $areaSearchText)
                 }
@@ -305,8 +309,20 @@ private struct AreaFilterView: View {
                     let filteredStates = areaSearchText.isEmpty ? usStates : usStates.filter { $0.contains(areaSearchText) }
                     ForEach(filteredStates, id: \.self) { state in
                         multiSelectRow(title: state, isSelected: draft.areas.contains(state)) {
-                            toggle(state, in: &draft.areas)
+                            selectSingle(state, in: &draft.areas)
                         }
+                    }
+                }
+            } else {
+                Section {
+                    Text("この国では都道府県/州単位の絞り込みは未対応のため、国単位で絞り込みます。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .onAppear {
+                    // 都道府県/州データがない国は、国そのものをareaの値として単一選択する。
+                    if draft.areas.first != draft.areaCountry {
+                        draft.areas = [draft.areaCountry]
                     }
                 }
             }
@@ -315,12 +331,39 @@ private struct AreaFilterView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func toggle(_ value: String, in set: inout Set<String>) {
-        if set.contains(value) {
-            set.remove(value)
-        } else {
-            set.insert(value)
+    private func selectSingle(_ value: String, in set: inout Set<String>) {
+        set = set.contains(value) ? [] : [value]
+    }
+}
+
+/// 居住地の絞り込みで選べる国の検索画面。
+private struct CountrySelectView: View {
+    @Binding var selectedCountry: String
+    var onChange: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+
+    private var filtered: [String] {
+        searchText.isEmpty ? residenceCountries : residenceCountries.filter { $0.contains(searchText) }
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                TextField("国を検索", text: $searchText)
+            }
+            Section {
+                ForEach(filtered, id: \.self) { country in
+                    multiSelectRow(title: country, isSelected: selectedCountry == country) {
+                        selectedCountry = country
+                        onChange()
+                        dismiss()
+                    }
+                }
+            }
         }
+        .navigationTitle("国")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -369,6 +412,15 @@ private struct UniversityFilterView: View {
     let universityCountries: [String]
     @State private var universitySearchText = ""
 
+    /// 居住地の絞り込みで国が選ばれている(=居住地フィルターがアクティブな)場合は、
+    /// その国にある大学だけを優先的に表示する。該当大学が無ければ全件にフォールバックする。
+    private var isFilteredByArea: Bool {
+        !draft.areas.isEmpty && universityCountries.contains(draft.areaCountry)
+    }
+    private var relevantCountries: [String] {
+        isFilteredByArea ? [draft.areaCountry] : universityCountries
+    }
+
     var body: some View {
         Form {
             Section {
@@ -385,8 +437,15 @@ private struct UniversityFilterView: View {
                 TextField("大学名で検索", text: $universitySearchText)
             }
             if universitySearchText.isEmpty {
+                if isFilteredByArea {
+                    Section {
+                        Text("居住地の絞り込み(\(draft.areaCountry))に合わせて大学を絞り込んでいます")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Section {
-                    ForEach(universityCountries, id: \.self) { country in
+                    ForEach(relevantCountries, id: \.self) { country in
                         NavigationLink {
                             UniversityMultiSelectView(
                                 universities: universities.filter { $0.country == country },
@@ -401,7 +460,7 @@ private struct UniversityFilterView: View {
                                 if let selected = universities.first(where: { $0.id == draft.universityId }), selected.country == country {
                                     Text(selected.name)
                                         .font(.caption)
-                                        .foregroundStyle(Color.brandRed)
+                                        .foregroundStyle(Color.brandBlue)
                                         .lineLimit(1)
                                 }
                             }
@@ -424,7 +483,8 @@ private struct UniversityFilterView: View {
     }
 }
 
-private struct PrefectureMultiSelectView: View {
+/// 居住地(都道府県/州)の単一選択画面。
+private struct PrefectureSingleSelectView: View {
     let options: [String]
     let title: String
     var searchPlaceholder: String = "検索"
@@ -443,11 +503,7 @@ private struct PrefectureMultiSelectView: View {
             Section {
                 ForEach(filtered, id: \.self) { option in
                     multiSelectRow(title: option, isSelected: selected.contains(option)) {
-                        if selected.contains(option) {
-                            selected.remove(option)
-                        } else {
-                            selected.insert(option)
-                        }
+                        selected = selected.contains(option) ? [] : [option]
                     }
                 }
             }

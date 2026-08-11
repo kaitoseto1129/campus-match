@@ -8,24 +8,34 @@
 import SwiftUI
 import PhotosUI
 extension Color {
-    static let brandRed = Color(red: 0.96, green: 0.42, blue: 0.44)
+    /// アプリのテーマカラー(水色)。以前はbrandBlueという名前で赤系だったが、
+    /// テーマカラー変更に伴いbrandBlueに統合した(値だけでなく参照も全てこちらに揃えている)。
+    static let brandBlue = Color(red: 0.20, green: 0.70, blue: 0.88)
     static let brandNavy = Color(red: 0.10, green: 0.18, blue: 0.40)
     static let brandPink = Color(red: 0.99, green: 0.55, blue: 0.62)
     static let brandTeal = Color(red: 0.20, green: 0.75, blue: 0.68)
     static let brandOrange = Color(red: 0.96, green: 0.62, blue: 0.28)
-    static let brandBlue = Color(red: 0.28, green: 0.52, blue: 0.93)
 
     static let brandGradient = LinearGradient(
-        colors: [Color.brandPink.opacity(0.9), Color.brandRed.opacity(0.85)],
+        colors: [Color.brandBlue.opacity(0.9), Color.brandTeal.opacity(0.85)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let appListBackground = LinearGradient(
-        colors: [Color.brandPink.opacity(0.12), Color.brandTeal.opacity(0.07), Color(.systemGroupedBackground)],
+        colors: [Color.brandBlue.opacity(0.14), Color.brandTeal.opacity(0.08), Color(.systemGroupedBackground)],
         startPoint: .top,
         endPoint: .bottom
     )
+
+    /// 探す画面のカードなどに使う、ユーザーIDから決まる一貫したパステルカラー。
+    /// 彩度・明度を抑えめにして「カラフルだけど派手すぎない」バリエーションを出す。
+    static func pastelAccent(for id: UUID) -> Color {
+        var hasher = Hasher()
+        hasher.combine(id)
+        let hue = Double(abs(hasher.finalize()) % 360) / 360.0
+        return Color(hue: hue, saturation: 0.55, brightness: 0.88)
+    }
 }
 
 struct ProfileView: View {
@@ -35,6 +45,15 @@ struct ProfileView: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var faceCheckMessage: String = ""
     @State private var showingFaceCheckAlert = false
+    @State private var cropperImage: IdentifiableImage? = nil
+    @State private var cropperContinuation: CheckedContinuation<UIImage?, Never>? = nil
+
+    private func presentCropper(for image: UIImage) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            cropperContinuation = continuation
+            cropperImage = IdentifiableImage(image: image)
+        }
+    }
 
     var editButton: some View {
         Button {
@@ -47,7 +66,7 @@ struct ProfileView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(Color.brandRed)
+            .background(Color.brandBlue)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
         }
@@ -77,15 +96,31 @@ struct ProfileView: View {
             Task {
                 guard let newValue,
                       let data = try? await newValue.loadTransferable(type: Data.self),
-                      let image = UIImage(data: data) else { return }
-                let result = await FaceDetector().checkFace(image: image)
+                      let image = UIImage(data: data) else {
+                    pickerItem = nil
+                    return
+                }
+                pickerItem = nil
+                guard let croppedImage = await presentCropper(for: image) else { return }
+                let result = await FaceDetector().checkFace(image: croppedImage)
                 if case .ok = result {
-                    await profileManager.changeMainPhoto(image: image)
+                    await profileManager.changeMainPhoto(image: croppedImage)
+                    if let error = profileManager.errorMessage {
+                        faceCheckMessage = error
+                        showingFaceCheckAlert = true
+                        profileManager.errorMessage = nil
+                    }
                 } else {
                     faceCheckMessage = result.message ?? "顔が写っている写真を選んでください"
                     showingFaceCheckAlert = true
                 }
-                pickerItem = nil
+            }
+        }
+        .fullScreenCover(item: $cropperImage) { wrapper in
+            PhotoCropperView(image: wrapper.image) { result in
+                cropperContinuation?.resume(returning: result)
+                cropperContinuation = nil
+                cropperImage = nil
             }
         }
         .alert("写真を変更できません", isPresented: $showingFaceCheckAlert) {

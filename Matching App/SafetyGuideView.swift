@@ -25,7 +25,7 @@ struct SafetyGuideView: View {
             HStack(alignment: .top, spacing: 14) {
                 Image(systemName: item.icon)
                     .font(.title3)
-                    .foregroundStyle(Color.brandRed)
+                    .foregroundStyle(Color.brandBlue)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title)

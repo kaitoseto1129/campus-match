@@ -9,6 +9,8 @@ struct MyPageHomeView: View {
     @StateObject private var profileManager = ProfileManager()
     @EnvironmentObject private var auth: AuthManager
     @EnvironmentObject private var notificationManager: NotificationCenterManager
+    @EnvironmentObject private var tabRouter: TabRouter
+    @State private var navPath = NavigationPath()
     @State private var showingWithdrawConfirm = false
     @State private var showingWithdrawFailedAlert = false
     @State private var isWithdrawing = false
@@ -16,13 +18,14 @@ struct MyPageHomeView: View {
     @State private var isBoosting = false
     @State private var showingBoostFailedAlert = false
     @State private var showingBoostConfirm = false
+    @State private var showingPurchaseSheet = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navPath) {
             ZStack(alignment: .top) {
                 Color(.systemGroupedBackground).ignoresSafeArea()
                 LinearGradient(
-                    colors: [Color.brandPink.opacity(0.55), Color(.systemGroupedBackground)],
+                    colors: [Color.brandBlue.opacity(0.5), Color.brandTeal.opacity(0.28), Color(.systemGroupedBackground)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -46,11 +49,7 @@ struct MyPageHomeView: View {
                                 FootprintsView()
                             }
                             Divider().padding(.leading, 66)
-                            menuRow(icon: "bell.fill", iconColor: .purple, title: "お知らせ") {
-                                AnnouncementsView()
-                            }
-                            Divider().padding(.leading, 66)
-                            menuRow(icon: "hand.thumbsup.fill", iconColor: Color.brandRed, title: "いいね!履歴") {
+                            menuRow(icon: "hand.thumbsup.fill", iconColor: Color.brandBlue, title: "いいね!履歴") {
                                 SentLikesView()
                             }
                             Divider().padding(.leading, 66)
@@ -79,13 +78,16 @@ struct MyPageHomeView: View {
                         settingsSection
                     }
                     .padding(.top)
-                    .padding(.bottom, 40)
+                    .padding(.bottom, 100)
                 }
             }
             .navigationTitle("マイページ")
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await profileManager.load()
+            }
+            .onChange(of: tabRouter.popToRootTokens[.myPage]) { _, _ in
+                navPath = NavigationPath()
             }
             .confirmationDialog(
                 "本当に退会しますか?",
@@ -130,10 +132,11 @@ struct MyPageHomeView: View {
                 }
                 .font(.subheadline)
                 .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(.white)
+                .padding(.vertical, 12)
+                .background(Color.brandBlue)
+                .foregroundStyle(.white)
                 .clipShape(Capsule())
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
             }
         }
     }
@@ -143,9 +146,7 @@ struct MyPageHomeView: View {
             if let profile = profileManager.profile {
                 let completeness = profile.completeness(photoCount: profileManager.photos.count)
                 if completeness.percent < 100 {
-                    NavigationLink {
-                        ProfileEditView(profileManager: profileManager)
-                    } label: {
+                    VStack(alignment: .leading, spacing: 14) {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 Text("プロフィール充実度")
@@ -154,21 +155,45 @@ struct MyPageHomeView: View {
                                 Spacer()
                                 Text("\(completeness.percent)%")
                                     .font(.subheadline.bold())
-                                    .foregroundStyle(Color.brandRed)
+                                    .foregroundStyle(Color.brandBlue)
                             }
                             ProgressView(value: Double(completeness.percent), total: 100)
-                                .tint(Color.brandRed)
-                            if let firstMissing = completeness.missingLabels.first {
-                                Text("「\(firstMissing)」を入力すると魅力度がアップします")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                .tint(Color.brandBlue)
+                        }
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("やることリスト")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+                                .padding(.bottom, 6)
+                            ForEach(completeness.missingLabels, id: \.self) { label in
+                                HStack {
+                                    Image(systemName: "circle")
+                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                    Text(label)
+                                        .font(.subheadline)
+                                    Spacer()
+                                    NavigationLink {
+                                        ProfileEditView(profileManager: profileManager, initialFocusSectionId: ProfileEditView.sectionId(for: label))
+                                    } label: {
+                                        Text("編集する")
+                                            .font(.caption.bold())
+                                            .foregroundStyle(Color.brandBlue)
+                                    }
+                                }
+                                .padding(.vertical, 6)
+                                if label != completeness.missingLabels.last {
+                                    Divider()
+                                }
                             }
                         }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
-                    .buttonStyle(.plain)
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
                 }
             }
@@ -254,7 +279,7 @@ struct MyPageHomeView: View {
     private var remainingLikesCard: some View {
         HStack(spacing: 4) {
             Image(systemName: "hand.thumbsup.fill")
-                .foregroundStyle(Color.brandRed)
+                .foregroundStyle(Color.brandBlue)
             Text("残いいね!")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -271,20 +296,23 @@ struct MyPageHomeView: View {
 
     private var purchaseLikesButton: some View {
         Button {
-            Task { await profileManager.purchaseLikesMock() }
+            showingPurchaseSheet = true
         } label: {
             HStack {
                 Image(systemName: "cart.fill")
-                Text("いいねを購入(100円で100いいね)")
+                Text("いいねを購入する")
                     .font(.subheadline.bold())
             }
             .frame(maxWidth: .infinity)
             .frame(height: 46)
-            .background(Color.brandRed)
+            .background(Color.brandBlue)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 23))
         }
         .padding(.horizontal)
+        .sheet(isPresented: $showingPurchaseSheet) {
+            LikesPurchaseSheet(profileManager: profileManager)
+        }
     }
 
     private var shareAppButton: some View {
@@ -369,7 +397,7 @@ struct MyPageHomeView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Color.brandRed, in: Capsule())
+                        .background(Color.brandBlue, in: Capsule())
                 }
                 Spacer()
                 Image(systemName: "chevron.right")

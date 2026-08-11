@@ -39,7 +39,7 @@ struct ModerationListView: View {
                             Task { await remove(profile) }
                         }
                         .font(.caption.bold())
-                        .foregroundStyle(Color.brandRed)
+                        .foregroundStyle(Color.brandBlue)
                     }
                 }
                 .listStyle(.plain)

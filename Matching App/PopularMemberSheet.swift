@@ -37,7 +37,7 @@ struct PopularMemberSheet: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .tint(Color.brandRed)
+            .tint(Color.brandBlue)
             .padding()
             .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
@@ -52,7 +52,7 @@ struct PopularMemberSheet: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(Color.brandRed)
+                .background(Color.brandBlue)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
             }

@@ -8,12 +8,12 @@ import SwiftUI
 /// 全画面を覆わず、プロフィール画面の上に軽く重ねて出す送信完了トースト。
 struct SentConfirmationOverlay: View {
     var message: String = "いいねを送りました"
-    var icon: String = "heart.fill"
+    var icon: String = "hand.thumbsup.fill"
 
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .foregroundStyle(Color.brandRed)
+                .foregroundStyle(Color.brandBlue)
             Text(message)
                 .font(.subheadline.bold())
         }

@@ -30,19 +30,6 @@ final class ChatManager: ObservableObject {
         didSet { applySort() }
     }
 
-    /// 会話が始まっていない/一定時間止まっているマッチ。「話しかけてみよう」の後押し表示に使う。
-    var staleMatches: [MatchedChat] {
-        matches.filter { match in
-            if let lastMessage = match.lastMessage {
-                return Date().timeIntervalSince(lastMessage.createdAt) >= Self.staleThreshold
-            } else if let matchedAt = match.match.createdAt {
-                return Date().timeIntervalSince(matchedAt) >= Self.staleThreshold
-            }
-            return false
-        }
-    }
-    private static let staleThreshold: TimeInterval = 24 * 60 * 60
-
     func load() async {
         guard let myId = supabase().auth.currentUser?.id else { return }
         isLoading = true
@@ -66,7 +53,12 @@ final class ChatManager: ObservableObject {
                 .execute()
                 .value
             let hiddenMatchIds = Set(hiddenRows.map(\.matchId))
-            let visibleMatchRows = matchRows.filter { !hiddenMatchIds.contains($0.id) }
+            // ブロックした相手とのトークも一覧から除外する。
+            let blockedIds = Set(await UserModeration.actedUserIds(actorId: myId, action: "block"))
+            let visibleMatchRows = matchRows.filter { match in
+                let otherId = match.userAId == myId ? match.userBId : match.userAId
+                return !hiddenMatchIds.contains(match.id) && !blockedIds.contains(otherId)
+            }
 
             let otherIds = visibleMatchRows.map { $0.userAId == myId ? $0.userBId : $0.userAId }
             guard !otherIds.isEmpty else {

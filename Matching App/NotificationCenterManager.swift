@@ -19,6 +19,9 @@ final class NotificationCenterManager: ObservableObject {
     @Published var unreadCount: Int = 0
     @Published var footprintsCount: Int = 0
     @Published var activeToast: MessageToast?
+    /// 足あとの新着、またはプロフィールの「やることリスト」が残っている場合にtrue。
+    /// マイページタブの目立たせ表示(丸バッジ)に使う。
+    @Published var hasMyPageTodo: Bool = false
 
     private var channel: RealtimeChannelV2?
     private var listenTask: Task<Void, Never>?
@@ -28,6 +31,7 @@ final class NotificationCenterManager: ObservableObject {
         guard let myId = supabase().auth.currentUser?.id else { return }
         await refresh()
         await refreshFootprintsCount()
+        await refreshMyPageTodo()
 
         let ch = supabase().channel("messages:notifications")
         let insertions = ch.postgresChange(InsertAction.self, table: "messages")
@@ -91,6 +95,34 @@ final class NotificationCenterManager: ObservableObject {
                 .value
         } catch {
             print("footprints count refresh error: \(error)")
+        }
+        await refreshMyPageTodo()
+    }
+
+    /// 足あと・プロフィール充実度の両方を見て、マイページタブを目立たせるべきか判定する。
+    func refreshMyPageTodo() async {
+        guard let myId = supabase().auth.currentUser?.id else { return }
+        if footprintsCount > 0 {
+            hasMyPageTodo = true
+            return
+        }
+        do {
+            let profile: Profile = try await supabase()
+                .from("profiles")
+                .select("*")
+                .eq("id", value: myId)
+                .single()
+                .execute()
+                .value
+            let photoCount = try await supabase()
+                .from("profile_photos")
+                .select("*", head: true, count: .exact)
+                .eq("user_id", value: myId)
+                .execute()
+                .count ?? 0
+            hasMyPageTodo = profile.completeness(photoCount: photoCount).percent < 100
+        } catch {
+            print("mypage todo refresh error: \(error)")
         }
     }
 

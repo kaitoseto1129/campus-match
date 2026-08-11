@@ -39,7 +39,7 @@ struct OtherUserProfileView<ActionContent: View>: View {
     @State private var otherProfilePhotoURLs: [UUID: URL] = [:]
     @State private var showingHideConfirm = false
     @State private var showingBlockConfirm = false
-    @State private var showingReportConfirm = false
+    @State private var showingReportSheet = false
     @State private var visitRecordId: UUID?
     @State private var viewedPhotoIds: Set<UUID> = []
     @State private var furthestSection: ProfileSection?
@@ -85,7 +85,7 @@ struct OtherUserProfileView<ActionContent: View>: View {
                         Label("ブロックする", systemImage: "hand.raised.fill")
                     }
                     Button(role: .destructive) {
-                        showingReportConfirm = true
+                        showingReportSheet = true
                     } label: {
                         Label("違反報告する", systemImage: "exclamationmark.triangle")
                     }
@@ -108,11 +108,10 @@ struct OtherUserProfileView<ActionContent: View>: View {
             }
             Button("キャンセル", role: .cancel) {}
         }
-        .confirmationDialog("違反報告しますか?", isPresented: $showingReportConfirm, titleVisibility: .visible) {
-            Button("報告する", role: .destructive) {
-                Task { await UserModeration.report(userId: profile.id, reason: "プロフィールからの報告") }
+        .sheet(isPresented: $showingReportSheet) {
+            ReportReasonSheet(targetName: profile.name) { reason in
+                Task { await UserModeration.report(userId: profile.id, reason: reason) }
             }
-            Button("キャンセル", role: .cancel) {}
         }
         .task {
             await load()

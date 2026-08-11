@@ -78,11 +78,11 @@ private struct MissionCardView: View {
             }
 
             HStack(spacing: 4) {
-                Image(systemName: "heart.fill")
+                Image(systemName: "hand.thumbsup.fill")
                 Text("+\(mission.reward)いいね")
             }
             .font(.caption.bold())
-            .foregroundStyle(Color.brandRed)
+            .foregroundStyle(Color.brandBlue)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(.white, in: Capsule())
@@ -106,14 +106,14 @@ private struct MissionCardView: View {
                         .foregroundStyle(mission.isComplete && !isClaimed ? .white : .white.opacity(0.6))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(mission.isComplete && !isClaimed ? Color.brandRed : Color.black.opacity(0.25), in: Capsule())
+                        .background(mission.isComplete && !isClaimed ? Color.brandBlue : Color.black.opacity(0.25), in: Capsule())
                 }
                 .disabled(!mission.isComplete || isClaimed || isClaiming)
             }
         }
         .padding()
         .background(
-            LinearGradient(colors: [Color.brandOrange, Color.brandRed], startPoint: .topLeading, endPoint: .bottomTrailing),
+            LinearGradient(colors: [Color.brandOrange, Color.brandBlue], startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 16)
         )
     }

@@ -18,7 +18,7 @@ struct QuickLikeButton: View {
     @State private var showingPopularSheet = false
     @State private var showingSentConfirmation = false
     @State private var confirmationMessage = "いいねを送りました"
-    @State private var confirmationIcon = "heart.fill"
+    @State private var confirmationIcon = "hand.thumbsup.fill"
     @State private var showingInsufficientLikesAlert = false
 
     init(profile: Profile, photoURL: URL? = nil) {
@@ -47,13 +47,13 @@ struct QuickLikeButton: View {
             }
         } label: {
             HStack {
-                Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "heart.fill"))
+                Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
                 Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
                     .bold()
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandRed))
+            .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandBlue))
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
         }
@@ -105,7 +105,7 @@ struct QuickLikeButton: View {
             return
         }
         confirmationMessage = "いいねを送りました"
-        confirmationIcon = "heart.fill"
+        confirmationIcon = "hand.thumbsup.fill"
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false

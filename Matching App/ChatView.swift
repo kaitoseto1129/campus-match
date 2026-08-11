@@ -21,11 +21,9 @@ struct ChatView: View {
     @State private var showingProfile = false
     @State private var showingHideConfirm = false
     @State private var showingBlockConfirm = false
-    @State private var showingReportConfirm = false
+    @State private var showingReportSheet = false
     @State private var showingCallRequestConfirm = false
     @State private var showingCancelCallRequestConfirm = false
-    @State private var showingCallAcceptedAlert = false
-    @State private var showingCallDeclinedAlert = false
     @State private var isBlocked = false
 
     private var myId: UUID? { supabase().auth.currentUser?.id }
@@ -72,6 +70,7 @@ struct ChatView: View {
                         )
                         .id(message.id)
                     }
+                    callRequestBubbles
                 }
                 .padding()
             }
@@ -109,14 +108,18 @@ struct ChatView: View {
             } label: {
                 HStack(spacing: 8) {
                     IconImage(url: otherPhotoURL, size: 32)
-                    HStack(spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(otherProfile.name)
                             .font(.subheadline.bold())
+                            .lineLimit(1)
                         Text(otherProfile.ageLabel)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .layoutPriority(-1)
                     }
                     .foregroundStyle(.primary)
+                    .minimumScaleFactor(0.85)
                 }
             }
             .buttonStyle(.plain)
@@ -146,7 +149,7 @@ struct ChatView: View {
                     Label("ブロックする", systemImage: "hand.raised.fill")
                 }
                 Button(role: .destructive) {
-                    showingReportConfirm = true
+                    showingReportSheet = true
                 } label: {
                     Label("違反報告する", systemImage: "exclamationmark.triangle")
                 }
@@ -165,7 +168,7 @@ struct ChatView: View {
                 }
                 Button("キャンセル", role: .cancel) {}
             } message: {
-                Text("いきなり発信はされません。相手が承諾した場合のみ通話に進めます。")
+                Text("「電話をします」というメッセージが相手に届きます。相手がタップして許可した場合のみ通話に進めます。")
             }
             .confirmationDialog("通話リクエストを取り消しますか?", isPresented: $showingCancelCallRequestConfirm, titleVisibility: .visible) {
                 Button("取り消す", role: .destructive) {
@@ -173,42 +176,22 @@ struct ChatView: View {
                 }
                 Button("戻る", role: .cancel) {}
             }
-            .alert("\(otherProfile.name)さんが通話を許可しました", isPresented: $showingCallAcceptedAlert) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("この先の通話機能は準備中です。")
+    }
+
+    /// 通話リクエストを、システムアラートではなくメッセージ風のバブルとしてトーク欄に表示する。
+    /// 相手からのリクエストはこのバブルをタップして応答する。
+    @ViewBuilder
+    private var callRequestBubbles: some View {
+        if let incoming = messageManager.incomingCallRequest, incoming.status == .pending {
+            CallRequestBubbleView(isMine: false, name: otherProfile.name, status: .pending) {
+                Task { await messageManager.respondToCallRequest(accept: true) }
+            } onDecline: {
+                Task { await messageManager.respondToCallRequest(accept: false) }
             }
-            .alert("今は難しいようです", isPresented: $showingCallDeclinedAlert) {
-                Button("OK", role: .cancel) {}
-            }
-            .onChange(of: messageManager.outgoingCallRequestStatus) { _, newValue in
-                switch newValue {
-                case .accepted:
-                    showingCallAcceptedAlert = true
-                    messageManager.outgoingCallRequestStatus = nil
-                case .declined, .canceled:
-                    if newValue == .declined { showingCallDeclinedAlert = true }
-                    messageManager.outgoingCallRequestStatus = nil
-                case .pending, nil:
-                    break
-                }
-            }
-            .alert(
-                "\(otherProfile.name)さんが通話をリクエストしています",
-                isPresented: Binding(
-                    get: { messageManager.incomingCallRequest != nil },
-                    set: { if !$0 { messageManager.incomingCallRequest = nil } }
-                )
-            ) {
-                Button("許可する") {
-                    Task { await messageManager.respondToCallRequest(accept: true) }
-                }
-                Button("今は無理", role: .cancel) {
-                    Task { await messageManager.respondToCallRequest(accept: false) }
-                }
-            } message: {
-                Text("許可すると相手に伝わります。この先の通話機能は準備中です。")
-            }
+        }
+        if let status = messageManager.outgoingCallRequestStatus {
+            CallRequestBubbleView(isMine: true, name: otherProfile.name, status: status, onAccept: nil, onDecline: nil)
+        }
     }
 
     var body: some View {
@@ -229,21 +212,43 @@ struct ChatView: View {
             Button("ブロックする", role: .destructive) {
                 Task {
                     await UserModeration.block(userId: otherProfile.id)
-                    isBlocked = true
+                    // ブロックしたトークは一覧にも表示され続けるべきではないため、その場で閉じる。
+                    dismiss()
                 }
             }
             Button("キャンセル", role: .cancel) {}
         } message: {
-            Text("ブロックするとお互いにメッセージが送れなくなります")
+            Text("ブロックするとお互いにメッセージが送れなくなり、このトークは一覧から消えます")
         }
-        .confirmationDialog("違反報告しますか?", isPresented: $showingReportConfirm, titleVisibility: .visible) {
-            Button("報告する", role: .destructive) {
-                Task { await UserModeration.report(userId: otherProfile.id, reason: "チャットからの報告") }
+        .sheet(isPresented: $showingReportSheet) {
+            ReportReasonSheet(targetName: otherProfile.name) { reason in
+                Task { await UserModeration.report(userId: otherProfile.id, reason: reason) }
             }
-            Button("キャンセル", role: .cancel) {}
+        }
+        .alert("送信できません", isPresented: Binding(
+            get: { messageManager.errorMessage != nil },
+            set: { if !$0 { messageManager.errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(messageManager.errorMessage ?? "")
         }
         .navigationDestination(isPresented: $showingProfile) {
-            OtherUserProfileView(profile: otherProfile) { EmptyView() }
+            OtherUserProfileView(profile: otherProfile) {
+                Button {
+                    showingProfile = false
+                } label: {
+                    Text("トークに戻る")
+                        .bold()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(Color.brandBlue)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 28))
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+            }
         }
         .task {
             await messageManager.load()
@@ -358,7 +363,7 @@ struct ChatView: View {
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 Image(systemName: "photo")
                     .font(.title2)
-                    .foregroundStyle(Color.brandRed)
+                    .foregroundStyle(Color.brandBlue)
             }
 
             TextField("メッセージを入力", text: $draftText, axis: .vertical)
@@ -377,12 +382,67 @@ struct ChatView: View {
             } label: {
                 Image(systemName: "paperplane.fill")
                     .font(.title2)
-                    .foregroundStyle(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.brandRed)
+                    .foregroundStyle(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.brandBlue)
             }
             .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || messageManager.isSending)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
+    }
+}
+
+/// 通話リクエストの状態をメッセージバブル風に表示する。
+/// 自分から送った分は状態表示のみ、相手から届いた分は許可/拒否のボタン付き。
+private struct CallRequestBubbleView: View {
+    let isMine: Bool
+    let name: String
+    let status: CallRequestStatus
+    var onAccept: (() -> Void)? = nil
+    var onDecline: (() -> Void)? = nil
+
+    private var statusText: String {
+        switch status {
+        case .pending: return isMine ? "電話をします" : "\(name)さんから電話のリクエストです"
+        case .accepted: return isMine ? "\(name)さんが通話を許可しました" : "通話を許可しました"
+        case .declined: return isMine ? "今は難しいようです" : "リクエストを見送りました"
+        case .canceled: return "通話リクエストを取り消しました"
+        }
+    }
+
+    var body: some View {
+        HStack {
+            if isMine { Spacer(minLength: 40) }
+            VStack(alignment: isMine ? .trailing : .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "phone.fill")
+                    Text(statusText)
+                        .font(.subheadline)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(isMine ? Color.brandBlue : Color(.systemGray6))
+                .foregroundStyle(isMine ? .white : .primary)
+                .clipShape(RoundedRectangle(cornerRadius: 18))
+
+                if !isMine, status == .pending, let onAccept, let onDecline {
+                    HStack(spacing: 8) {
+                        Button("許可する", action: onAccept)
+                            .font(.caption.bold())
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.brandBlue, in: Capsule())
+                            .foregroundStyle(.white)
+                        Button("今は無理", action: onDecline)
+                            .font(.caption.bold())
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray5), in: Capsule())
+                            .foregroundStyle(.primary)
+                    }
+                }
+            }
+            if !isMine { Spacer(minLength: 40) }
+        }
     }
 }
 
@@ -443,7 +503,7 @@ private struct MessageBubbleView: View {
                         Text(body)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .background(isMine ? Color.brandRed : Color(.systemGray6))
+                            .background(isMine ? Color.brandBlue : Color(.systemGray6))
                             .foregroundStyle(isMine ? .white : .primary)
                             .clipShape(RoundedRectangle(cornerRadius: 18))
                             .contextMenu {

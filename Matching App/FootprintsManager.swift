@@ -19,12 +19,22 @@ final class FootprintsManager: ObservableObject {
     @Published var footprints: [Footprint] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    /// 既にいいね済みの相手のID。足あと画面から重複していいねを送ろうとして
+    /// unique制約違反になり、原因不明な「いいねが足りません」表示になっていた不具合の修正用。
+    @Published var likedIds: Set<UUID> = []
 
     func load() async {
         guard let myId = supabase().auth.currentUser?.id else { return }
         isLoading = true
         errorMessage = nil
         do {
+            let likeRows: [Like] = try await supabase()
+                .from("likes")
+                .select()
+                .eq("from_user_id", value: myId)
+                .execute()
+                .value
+            likedIds = Set(likeRows.map(\.toUserId))
             struct VisitRow: Decodable {
                 let id: UUID
                 let viewerId: UUID

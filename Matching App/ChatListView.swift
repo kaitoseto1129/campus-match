@@ -8,16 +8,14 @@ import Supabase
 
 struct ChatListView: View {
     @StateObject private var chatManager = ChatManager()
+    @EnvironmentObject private var tabRouter: TabRouter
     @State private var pendingHideMatch: MatchedChat?
     @State private var pendingBlockMatch: MatchedChat?
-    @State private var showsStaleNudge = true
+    @State private var navPath = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navPath) {
             VStack(spacing: 0) {
-                if showsStaleNudge, !chatManager.staleMatches.isEmpty {
-                    staleNudgeBanner
-                }
                 sortChips
 
                 if chatManager.matches.isEmpty && !chatManager.isLoading {
@@ -62,7 +60,7 @@ struct ChatListView: View {
                                             .font(.caption2.bold())
                                             .foregroundStyle(.white)
                                             .padding(6)
-                                            .background(Color.brandRed, in: Circle())
+                                            .background(Color.brandBlue, in: Circle())
                                     }
                                 }
                             }
@@ -92,6 +90,9 @@ struct ChatListView: View {
             .navigationTitle("トーク")
             .task {
                 await chatManager.load()
+            }
+            .onChange(of: tabRouter.popToRootTokens[.chat]) { _, _ in
+                navPath = NavigationPath()
             }
             .confirmationDialog(
                 "このトークを非表示にしますか?",
@@ -150,44 +151,6 @@ struct ChatListView: View {
         }
     }
 
-    private var staleNudgeBanner: some View {
-        let stale = chatManager.staleMatches
-        return NavigationLink {
-            if let first = stale.first {
-                ChatView(matchId: first.match.id, otherProfile: first.profile, otherPhotoURL: first.photoURL)
-            }
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "bubble.left.and.exclamationmark.bubble.right.fill")
-                    .foregroundStyle(Color.brandOrange)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(stale.count == 1 ? "\(stale[0].profile.name)さんとの会話が止まっています" : "\(stale.count)件のトークが止まっています")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.primary)
-                    Text("話しかけてみましょう!")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button {
-                    withAnimation { showsStaleNudge = false }
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(6)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(12)
-            .background(Color.brandOrange.opacity(0.12))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .padding(.horizontal)
-            .padding(.top, 10)
-        }
-        .buttonStyle(.plain)
-    }
-
     private var sortChips: some View {
         HStack(spacing: 8) {
             sortChip(title: "すべて", isSelected: chatManager.sortMode == .recent) {
@@ -209,7 +172,7 @@ struct ChatListView: View {
                 .foregroundStyle(isSelected ? .white : .primary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(isSelected ? Color.brandRed : Color(.systemGray6), in: Capsule())
+                .background(isSelected ? Color.brandBlue : Color(.systemGray6), in: Capsule())
         }
     }
 

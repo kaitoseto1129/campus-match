@@ -7,11 +7,13 @@ import SwiftUI
 
 struct LikesView: View {
     @StateObject private var likesManager = LikesManager()
+    @StateObject private var profileManager = ProfileManager()
     @EnvironmentObject private var tabRouter: TabRouter
     @State private var showingFilterSheet = false
+    @State private var navPath = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navPath) {
             ScrollView {
                 PrivateModeBanner()
 
@@ -49,12 +51,16 @@ struct LikesView: View {
             .navigationTitle("いいね")
             .task {
                 await likesManager.load()
+                await profileManager.load()
             }
             .sheet(isPresented: $showingFilterSheet) {
                 FilterSheetView(filter: $likesManager.filter)
             }
             .onChange(of: likesManager.filter) { _, _ in
                 Task { await likesManager.load() }
+            }
+            .onChange(of: tabRouter.popToRootTokens[.likes]) { _, _ in
+                navPath = NavigationPath()
             }
         }
     }
@@ -77,19 +83,51 @@ struct LikesView: View {
                 .padding(.vertical, 12)
                 .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 14))
 
-            Button {
-                tabRouter.selectedTab = .discover
+            NavigationLink {
+                ProfileEditView(profileManager: profileManager)
             } label: {
                 HStack {
-                    Image(systemName: "magnifyingglass")
-                    Text("探す")
+                    Image(systemName: "square.and.pencil")
+                    Text("プロフィールを編集する")
                 }
                 .bold()
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(Color.brandRed)
-                .foregroundStyle(.white)
+                .background(Color(.systemGray6))
+                .foregroundStyle(.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
+            }
+            .padding(.horizontal, 40)
+
+            HStack(spacing: 10) {
+                Button {
+                    tabRouter.selectedTab = .discover
+                } label: {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                        Text("探す")
+                    }
+                    .bold()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(Color.brandBlue)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                }
+                Button {
+                    tabRouter.selectedTab = .myPage
+                } label: {
+                    HStack {
+                        Image(systemName: "bolt.fill")
+                        Text("アピールを使う")
+                    }
+                    .bold()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(Color.brandOrange)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                }
             }
             .padding(.horizontal, 40)
 
@@ -174,7 +212,7 @@ private struct LikeCardView: View {
                     .bold()
                     .frame(maxWidth: .infinity)
                     .frame(height: 40)
-                    .background(Color.brandRed)
+                    .background(Color.brandBlue)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
             }
@@ -206,7 +244,7 @@ struct ThanksButton: View {
                 .bold()
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(Color.brandRed)
+                .background(Color.brandBlue)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
         }

@@ -68,9 +68,9 @@ struct MainTabView: View {
             Divider()
             HStack(spacing: 0) {
                 tabButton(.discover, icon: "magnifyingglass", label: "探す")
-                tabButton(.likes, icon: "heart.fill", label: "グッド")
+                tabButton(.likes, icon: "hand.thumbsup.fill", label: "いいね")
                 tabButton(.chat, icon: "message.fill", label: "トーク", badge: notificationManager.unreadCount)
-                tabButton(.myPage, icon: "person.fill", label: "マイページ", showDot: notificationManager.footprintsCount > 0)
+                tabButton(.myPage, icon: "person.fill", label: "マイページ", showDot: notificationManager.hasMyPageTodo, highlightWhenDot: true)
             }
             .padding(.top, 8)
             .padding(.bottom, 4)
@@ -78,32 +78,45 @@ struct MainTabView: View {
         .background(Color(.systemBackground))
     }
 
-    private func tabButton(_ tab: AppTab, icon: String, label: String, badge: Int = 0, showDot: Bool = false) -> some View {
-        Button {
-            tabRouter.selectedTab = tab
+    /// highlightWhenDot: showDotが立っている間、アイコンをテーマカラーの丸バッジに乗せて目立たせる
+    /// (足あとの新着や、プロフィールのやることリストが残っている時のマイページタブなど)。
+    private func tabButton(_ tab: AppTab, icon: String, label: String, badge: Int = 0, showDot: Bool = false, highlightWhenDot: Bool = false) -> some View {
+        let isHighlighted = showDot && highlightWhenDot
+        return Button {
+            tabRouter.selectTab(tab)
         } label: {
             VStack(spacing: 4) {
                 ZStack(alignment: .topTrailing) {
-                    Image(systemName: icon)
-                        .font(.system(size: 21))
+                    if isHighlighted {
+                        Image(systemName: icon)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white)
+                            .frame(width: 30, height: 30)
+                            .background(Color.brandBlue, in: Circle())
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 21))
+                    }
                     if badge > 0 {
                         Text("\(badge)")
                             .font(.system(size: 10).bold())
                             .foregroundStyle(.white)
                             .padding(4)
-                            .background(Color.brandRed, in: Circle())
+                            .background(Color.brandBlue, in: Circle())
                             .offset(x: 12, y: -8)
                     } else if showDot {
                         Circle()
-                            .fill(Color.brandRed)
+                            .fill(Color.brandBlue)
                             .frame(width: 9, height: 9)
-                            .offset(x: 9, y: -6)
+                            .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 1.5))
+                            .offset(x: isHighlighted ? 2 : 9, y: isHighlighted ? -2 : -6)
                     }
                 }
+                .frame(height: 30)
                 Text(label)
                     .font(.caption2)
             }
-            .foregroundStyle(tabRouter.selectedTab == tab ? Color.brandRed : Color(.systemGray))
+            .foregroundStyle(tabRouter.selectedTab == tab || isHighlighted ? Color.brandBlue : Color(.systemGray))
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)

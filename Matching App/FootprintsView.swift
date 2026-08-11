@@ -23,7 +23,8 @@ struct FootprintsView: View {
                         FootprintCardView(
                             footprint: footprint,
                             allProfiles: footprintsManager.footprints.map(\.profile),
-                            startIndex: index
+                            startIndex: index,
+                            alreadyLiked: footprintsManager.likedIds.contains(footprint.profile.id)
                         )
                     }
                 }
@@ -47,15 +48,17 @@ private struct FootprintCardView: View {
     let footprint: Footprint
     let allProfiles: [Profile]
     let startIndex: Int
+    let alreadyLiked: Bool
     @State private var isSending = false
     @State private var didSend = false
     @State private var showingInsufficientLikesAlert = false
+    @State private var alertMessage = "マイページからいいねを増やしてください。"
 
     var body: some View {
         VStack(spacing: 8) {
             NavigationLink {
                 SwipeableProfileView(profiles: allProfiles, startIndex: startIndex) { profile in
-                    FootprintLikeButton(profile: profile)
+                    FootprintLikeButton(profile: profile, alreadyLiked: alreadyLiked)
                 }
             } label: {
                 AsyncImage(url: footprint.photoURL) { phase in
@@ -73,6 +76,10 @@ private struct FootprintCardView: View {
             }
             .buttonStyle(.plain)
 
+            Text(footprint.profile.name)
+                .font(.subheadline.bold())
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 4) {
                 Text(footprint.profile.ageLabel)
                     .font(.caption.bold())
@@ -92,30 +99,35 @@ private struct FootprintCardView: View {
                     isSending = false
                 }
             } label: {
-                Text(didSend ? "いいねを送りました" : "いいねを送る")
+                Text((didSend || alreadyLiked) ? "いいね送信済み" : "いいねを送る")
                     .font(.caption.bold())
                     .frame(maxWidth: .infinity)
                     .frame(height: 32)
-                    .background(didSend ? Color.gray : Color.brandRed)
+                    .background((didSend || alreadyLiked) ? Color.gray : Color.brandBlue)
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
             }
-            .disabled(isSending || didSend)
+            .disabled(isSending || didSend || alreadyLiked)
         }
-        .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
+        .alert("いいねを送れませんでした", isPresented: $showingInsufficientLikesAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("マイページからいいねを増やしてください。")
+            Text(alertMessage)
         }
     }
 
     private func sendLike() async {
+        // 既にいいね済みの相手にもう一度送ろうとするとDB側のunique制約違反になり、
+        // それが「いいねが足りません」という不正確なエラーとして表示されてしまっていた。
+        // 送信前にalreadyLikedで弾くことでこのケース自体を回避する。
+        guard !alreadyLiked else { return }
         do {
             try await supabase()
                 .rpc("send_like_atomic", params: SendLikeParams(pToUserId: footprint.profile.id, pIsSpecial: false))
                 .execute()
             didSend = true
         } catch {
+            alertMessage = "残いいねが足りないか、通信に失敗した可能性があります。マイページからいいねを増やしてから、もう一度お試しください。"
             showingInsufficientLikesAlert = true
             print("footprint like error: \(error)")
         }
@@ -124,6 +136,7 @@ private struct FootprintCardView: View {
 
 private struct FootprintLikeButton: View {
     let profile: Profile
+    let alreadyLiked: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var isSending = false
     @State private var didSend = false
@@ -143,27 +156,28 @@ private struct FootprintLikeButton: View {
             }
         } label: {
             HStack {
-                Image(systemName: "heart.fill")
-                Text(didSend ? "いいねを送りました" : "いいねを送る")
+                Image(systemName: "hand.thumbsup.fill")
+                Text((didSend || alreadyLiked) ? "いいね送信済み" : "いいねを送る")
                     .bold()
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(Color.brandRed)
+            .background((didSend || alreadyLiked) ? Color.gray : Color.brandBlue)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
         }
         .padding(.horizontal)
         .padding(.bottom, 8)
-        .disabled(isSending || didSend)
-        .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
+        .disabled(isSending || didSend || alreadyLiked)
+        .alert("いいねを送れませんでした", isPresented: $showingInsufficientLikesAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("マイページからいいねを増やしてください。")
+            Text("残いいねが足りないか、通信に失敗した可能性があります。マイページからいいねを増やしてから、もう一度お試しください。")
         }
     }
 
     private func sendLike() async -> Bool {
+        guard !alreadyLiked else { return false }
         do {
             try await supabase()
                 .rpc("send_like_atomic", params: SendLikeParams(pToUserId: profile.id, pIsSpecial: false))

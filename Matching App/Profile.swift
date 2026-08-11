@@ -200,8 +200,11 @@ let nationalities: [String] = [
     "日本", "アメリカ", "韓国", "中国", "台湾", "その他"
 ]
 
-/// 居住地の絞り込みで選べる国。
-let residenceCountries: [String] = ["日本", "アメリカ"]
+/// 居住地の絞り込みで選べる国。日本・アメリカは都道府県/州まで選べ、それ以外は国単位の絞り込みとなる。
+let residenceCountries: [String] = [
+    "日本", "アメリカ", "韓国", "中国", "台湾", "香港", "イギリス", "フランス", "ドイツ",
+    "カナダ", "オーストラリア", "シンガポール", "タイ", "ベトナム", "インドネシア", "その他"
+]
 
 let usStates: [String] = [
     "アラバマ州", "アラスカ州", "アリゾナ州", "アーカンソー州", "カリフォルニア州",
@@ -216,9 +219,19 @@ let usStates: [String] = [
     "バージニア州", "ワシントン州", "ウェストバージニア州", "ウィスコンシン州", "ワイオミング州"
 ]
 
-let drinkingOptions: [String] = ["飲む", "時々飲む", "飲まない"]
-let smokingOptions: [String] = ["吸わない", "禁煙中", "たまに吸う", "吸う"]
-let bodyTypeOptions: [String] = ["スリム", "やや細め", "普通", "グラマー", "筋肉質", "ややぽっちゃり", "太め"]
-let replyPaceOptions: [String] = ["すぐ返す", "まあまあ返す", "たまに返す"]
-let replyTimeOptions: [String] = ["朝型", "昼型", "夜型", "深夜型"]
-let languageOptions: [String] = ["日本語", "英語", "中国語", "韓国語", "その他"]
+/// ライフスタイル系ピッカーの「未選択」を表す共通のプレースホルダー値。
+/// 以前は各配列の先頭(実質のデフォルト値)が初期選択されてしまっていたため、
+/// 明示的な未選択状態を持たせて「自分で選ぶまでは空欄」にできるようにしている。
+let unselectedOption = "-"
+
+let drinkingOptions: [String] = [unselectedOption, "飲む", "時々飲む", "飲まない"]
+let smokingOptions: [String] = [unselectedOption, "吸わない", "禁煙中", "たまに吸う", "吸う"]
+let bodyTypeOptions: [String] = [unselectedOption, "スリム", "やや細め", "普通", "グラマー", "筋肉質", "ややぽっちゃり", "太め"]
+let replyPaceOptions: [String] = [unselectedOption, "すぐ返す", "まあまあ返す", "たまに返す"]
+let replyTimeOptions: [String] = [unselectedOption, "朝型", "昼型", "夜型", "深夜型"]
+/// 話せる言語。検索して選べるよう、以前より幅広い選択肢を用意している。
+let languageOptions: [String] = [
+    "日本語", "英語", "中国語", "韓国語", "フランス語", "スペイン語", "ドイツ語",
+    "イタリア語", "ポルトガル語", "ロシア語", "タイ語", "ベトナム語", "インドネシア語",
+    "ヒンディー語", "アラビア語", "その他"
+]

@@ -103,7 +103,7 @@ struct PrivacyToggleRows: View {
                     Text("受け取ったいいね数を他のユーザーに表示する")
                         .font(.subheadline)
                 }
-                .tint(Color.brandRed)
+                .tint(Color.brandBlue)
             }
             .padding()
 
@@ -119,7 +119,7 @@ struct PrivacyToggleRows: View {
                     Text("プライベートモード")
                         .font(.subheadline)
                 }
-                .tint(Color.brandRed)
+                .tint(Color.brandBlue)
                 Text("ONにすると他ユーザーのプロフィールを見ても足あとが付きません")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -138,7 +138,7 @@ struct PrivacyToggleRows: View {
                     Text("オンライン状態を表示する")
                         .font(.subheadline)
                 }
-                .tint(Color.brandRed)
+                .tint(Color.brandBlue)
                 Text("OFFにすると他ユーザーからオンライン/オフラインが見えなくなります")
                     .font(.caption2)
                     .foregroundStyle(.secondary)

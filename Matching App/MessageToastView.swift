@@ -12,7 +12,7 @@ struct MessageToastView: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "message.fill")
-                .foregroundStyle(Color.brandRed)
+                .foregroundStyle(Color.brandBlue)
             VStack(alignment: .leading, spacing: 2) {
                 Text(toast.senderName)
                     .font(.subheadline.bold())

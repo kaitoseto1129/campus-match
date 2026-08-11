@@ -33,7 +33,7 @@ struct ProfileAnalyticsView: View {
     private var summaryCards: some View {
         HStack(spacing: 12) {
             statCard(icon: "eye.fill", color: Color.brandTeal, title: "プロフィール閲覧数", value: "\(manager.totalVisits)")
-            statCard(icon: "hand.thumbsup.fill", color: Color.brandRed, title: "受け取ったいいね", value: "\(manager.totalLikesReceived)")
+            statCard(icon: "hand.thumbsup.fill", color: Color.brandBlue, title: "受け取ったいいね", value: "\(manager.totalLikesReceived)")
         }
     }
 
@@ -97,7 +97,7 @@ struct ProfileAnalyticsView: View {
                         x: .value("閲覧数", stat.viewCount),
                         y: .value("写真", index == 0 ? "メイン" : "\(index + 1)枚目")
                     )
-                    .foregroundStyle(index == 0 ? Color.brandRed : Color.brandTeal)
+                    .foregroundStyle(index == 0 ? Color.brandBlue : Color.brandTeal)
                     .annotation(position: .trailing) {
                         Text("\(stat.viewCount)")
                             .font(.caption2.bold())

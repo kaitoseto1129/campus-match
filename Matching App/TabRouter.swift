@@ -20,6 +20,9 @@ final class TabRouter: ObservableObject {
     @Published private(set) var isTabBarHidden = false
     private var hideRequestCount = 0
 
+    /// タブごとの「ルートまで戻れ」信号。値が変わるたびに各タブのNavigationStackがpathを空にする。
+    @Published private(set) var popToRootTokens: [AppTab: UUID] = [:]
+
     func pushDetailScreen() {
         hideRequestCount += 1
         isTabBarHidden = hideRequestCount > 0
@@ -28,5 +31,15 @@ final class TabRouter: ObservableObject {
     func popDetailScreen() {
         hideRequestCount = max(0, hideRequestCount - 1)
         isTabBarHidden = hideRequestCount > 0
+    }
+
+    /// タブバーのボタンから呼ぶ。既に選択中のタブを再度タップした場合は、
+    /// そのタブのNavigationStackをルートまで戻す(サブ画面を開いたままタブが反応しない不具合の修正)。
+    func selectTab(_ tab: AppTab) {
+        if selectedTab == tab {
+            popToRootTokens[tab] = UUID()
+        } else {
+            selectedTab = tab
+        }
     }
 }

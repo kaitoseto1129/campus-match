@@ -105,7 +105,7 @@ struct SentLikesView: View {
             isOnline: sentLike.isOnline,
             commonPoints: sentLike.commonPoints,
             ribbonLabel: sentLike.isMatched ? "マッチ済み" : sentLike.profile.joinBadgeLabel,
-            ribbonColor: sentLike.isMatched ? Color.brandRed : Color.brandOrange,
+            ribbonColor: sentLike.isMatched ? Color.brandBlue : Color.brandOrange,
             destination: AnyView(
                 SwipeableProfileView(profiles: sentLikesManager.sent.map(\.profile), startIndex: index) { _ in EmptyView() }
             )
@@ -232,7 +232,7 @@ private struct ThanksActionButton: View {
                 .bold()
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(Color.brandRed)
+                .background(Color.brandBlue)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 22))
         }

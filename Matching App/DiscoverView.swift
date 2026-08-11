@@ -7,13 +7,27 @@ import SwiftUI
 
 struct DiscoverView: View {
     @StateObject private var discoverManager = DiscoverManager()
+    @EnvironmentObject private var tabRouter: TabRouter
     @State private var showingFilterSheet = false
     @State private var showingMissions = false
+    @State private var navPath = NavigationPath()
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
+        NavigationStack(path: $navPath) {
+            ZStack(alignment: .top) {
+                // 他の一覧画面より少しだけ色みを強くした、探す画面専用のトップウォッシュ。
+                LinearGradient(
+                    colors: [Color.brandBlue.opacity(0.35), Color.brandTeal.opacity(0.22), Color.brandPink.opacity(0.12), .clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 220)
+                .ignoresSafeArea(edges: .top)
+
+                ScrollView {
                 PrivateModeBanner()
+
+                appealBanner
 
                 boostedSection
 
@@ -23,7 +37,7 @@ struct DiscoverView: View {
                     }
                     Text("\(discoverManager.totalCandidateCount)人")
                         .font(.subheadline.bold())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.brandBlue)
                     Spacer()
                     SortMenuButton(sortOrder: $discoverManager.filter.sortOrder)
                 }
@@ -64,10 +78,11 @@ struct DiscoverView: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
-            }
-            .background(Color.appListBackground.ignoresSafeArea())
-            .refreshable {
-                await discoverManager.load()
+                }
+                .background(Color.appListBackground.ignoresSafeArea())
+                .refreshable {
+                    await discoverManager.load()
+                }
             }
             .navigationTitle("探す")
             .toolbar {
@@ -93,7 +108,40 @@ struct DiscoverView: View {
             .onChange(of: discoverManager.filter) { _, _ in
                 Task { await discoverManager.load() }
             }
+            .onChange(of: tabRouter.popToRootTokens[.discover]) { _, _ in
+                navPath = NavigationPath()
+            }
         }
+    }
+
+    /// 探す画面から直接アピール(ブースト)機能への導線を出す。実際の発動はマイページで行う。
+    private var appealBanner: some View {
+        Button {
+            tabRouter.selectedTab = .myPage
+        } label: {
+            HStack {
+                Image(systemName: "bolt.fill")
+                    .foregroundStyle(Color.brandOrange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("アピールを使う")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.primary)
+                    Text("10いいねで1時間、この画面のトップに表示されます")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(Color.brandOrange.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
+            .padding(.top, 8)
+        }
+        .buttonStyle(.plain)
     }
 
     private var boostedSection: some View {
@@ -247,6 +295,9 @@ private struct DiscoverCardView: View {
     let photoURL: URL?
     var photoHeight: CGFloat = 180
 
+    /// カードごとに一貫した淡い差し色をつけて、グリッド全体の色みを増やす。
+    private var accent: Color { Color.pastelAccent(for: profile.id) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topLeading) {
@@ -266,15 +317,29 @@ private struct DiscoverCardView: View {
                     RibbonBadge(text: "アピール中", color: Color.brandOrange)
                         .padding(.top, 10)
                 } else if let badge = profile.joinBadgeLabel {
-                    RibbonBadge(text: badge, color: Color.brandRed)
+                    RibbonBadge(text: badge, color: Color.brandBlue)
                         .padding(.top, 10)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(accent.opacity(0.55), lineWidth: 2)
+            }
+            .shadow(color: accent.opacity(0.25), radius: 6, y: 3)
 
-            HStack(spacing: 4) {
+            Text(profile.name)
+                .font(.subheadline.bold())
+                .lineLimit(1)
+                .padding(.horizontal, 2)
+
+            HStack(spacing: 6) {
                 Text(profile.ageLabel)
-                    .font(.subheadline.bold())
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(accent, in: Capsule())
                 if let major = profile.major, !major.isEmpty {
                     Text(major)
                         .font(.caption)
@@ -296,7 +361,7 @@ private struct DiscoverLikeButton: View {
     @State private var showingPopularSheet = false
     @State private var showingSentConfirmation = false
     @State private var confirmationMessage = "いいねを送りました"
-    @State private var confirmationIcon = "heart.fill"
+    @State private var confirmationIcon = "hand.thumbsup.fill"
     @State private var showingInsufficientLikesAlert = false
 
     private var alreadyLiked: Bool { discoverManager.likedIds.contains(candidate.id) }
@@ -343,13 +408,13 @@ private struct DiscoverLikeButton: View {
                 }
             } label: {
                 HStack {
-                    Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "heart.fill"))
+                    Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
                     Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
                         .bold()
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandRed))
+                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandBlue))
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
             }
@@ -380,7 +445,7 @@ private struct DiscoverLikeButton: View {
             return
         }
         confirmationMessage = "いいねを送りました"
-        confirmationIcon = "heart.fill"
+        confirmationIcon = "hand.thumbsup.fill"
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false

@@ -124,10 +124,10 @@ struct ProfileDisplayView<ActionContent: View>: View {
                         Text(likeCount <= 5 ? "〜5" : "\(likeCount)")
                     }
                     .font(.caption.bold())
-                    .foregroundStyle(Color.brandRed)
+                    .foregroundStyle(Color.brandBlue)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.brandRed.opacity(0.12), in: Capsule())
+                    .background(Color.brandBlue.opacity(0.12), in: Capsule())
                 }
             }
             if let isOnline {
@@ -233,7 +233,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-                .foregroundStyle(Color.brandRed)
+                .foregroundStyle(Color.brandBlue)
         }
         .padding(.vertical, 14)
     }
