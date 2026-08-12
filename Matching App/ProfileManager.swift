@@ -84,6 +84,10 @@ class ProfileManager: ObservableObject {
             let url = try await supabase().storage.from("profile_photos").getPublicURL(path: filePath)
             let newPhoto = ProfilePhoto(id: commonId, userId: uid, urlString: url.absoluteString, orderNumber: slot)
             try await supabase().from("profile_photos").insert([newPhoto]).execute()
+            // 保存自体は成功しているのに再取得が何らかの理由で失敗すると
+            // 画面に反映されない(反映されていないように見える)ため、ローカルにも即時反映しておく。
+            photos.removeAll { $0.orderNumber == slot }
+            photos.append(newPhoto)
             await loadPhotos()
         } catch {
             errorMessage = "写真の保存に失敗しました"

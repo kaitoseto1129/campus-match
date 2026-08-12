@@ -17,9 +17,10 @@ struct ProfileEditView: View {
     @Environment(\.dismiss) var dismiss
     @State var name: String = ""
     @State var description: String = ""
-    @State var gender: Gender = .male
+    @State var gender: Gender? = nil
     @State var birthday: Date = Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date()
     @State var area: String = ""
+    private var areaLabel: String { area.isEmpty ? unselectedOption : area }
     @State var height: Int? = nil
     @State var major: String = ""
     @State var nationalities: Set<String> = []
@@ -134,9 +135,13 @@ struct ProfileEditView: View {
         .id("photos")
     }
     func emptyPhotoSlot(label: String, slot: Int) -> some View {
-        // どのスロットが空でも、そこだけを狙って個別に選べるようにする
-        // (以前はメインが空の状態でサブを選ぶと、メイン用の顔判定が誤って走ってしまっていた)。
-        PhotosPicker(selection: $pickerItem, matching: .images) {
+        // 枠ごとに別々のPhotosPickerを持たせると、同じ選択状態を共有する複数インスタンスが
+        // 干渉して選択画面が閉じても再度開いてしまう不具合があったため、タップしたスロットだけ
+        // 記録しておき、画面全体で1つだけ持つPhotosPicker(showingChangePhotoPicker)を開く。
+        Button {
+            pickerTargetSlot = slot
+            showingChangePhotoPicker = true
+        } label: {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(.systemGray6))
                 .frame(height: 80)
@@ -151,7 +156,7 @@ struct ProfileEditView: View {
                     .foregroundStyle(.secondary)
                 }
         }
-        .simultaneousGesture(TapGesture().onEnded { pickerTargetSlot = slot })
+        .buttonStyle(.plain)
         .dropDestination(for: String.self) { items, _ in
             guard let sourceSlot = items.first.flatMap(Int.init) else { return false }
             Task { await profileManager.swapPhotos(at: sourceSlot, and: slot) }
@@ -224,8 +229,8 @@ struct ProfileEditView: View {
             labeledTextField(title: "ニックネーム(必須)", text: $name, placeholder: "未入力")
             labeledTextField(title: "専攻(任意)", text: $major, placeholder: "未入力")
             formRow(title: "誕生日(必須)", value: birthdayLabel) { showingBirthdayPicker = true }
-            formRow(title: "性別(必須)", value: gender.label) { showingGenderPicker = true }
-            formRow(title: "居住地(必須)", value: area.isEmpty ? "-" : area) { showingAreaPicker = true }
+            formRow(title: "性別(必須)", value: gender?.label ?? unselectedOption) { showingGenderPicker = true }
+            formRow(title: "居住地(必須)", value: areaLabel) { showingAreaPicker = true }
             formRow(title: "大学(必須)", value: universityName.isEmpty ? "選択してください" : universityName) {
                 showingUniversityPicker = true
             }
@@ -233,6 +238,9 @@ struct ProfileEditView: View {
             formRow(title: "国籍(任意・複数選択可)", value: nationalities.isEmpty ? "-" : nationalities.sorted().joined(separator: "・")) {
                 showingNationalityPicker = true
             }
+        } header: {
+            Label("基本情報", systemImage: "person.text.rectangle")
+                .foregroundStyle(Color.brandPurple)
         }
         .id("basic")
     }
@@ -319,9 +327,9 @@ struct ProfileEditView: View {
             if let profile = profileManager.profile {
                 self.name = profile.name
                 self.description = profile.description ?? ""
-                self.gender = profile.gender ?? .male
+                self.gender = profile.gender
                 self.birthday = profile.birthday ?? (Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date())
-                self.area = profile.area.isEmpty ? (prefectures.first ?? "") : profile.area
+                self.area = profile.area
                 self.height = profile.height
                 self.major = profile.major ?? ""
                 self.nationalities = Set(profile.nationalities)
@@ -332,8 +340,6 @@ struct ProfileEditView: View {
                 self.languages = Set(profile.languages)
                 self.universityId = profile.universityId
                 self.universityName = profileManager.university?.name ?? ""
-            } else if area.isEmpty {
-                area = prefectures.first ?? ""
             }
         }
         .onChange(of: pickerItem) {oldValue, newValue in
@@ -550,6 +556,16 @@ struct ProfileEditView: View {
         }
         guard let height else {
             validationMessage = "身長を選択してください"
+            showingValidationAlert = true
+            return
+        }
+        guard let gender else {
+            validationMessage = "性別を選択してください"
+            showingValidationAlert = true
+            return
+        }
+        guard !area.isEmpty else {
+            validationMessage = "居住地を選択してください"
             showingValidationAlert = true
             return
         }
