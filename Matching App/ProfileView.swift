@@ -102,10 +102,21 @@ struct ProfileView: View {
         .photosPicker(isPresented: $showingMainPhotoPicker, selection: $pickerItem, matching: .images)
         .onChange(of: pickerItem) { _, newValue in
             Task {
-                guard let newValue,
-                      let data = try? await newValue.loadTransferable(type: Data.self),
-                      let image = UIImage(data: data) else {
+                guard let newValue else { return }
+                let image: UIImage
+                do {
+                    guard let data = try await newValue.loadTransferable(type: Data.self), let loaded = UIImage(data: data) else {
+                        pickerItem = nil
+                        faceCheckMessage = "この写真を読み込めませんでした。別の写真でお試しください。"
+                        showingFaceCheckAlert = true
+                        return
+                    }
+                    image = loaded
+                } catch {
                     pickerItem = nil
+                    faceCheckMessage = "写真の読み込みに失敗しました。もう一度お試しください。"
+                    showingFaceCheckAlert = true
+                    print("photo load error: \(error)")
                     return
                 }
                 pickerItem = nil
