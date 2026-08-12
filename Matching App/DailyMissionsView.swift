@@ -82,7 +82,7 @@ private struct MissionCardView: View {
                 Text("+\(mission.reward)いいね")
             }
             .font(.caption.bold())
-            .foregroundStyle(Color.brandBlue)
+            .foregroundStyle(Color.brandPurple)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(.white, in: Capsule())
@@ -103,7 +103,7 @@ private struct MissionCardView: View {
                 } label: {
                     Text(isClaimed ? "受取済み" : "受け取る")
                         .font(.caption.bold())
-                        .foregroundStyle(mission.isComplete && !isClaimed ? Color.brandBlue : .white.opacity(0.6))
+                        .foregroundStyle(mission.isComplete && !isClaimed ? Color.brandPurple : .white.opacity(0.6))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .background(mission.isComplete && !isClaimed ? .white : Color.black.opacity(0.25), in: Capsule())
@@ -113,7 +113,7 @@ private struct MissionCardView: View {
         }
         .padding()
         .background(
-            LinearGradient(colors: [Color.brandBlue, Color.brandTeal], startPoint: .topLeading, endPoint: .bottomTrailing),
+            LinearGradient(colors: [Color.brandPurple, Color.brandTeal], startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 16)
         )
     }

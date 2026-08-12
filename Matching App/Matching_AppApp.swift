@@ -11,6 +11,8 @@ import SwiftUI
 struct Matching_AppApp: App {
     @StateObject var auth = AuthManager()
     @Environment(\.scenePhase) private var scenePhase
+    /// 初回起動時だけウェルカム画面を出すためのフラグ(端末に永続化される)。
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
 
     init() {
         // AsyncImageで読み込むプロフィール写真・アイコン等がディスクにキャッシュされるようにする(デフォルトは小さめ)。
@@ -19,10 +21,14 @@ struct Matching_AppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if auth.isAuthenticated {
-                RootGateView()
-            } else {
-             AuthView()
+            Group {
+                if !hasSeenWelcome {
+                    WelcomeOnboardingView { hasSeenWelcome = true }
+                } else if auth.isAuthenticated {
+                    RootGateView()
+                } else {
+                    AuthView()
+                }
             }
         }
         .environmentObject(auth)

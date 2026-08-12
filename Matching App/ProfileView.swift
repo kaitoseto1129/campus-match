@@ -8,22 +8,23 @@
 import SwiftUI
 import PhotosUI
 extension Color {
-    /// アプリのテーマカラー(水色)。以前はbrandBlueという名前で赤系だったが、
-    /// テーマカラー変更に伴いbrandBlueに統合した(値だけでなく参照も全てこちらに揃えている)。
-    static let brandBlue = Color(red: 0.20, green: 0.70, blue: 0.88)
+    /// アプリのテーマカラー。アプリアイコン(紫→ピンクのグラデーション)に合わせている。
+    /// 以前は水色(brandBlue)だったが、アイコンの配色に統一するためbrandPurpleに変更した。
+    static let brandPurple = Color(red: 0.56, green: 0.47, blue: 0.92)
     static let brandNavy = Color(red: 0.10, green: 0.18, blue: 0.40)
-    static let brandPink = Color(red: 0.99, green: 0.55, blue: 0.62)
+    static let brandPink = Color(red: 0.93, green: 0.56, blue: 0.75)
     static let brandTeal = Color(red: 0.20, green: 0.75, blue: 0.68)
     static let brandOrange = Color(red: 0.96, green: 0.62, blue: 0.28)
 
+    /// アプリアイコンと同じ紫→ピンクのグラデーション。
     static let brandGradient = LinearGradient(
-        colors: [Color.brandBlue.opacity(0.9), Color.brandTeal.opacity(0.85)],
+        colors: [Color.brandPurple, Color.brandPink],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let appListBackground = LinearGradient(
-        colors: [Color.brandBlue.opacity(0.14), Color.brandTeal.opacity(0.08), Color(.systemGroupedBackground)],
+        colors: [Color.brandPurple.opacity(0.14), Color.brandPink.opacity(0.10), Color(.systemGroupedBackground)],
         startPoint: .top,
         endPoint: .bottom
     )
@@ -67,7 +68,7 @@ struct ProfileView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(Color.brandBlue)
+            .background(Color.brandPurple)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
         }

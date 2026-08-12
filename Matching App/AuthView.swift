@@ -41,48 +41,114 @@ struct AuthView: View {
         }
         return true
     }
+
     var body: some View {
-        Text("キャンパスマッチ")
-            .font(.largeTitle.bold())
-            .task {
-                await loadValidDomains()
+        ZStack {
+            Color.appListBackground.ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 20) {
+                    header
+                    modeSwitcher
+                    formFields
+                    errorMessages
+                    primaryButton
+
+                    if !isSignUp {
+                        Button {
+                            resetEmail = email
+                            resetErrorMessage = nil
+                            showingForgotPassword = true
+                        } label: {
+                            Text("パスワードをお忘れの方はこちら")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    orDivider
+                    socialLoginButtons
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 40)
+                .padding(.bottom, 40)
             }
-        Text("大学メールアドレスで登録")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+        }
+        .task {
+            await loadValidDomains()
+        }
+        .sheet(isPresented: $showingForgotPassword) {
+            forgotPasswordSheet
+        }
+    }
+
+    private var header: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.brandGradient)
+                    .frame(width: 84, height: 84)
+                    .shadow(color: Color.brandPurple.opacity(0.35), radius: 12, y: 6)
+                Text("CM")
+                    .font(.title.bold())
+                    .foregroundStyle(.white)
+            }
+            Text("キャンパスマッチ")
+                .font(.title2.bold())
+            Text("大学メールアドレスで登録")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.bottom, 8)
+    }
+
+    private var modeSwitcher: some View {
         Picker("", selection: $isSignUp) {
             Text("新規登録").tag(true)
             Text("ログイン").tag(false)
         }
         .pickerStyle(.segmented)
-        .padding(.horizontal, 40)
-        VStack {
+    }
+
+    private var formFields: some View {
+        VStack(spacing: 12) {
             if isSignUp {
                 TextField("表示名", text: $displayName)
+                    .textFieldStyle(.plain)
+                    .padding()
+                    .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
             }
             TextField("メールアドレス", text: $email)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.plain)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .padding()
+                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
             SecureField("パスワード", text: $password)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.plain)
+                .padding()
+                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
         }
-        .padding(.horizontal, 40)
+    }
+
+    @ViewBuilder
+    private var errorMessages: some View {
         if isSignUp && !email.isEmpty && !isEmailDomainValid {
             Text("大学のメールアドレスで登録してください")
                 .font(.caption)
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
         }
         if let error = auth.errorMessage {
             Text(error)
                 .font(.caption)
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
         }
+    }
+
+    private var primaryButton: some View {
         Button {
             Task {
                 if isSignUp {
@@ -93,36 +159,26 @@ struct AuthView: View {
             }
         } label: {
             Text(isSignUp ? "登録する" : "ログイン")
+                .bold()
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(isFormValid ? AnyShapeStyle(Color.brandGradient) : AnyShapeStyle(Color(.systemGray4)))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 27))
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 50)
-        .background(.pink.opacity(isFormValid ? 1: 0.5))
-        .foregroundStyle(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 40)
         .disabled(!isFormValid || auth.isLoading)
+    }
 
-        if !isSignUp {
-            Button {
-                resetEmail = email
-                resetErrorMessage = nil
-                showingForgotPassword = true
-            } label: {
-                Text("パスワードをお忘れの方はこちら")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, 8)
-        }
-
+    private var orDivider: some View {
         HStack {
             Rectangle().fill(Color(.systemGray4)).frame(height: 1)
             Text("または").font(.caption).foregroundStyle(.secondary)
             Rectangle().fill(Color(.systemGray4)).frame(height: 1)
         }
-        .padding(.horizontal, 40)
-        .padding(.top, 16)
+        .padding(.top, 4)
+    }
 
+    private var socialLoginButtons: some View {
         VStack(spacing: 10) {
             socialLoginButton(title: "Googleで続ける", systemImage: "g.circle.fill") {
                 Task { await auth.signInWithOAuth(provider: .google) }
@@ -131,57 +187,54 @@ struct AuthView: View {
                 Task { await auth.signInWithOAuth(provider: .facebook) }
             }
         }
-        .padding(.horizontal, 40)
-        .padding(.top, 10)
         .disabled(auth.isLoading)
+    }
 
-        EmptyView()
-            .sheet(isPresented: $showingForgotPassword) {
-                NavigationStack {
-                    VStack(spacing: 16) {
-                        Text("登録したメールアドレスにパスワード再設定用のリンクを送ります。")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                        TextField("メールアドレス", text: $resetEmail)
-                            .textFieldStyle(.roundedBorder)
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                        if let resetErrorMessage {
-                            Text(resetErrorMessage)
-                                .font(.caption)
-                                .foregroundStyle(.red)
-                        }
-                        Button {
-                            Task { await sendPasswordReset() }
-                        } label: {
-                            Text("再設定メールを送信")
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(.pink.opacity(resetEmail.contains("@") ? 1 : 0.5))
-                                .foregroundStyle(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                        .disabled(!resetEmail.contains("@") || isSendingReset)
-                        Spacer()
-                    }
-                    .padding()
-                    .padding(.top, 24)
-                    .navigationTitle("パスワード再設定")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("閉じる") { showingForgotPassword = false }
-                        }
-                    }
+    private var forgotPasswordSheet: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                Text("登録したメールアドレスにパスワード再設定用のリンクを送ります。")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                TextField("メールアドレス", text: $resetEmail)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                if let resetErrorMessage {
+                    Text(resetErrorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
                 }
-                .alert("送信しました", isPresented: $showingResetSentAlert) {
-                    Button("OK") { showingForgotPassword = false }
-                } message: {
-                    Text("\(resetEmail) にパスワード再設定用のメールを送信しました。届いたメール内のリンクから再設定してください。")
+                Button {
+                    Task { await sendPasswordReset() }
+                } label: {
+                    Text("再設定メールを送信")
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.brandPurple.opacity(resetEmail.contains("@") ? 1 : 0.5))
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .disabled(!resetEmail.contains("@") || isSendingReset)
+                Spacer()
+            }
+            .padding()
+            .padding(.top, 24)
+            .navigationTitle("パスワード再設定")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("閉じる") { showingForgotPassword = false }
                 }
             }
+        }
+        .alert("送信しました", isPresented: $showingResetSentAlert) {
+            Button("OK") { showingForgotPassword = false }
+        } message: {
+            Text("\(resetEmail) にパスワード再設定用のメールを送信しました。届いたメール内のリンクから再設定してください。")
+        }
     }
 
     private func socialLoginButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
@@ -193,9 +246,9 @@ struct AuthView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 48)
-            .background(Color(.systemGray6))
+            .background(Color(.systemBackground))
             .foregroundStyle(.primary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 
@@ -231,5 +284,3 @@ struct AuthView: View {
     AuthView()
         .environmentObject(AuthManager())
 }
-
-

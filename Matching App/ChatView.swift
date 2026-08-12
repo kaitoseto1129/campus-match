@@ -76,7 +76,7 @@ struct ChatView: View {
             }
             .background(
                 LinearGradient(
-                    colors: [Color.brandBlue.opacity(0.08), Color(.systemGroupedBackground)],
+                    colors: [Color.brandPurple.opacity(0.08), Color(.systemGroupedBackground)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -249,7 +249,7 @@ struct ChatView: View {
                         .bold()
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(Color.brandBlue)
+                        .background(Color.brandPurple)
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 28))
                 }
@@ -370,7 +370,7 @@ struct ChatView: View {
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 Image(systemName: "photo")
                     .font(.title2)
-                    .foregroundStyle(Color.brandBlue)
+                    .foregroundStyle(Color.brandPurple)
             }
 
             TextField("メッセージを入力", text: $draftText, axis: .vertical)
@@ -389,7 +389,7 @@ struct ChatView: View {
             } label: {
                 Image(systemName: "paperplane.fill")
                     .font(.title2)
-                    .foregroundStyle(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.brandBlue)
+                    .foregroundStyle(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.brandPurple)
             }
             .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || messageManager.isSending)
         }
@@ -427,7 +427,7 @@ private struct CallRequestBubbleView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(isMine ? Color.brandBlue : Color(.systemGray6))
+                .background(isMine ? Color.brandPurple : Color(.systemGray6))
                 .foregroundStyle(isMine ? .white : .primary)
                 .clipShape(RoundedRectangle(cornerRadius: 18))
 
@@ -437,7 +437,7 @@ private struct CallRequestBubbleView: View {
                             .font(.caption.bold())
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color.brandBlue, in: Capsule())
+                            .background(Color.brandPurple, in: Capsule())
                             .foregroundStyle(.white)
                         Button("今は無理", action: onDecline)
                             .font(.caption.bold())
@@ -510,7 +510,7 @@ private struct MessageBubbleView: View {
                         Text(body)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .background(isMine ? Color.brandBlue : Color(.systemGray6))
+                            .background(isMine ? Color.brandPurple : Color(.systemGray6))
                             .foregroundStyle(isMine ? .white : .primary)
                             .clipShape(RoundedRectangle(cornerRadius: 18))
                             .contextMenu {

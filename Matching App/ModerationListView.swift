@@ -44,7 +44,7 @@ struct ModerationListView: View {
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
-                                    .background(Color.brandBlue, in: Capsule())
+                                    .background(Color.brandPurple, in: Capsule())
                             }
                         }
                         .padding()

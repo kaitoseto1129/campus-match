@@ -10,6 +10,8 @@ import SwiftUI
 struct RootGateView: View {
     @StateObject private var profileManager = ProfileManager()
     @State private var hasLoaded = false
+    /// プロフィール完成後、初回だけプッシュ通知の許可案内を挟むためのフラグ。
+    @AppStorage("hasRequestedNotificationPermission") private var hasRequestedNotificationPermission = false
 
     var body: some View {
         Group {
@@ -18,7 +20,13 @@ struct RootGateView: View {
             } else if let profile = profileManager.profile,
                       profile.isProfileComplete,
                       profileManager.photos.count >= ProfileEditView.minPhotoCount {
-                MainTabView()
+                if !hasRequestedNotificationPermission {
+                    NotificationPermissionView {
+                        hasRequestedNotificationPermission = true
+                    }
+                } else {
+                    MainTabView()
+                }
             } else {
                 ProfileEditView(profileManager: profileManager, isOnboarding: true)
             }

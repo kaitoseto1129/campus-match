@@ -79,7 +79,7 @@ struct PhotoCropperView: View {
                             .bold()
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
-                            .background(Color.brandBlue)
+                            .background(Color.brandPurple)
                             .foregroundStyle(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 28))
                     }

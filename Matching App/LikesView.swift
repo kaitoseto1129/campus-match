@@ -114,7 +114,7 @@ struct LikesView: View {
                     .bold()
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
-                    .background(Color.brandBlue)
+                    .background(Color.brandPurple)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 28))
                 }
@@ -216,7 +216,7 @@ private struct LikeCardView: View {
                     .bold()
                     .frame(maxWidth: .infinity)
                     .frame(height: 40)
-                    .background(Color.brandBlue)
+                    .background(Color.brandPurple)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
             }
@@ -248,7 +248,7 @@ struct ThanksButton: View {
                 .bold()
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(Color.brandBlue)
+                .background(Color.brandPurple)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
         }

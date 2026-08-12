@@ -36,7 +36,7 @@ struct LikesPurchaseSheet: View {
                             .font(.system(size: 40))
                             .foregroundStyle(.white)
                             .frame(width: 76, height: 76)
-                            .background(Color.brandBlue, in: Circle())
+                            .background(Color.brandPurple, in: Circle())
                         Text("いいねを購入")
                             .font(.title3.bold())
                         Text("プランを選んでください(実際の決済はまだ行われません)")
@@ -54,10 +54,10 @@ struct LikesPurchaseSheet: View {
                                 HStack {
                                     ZStack {
                                         Circle()
-                                            .fill(plan.isBestValue ? Color.brandOrange.opacity(0.15) : Color.brandBlue.opacity(0.12))
+                                            .fill(plan.isBestValue ? Color.brandOrange.opacity(0.15) : Color.brandPurple.opacity(0.12))
                                             .frame(width: 46, height: 46)
                                         Image(systemName: plan.icon)
-                                            .foregroundStyle(plan.isBestValue ? Color.brandOrange : Color.brandBlue)
+                                            .foregroundStyle(plan.isBestValue ? Color.brandOrange : Color.brandPurple)
                                     }
                                     VStack(alignment: .leading, spacing: 2) {
                                         HStack(spacing: 6) {

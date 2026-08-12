@@ -105,7 +105,7 @@ struct SentLikesView: View {
             isOnline: sentLike.isOnline,
             commonPoints: sentLike.commonPoints,
             ribbonLabel: sentLike.isMatched ? "マッチ済み" : sentLike.profile.joinBadgeLabel,
-            ribbonColor: sentLike.isMatched ? Color.brandBlue : Color.brandOrange,
+            ribbonColor: sentLike.isMatched ? Color.brandPurple : Color.brandOrange,
             destination: AnyView(
                 SwipeableProfileView(profiles: sentLikesManager.sent.map(\.profile), startIndex: index) { _ in EmptyView() }
             )
@@ -192,8 +192,8 @@ private struct LikeHistoryCardView<Action: View>: View {
                             .font(.caption2.bold())
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
-                            .background(Color.brandBlue.opacity(0.15), in: Capsule())
-                            .foregroundStyle(Color.brandBlue)
+                            .background(Color.brandPurple.opacity(0.15), in: Capsule())
+                            .foregroundStyle(Color.brandPurple)
                     }
                     if let tagline = profile.tagline, !tagline.isEmpty {
                         Text(tagline)
@@ -233,7 +233,7 @@ private struct ThanksActionButton: View {
                 .bold()
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(Color.brandBlue)
+                .background(Color.brandPurple)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 22))
         }

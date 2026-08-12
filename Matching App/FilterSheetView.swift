@@ -158,7 +158,7 @@ struct FilterSheetView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(Color.brandBlue)
+                    .background(Color.brandPurple)
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
                 }
@@ -174,7 +174,7 @@ struct FilterSheetView: View {
                 .foregroundStyle(.primary)
             Spacer()
             Text(value)
-                .foregroundStyle(Color.brandBlue)
+                .foregroundStyle(Color.brandPurple)
                 .lineLimit(1)
             Image(systemName: "chevron.right")
                 .font(.caption)
@@ -241,7 +241,7 @@ private func multiSelectRow(title: String, isSelected: Bool, action: @escaping (
             Spacer()
             if isSelected {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(Color.brandBlue)
+                    .foregroundStyle(Color.brandPurple)
             }
         }
         .contentShape(Rectangle())
@@ -269,7 +269,7 @@ private struct AreaFilterView: View {
                         Text("国")
                         Spacer()
                         Text(draft.areaCountry)
-                            .foregroundStyle(Color.brandBlue)
+                            .foregroundStyle(Color.brandPurple)
                     }
                 }
             }
@@ -290,7 +290,7 @@ private struct AreaFilterView: View {
                                     if let selected = draft.areas.first, region.prefectures.contains(selected) {
                                         Text(selected)
                                             .font(.caption)
-                                            .foregroundStyle(Color.brandBlue)
+                                            .foregroundStyle(Color.brandPurple)
                                     }
                                 }
                             }
@@ -329,7 +329,7 @@ private struct AreaFilterView: View {
                             Text("\(draft.areaCountry)で絞り込む")
                             Spacer()
                             if draft.areas.first == draft.areaCountry {
-                                Image(systemName: "checkmark").foregroundStyle(Color.brandBlue)
+                                Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                             }
                         }
                     }
@@ -489,7 +489,7 @@ private struct UniversityFilterView: View {
                                 if let selected = universities.first(where: { $0.id == draft.universityId }), selected.country == country {
                                     Text(selected.name)
                                         .font(.caption)
-                                        .foregroundStyle(Color.brandBlue)
+                                        .foregroundStyle(Color.brandPurple)
                                         .lineLimit(1)
                                 }
                             }

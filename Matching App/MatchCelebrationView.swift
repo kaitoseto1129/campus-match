@@ -18,7 +18,7 @@ struct MatchCelebrationView: View {
         NavigationStack {
             ZStack {
                 LinearGradient(
-                    colors: [Color(red: 0.99, green: 0.68, blue: 0.66), Color.brandBlue],
+                    colors: [Color(red: 0.99, green: 0.68, blue: 0.66), Color.brandPurple],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -60,7 +60,7 @@ struct MatchCelebrationView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
                             .background(.white)
-                            .foregroundStyle(Color.brandBlue)
+                            .foregroundStyle(Color.brandPurple)
                             .clipShape(Capsule())
                     }
                     .padding(.horizontal, 24)
@@ -91,7 +91,7 @@ struct MatchCelebrationView: View {
         HStack(spacing: 12) {
             Image(systemName: "bubble.left.and.bubble.right.fill")
                 .font(.title3)
-                .foregroundStyle(Color.brandBlue)
+                .foregroundStyle(Color.brandPurple)
                 .padding(10)
                 .background(.white, in: Circle())
             Text("60分以内に最初のメッセージを送るとトークが長続きする傾向にあります")

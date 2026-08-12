@@ -92,7 +92,7 @@ struct MainTabView: View {
                             .font(.system(size: 15))
                             .foregroundStyle(.white)
                             .frame(width: 30, height: 30)
-                            .background(Color.brandBlue, in: Circle())
+                            .background(Color.brandPurple, in: Circle())
                     } else {
                         Image(systemName: icon)
                             .font(.system(size: 21))
@@ -102,11 +102,11 @@ struct MainTabView: View {
                             .font(.system(size: 10).bold())
                             .foregroundStyle(.white)
                             .padding(4)
-                            .background(Color.brandBlue, in: Circle())
+                            .background(Color.brandPurple, in: Circle())
                             .offset(x: 12, y: -8)
                     } else if showDot {
                         Circle()
-                            .fill(Color.brandBlue)
+                            .fill(Color.brandPurple)
                             .frame(width: 9, height: 9)
                             .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 1.5))
                             .offset(x: isHighlighted ? 2 : 9, y: isHighlighted ? -2 : -6)
@@ -116,7 +116,7 @@ struct MainTabView: View {
                 Text(label)
                     .font(.caption2)
             }
-            .foregroundStyle(tabRouter.selectedTab == tab || isHighlighted ? Color.brandBlue : Color(.systemGray))
+            .foregroundStyle(tabRouter.selectedTab == tab || isHighlighted ? Color.brandPurple : Color(.systemGray))
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)

@@ -17,10 +17,10 @@ struct FilterMenuButton: View {
                 Text(isActive ? "絞り込み中" : "絞り込み")
             }
             .font(.subheadline.bold())
-            .foregroundStyle(isActive ? Color.brandBlue : .primary)
+            .foregroundStyle(isActive ? Color.brandPurple : .primary)
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
-            .background(isActive ? Color.brandBlue.opacity(0.12) : Color(.systemGray6), in: Capsule())
+            .background(isActive ? Color.brandPurple.opacity(0.12) : Color(.systemGray6), in: Capsule())
         }
     }
 }

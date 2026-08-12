@@ -60,7 +60,7 @@ struct ChatListView: View {
                                             .font(.caption2.bold())
                                             .foregroundStyle(.white)
                                             .padding(6)
-                                            .background(Color.brandBlue, in: Circle())
+                                            .background(Color.brandPurple, in: Circle())
                                     }
                                 }
                             }
@@ -172,7 +172,7 @@ struct ChatListView: View {
                 .foregroundStyle(isSelected ? .white : .primary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(isSelected ? Color.brandBlue : Color(.systemGray6), in: Capsule())
+                .background(isSelected ? Color.brandPurple : Color(.systemGray6), in: Capsule())
         }
     }
 

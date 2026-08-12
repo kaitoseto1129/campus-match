@@ -103,7 +103,7 @@ private struct FootprintCardView: View {
                     .font(.caption.bold())
                     .frame(maxWidth: .infinity)
                     .frame(height: 32)
-                    .background((didSend || alreadyLiked) ? Color.gray : Color.brandBlue)
+                    .background((didSend || alreadyLiked) ? Color.gray : Color.brandPurple)
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
             }
@@ -162,7 +162,7 @@ private struct FootprintLikeButton: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background((didSend || alreadyLiked) ? Color.gray : Color.brandBlue)
+            .background((didSend || alreadyLiked) ? Color.gray : Color.brandPurple)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
         }

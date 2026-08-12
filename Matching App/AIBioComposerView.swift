@@ -89,7 +89,7 @@ struct AIBioComposerView: View {
                     .font(.subheadline)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(selected ? Color.brandBlue : Color(.systemGray6), in: Capsule())
+                    .background(selected ? Color.brandPurple : Color(.systemGray6), in: Capsule())
                     .foregroundStyle(selected ? .white : .primary)
             }
             .buttonStyle(.plain)

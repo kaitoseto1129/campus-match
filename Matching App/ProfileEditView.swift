@@ -273,7 +273,7 @@ struct ProfileEditView: View {
                 Spacer()
                 Text("\(description.count) / \(Self.minDescriptionLength)文字以上")
                     .font(.caption)
-                    .foregroundStyle(description.count >= Self.minDescriptionLength ? .secondary : Color.brandBlue)
+                    .foregroundStyle(description.count >= Self.minDescriptionLength ? .secondary : Color.brandPurple)
             }
         }
         .id("about")
@@ -674,7 +674,7 @@ struct LanguageMultiSelectView: View {
                                 Spacer()
                                 if selected.contains(language) {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(Color.brandBlue)
+                                        .foregroundStyle(Color.brandPurple)
                                 }
                             }
                         }
@@ -723,7 +723,7 @@ struct NationalityMultiSelectView: View {
                                 Spacer()
                                 if selected.contains(nation) {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(Color.brandBlue)
+                                        .foregroundStyle(Color.brandPurple)
                                 }
                             }
                         }
@@ -771,7 +771,7 @@ struct ResidencePickerView: View {
                         HStack {
                             Text("国")
                             Spacer()
-                            Text(country).foregroundStyle(Color.brandBlue)
+                            Text(country).foregroundStyle(Color.brandPurple)
                         }
                     }
                 }
@@ -790,7 +790,7 @@ struct ResidencePickerView: View {
                                         Text(region.name)
                                         Spacer()
                                         if region.prefectures.contains(area) {
-                                            Text(area).font(.caption).foregroundStyle(Color.brandBlue)
+                                            Text(area).font(.caption).foregroundStyle(Color.brandPurple)
                                         }
                                     }
                                 }
@@ -823,7 +823,7 @@ struct ResidencePickerView: View {
                                 Text(country)
                                 Spacer()
                                 if area == country {
-                                    Image(systemName: "checkmark").foregroundStyle(Color.brandBlue)
+                                    Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                                 }
                             }
                         }
@@ -849,7 +849,7 @@ struct ResidencePickerView: View {
                 Text(value).foregroundStyle(.primary)
                 Spacer()
                 if area == value {
-                    Image(systemName: "checkmark").foregroundStyle(Color.brandBlue)
+                    Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                 }
             }
         }
@@ -883,7 +883,7 @@ private struct CountrySearchView: View {
                             Text(country).foregroundStyle(.primary)
                             Spacer()
                             if selectedCountry == country {
-                                Image(systemName: "checkmark").foregroundStyle(Color.brandBlue)
+                                Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                             }
                         }
                     }
@@ -922,7 +922,7 @@ private struct PrefectureListView: View {
                             Text(option).foregroundStyle(.primary)
                             Spacer()
                             if area == option {
-                                Image(systemName: "checkmark").foregroundStyle(Color.brandBlue)
+                                Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                             }
                         }
                     }
@@ -985,7 +985,7 @@ struct UniversityPickerView: View {
                                 }
                                 Spacer()
                                 if universityId == university.id {
-                                    Image(systemName: "checkmark").foregroundStyle(Color.brandBlue)
+                                    Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                                 }
                             }
                         }

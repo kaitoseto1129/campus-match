@@ -18,7 +18,7 @@ struct DiscoverView: View {
             ZStack(alignment: .top) {
                 // 他の一覧画面より少しだけ色みを強くした、探す画面専用のトップウォッシュ。
                 LinearGradient(
-                    colors: [Color.brandBlue.opacity(0.35), Color.brandTeal.opacity(0.22), Color.brandPink.opacity(0.12), .clear],
+                    colors: [Color.brandPurple.opacity(0.35), Color.brandTeal.opacity(0.22), Color.brandPink.opacity(0.12), .clear],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -38,7 +38,7 @@ struct DiscoverView: View {
                     }
                     Text("\(discoverManager.totalCandidateCount)人")
                         .font(.subheadline.bold())
-                        .foregroundStyle(Color.brandBlue)
+                        .foregroundStyle(Color.brandPurple)
                     Spacer()
                     SortMenuButton(sortOrder: $discoverManager.filter.sortOrder)
                 }
@@ -329,7 +329,7 @@ private struct DiscoverCardView: View {
                     RibbonBadge(text: "アピール中", color: Color.brandOrange)
                         .padding(.top, 10)
                 } else if let badge = profile.joinBadgeLabel {
-                    RibbonBadge(text: badge, color: Color.brandBlue)
+                    RibbonBadge(text: badge, color: Color.brandPurple)
                         .padding(.top, 10)
                 }
             }
@@ -426,7 +426,7 @@ private struct DiscoverLikeButton: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandBlue))
+                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandPurple))
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
             }

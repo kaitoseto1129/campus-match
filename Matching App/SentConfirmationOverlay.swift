@@ -13,7 +13,7 @@ struct SentConfirmationOverlay: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .foregroundStyle(Color.brandBlue)
+                .foregroundStyle(Color.brandPurple)
             Text(message)
                 .font(.subheadline.bold())
         }

@@ -27,7 +27,7 @@ struct MyPageHomeView: View {
                 // 色味が完全に無くなって寂しく見えていたため、ベースを画面全体で色みのあるappListBackgroundにした。
                 Color.appListBackground.ignoresSafeArea()
                 LinearGradient(
-                    colors: [Color.brandBlue.opacity(0.5), Color.brandTeal.opacity(0.28), .clear],
+                    colors: [Color.brandPurple.opacity(0.5), Color.brandTeal.opacity(0.28), .clear],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -51,7 +51,7 @@ struct MyPageHomeView: View {
                                 FootprintsView()
                             }
                             Divider().padding(.leading, 66)
-                            menuRow(icon: "hand.thumbsup.fill", iconColor: Color.brandBlue, title: "いいね!履歴") {
+                            menuRow(icon: "hand.thumbsup.fill", iconColor: Color.brandPurple, title: "いいね!履歴") {
                                 SentLikesView()
                             }
                             Divider().padding(.leading, 66)
@@ -135,7 +135,7 @@ struct MyPageHomeView: View {
                 .font(.subheadline)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
-                .background(Color.brandBlue)
+                .background(Color.brandPurple)
                 .foregroundStyle(.white)
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
@@ -157,10 +157,10 @@ struct MyPageHomeView: View {
                                 Spacer()
                                 Text("\(completeness.percent)%")
                                     .font(.subheadline.bold())
-                                    .foregroundStyle(Color.brandBlue)
+                                    .foregroundStyle(Color.brandPurple)
                             }
                             ProgressView(value: Double(completeness.percent), total: 100)
-                                .tint(Color.brandBlue)
+                                .tint(Color.brandPurple)
                         }
 
                         Divider()
@@ -183,7 +183,7 @@ struct MyPageHomeView: View {
                                     } label: {
                                         Text("編集する")
                                             .font(.caption.bold())
-                                            .foregroundStyle(Color.brandBlue)
+                                            .foregroundStyle(Color.brandPurple)
                                     }
                                 }
                                 .padding(.vertical, 6)
@@ -281,7 +281,7 @@ struct MyPageHomeView: View {
     private var remainingLikesCard: some View {
         HStack(spacing: 4) {
             Image(systemName: "hand.thumbsup.fill")
-                .foregroundStyle(Color.brandBlue)
+                .foregroundStyle(Color.brandPurple)
             Text("残いいね!")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -307,7 +307,7 @@ struct MyPageHomeView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 46)
-            .background(Color.brandBlue)
+            .background(Color.brandPurple)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 23))
         }
@@ -399,7 +399,7 @@ struct MyPageHomeView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Color.brandBlue, in: Capsule())
+                        .background(Color.brandPurple, in: Capsule())
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
