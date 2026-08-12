@@ -40,6 +40,7 @@ extension Color {
 
 struct ProfileView: View {
     @StateObject var profileManager: ProfileManager
+    @EnvironmentObject private var tabRouter: TabRouter
     @State var showEditSheet: Bool = false
     @State private var showingMainPhotoPicker = false
     @State private var pickerItem: PhotosPickerItem?
@@ -87,6 +88,13 @@ struct ProfileView: View {
         .task {
             await profileManager
                 .load()
+        }
+        .onAppear {
+            // タブバーが編集ボタンの上に覆いかぶさって隠してしまっていたため、他の詳細画面同様に隠す。
+            tabRouter.pushDetailScreen()
+        }
+        .onDisappear {
+            tabRouter.popDetailScreen()
         }
         .sheet(isPresented: $showEditSheet){
             ProfileEditView(profileManager: profileManager)

@@ -5,6 +5,7 @@
 
 import SwiftUI
 import PhotosUI
+import Supabase
 
 struct ProfileEditView: View {
     @ObservedObject var profileManager: ProfileManager
@@ -27,7 +28,8 @@ struct ProfileEditView: View {
     @State var smoking: String = unselectedOption
     @State var bodyType: String = unselectedOption
     @State var languages: Set<String> = []
-    @State var replyPace: String = unselectedOption
+    @State var universityId: UUID? = nil
+    @State var universityName: String = ""
     @State var pickerItem: PhotosPickerItem? = nil
     /// 直近でタップした写真スロット(0=メイン, 1〜3=サブ)。pickerItemが確定した時にどこへ入れるか判定するために使う。
     @State var pickerTargetSlot: Int = 0
@@ -46,6 +48,13 @@ struct ProfileEditView: View {
     @State var showingAreaPicker: Bool = false
     @State var showingGenderPicker: Bool = false
     @State var showingHeightPicker: Bool = false
+    @State var showingUniversityPicker: Bool = false
+    @State var showingChangePhotoPicker: Bool = false
+    @State var draggingSlot: Int? = nil
+    /// タップした写真の「変更する/削除する」メニューを出す対象スロット。
+    @State var photoActionSlot: Int? = nil
+    /// 「画像を変更する」で置き換える対象。新しい写真の登録が成功したら、この古い写真を削除する。
+    @State var photoToReplace: ProfilePhoto? = nil
 
     /// 写真をトリミング画面に渡し、ユーザーが決定した範囲だけを切り出した画像を返す(キャンセル時はnil)。
     func presentCropper(for image: UIImage) async -> UIImage? {
@@ -95,7 +104,7 @@ struct ProfileEditView: View {
         Group {
             Section("メイン写真(必須)") {
                 if let mainPhoto = photo(forSlot: 0) {
-                    editablePhotoCell(mainPhoto)
+                    editablePhotoCell(mainPhoto, slot: 0)
                         .frame(width: 100, height: 100)
                 } else {
                     emptyPhotoSlot(label: "メイン写真を追加", slot: 0)
@@ -111,13 +120,13 @@ struct ProfileEditView: View {
                 LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(1..<Self.minPhotoCount, id: \.self) { slot in
                         if let subPhoto = photo(forSlot: slot) {
-                            editablePhotoCell(subPhoto)
+                            editablePhotoCell(subPhoto, slot: slot)
                         } else {
                             emptyPhotoSlot(label: "サブ\(slot)", slot: slot)
                         }
                     }
                 }
-                Text("メインより先に、この3枚から登録しても大丈夫です")
+                Text("メインより先に、この3枚から登録しても大丈夫です。写真をドラッグすると並び替えられます")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -143,9 +152,14 @@ struct ProfileEditView: View {
                 }
         }
         .simultaneousGesture(TapGesture().onEnded { pickerTargetSlot = slot })
+        .dropDestination(for: String.self) { items, _ in
+            guard let sourceSlot = items.first.flatMap(Int.init) else { return false }
+            Task { await profileManager.swapPhotos(at: sourceSlot, and: slot) }
+            return true
+        }
     }
-    func editablePhotoCell(_ photo: ProfilePhoto) -> some View {
-        ZStack(alignment: .topTrailing) {
+    func editablePhotoCell(_ photo: ProfilePhoto, slot: Int) -> some View {
+        ZStack(alignment: .topLeading) {
             AsyncImage(url: photo.url) { image in
                 image.resizable().scaledToFill()
             } placeholder: {
@@ -163,28 +177,15 @@ struct ProfileEditView: View {
                     .background(.black.opacity(0.2))
                     .padding(6)
             }
-            Button {
-                Task {
-                    await profileManager.deletePhoto(photo: photo)
-                }
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.white, .black.opacity(0.3))
-                    .font(.title3)
-            }
-            .buttonStyle(.plain)
         }
         .frame(height: 80)
-        .contextMenu {
-            if !photo.isMain {
-                Button {
-                    Task {
-                        await profileManager.makeMain(photo:photo)
-                    }
-                } label: {
-                    Label("メインにする",systemImage: "star")
-                }
-            }
+        .contentShape(Rectangle())
+        .onTapGesture { photoActionSlot = slot }
+        .draggable(String(slot))
+        .dropDestination(for: String.self) { items, _ in
+            guard let sourceSlot = items.first.flatMap(Int.init) else { return false }
+            Task { await profileManager.swapPhotos(at: sourceSlot, and: slot) }
+            return true
         }
     }
 
@@ -205,13 +206,29 @@ struct ProfileEditView: View {
         .buttonStyle(.plain)
     }
 
+    /// タイトルを常時表示のラベルにして、値だけをその場で編集できる行。
+    /// (以前はプレースホルダーが入力すると消えてしまい、何の項目か分かりづらかった)
+    private func labeledTextField(title: String, text: Binding<String>, placeholder: String) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(.primary)
+            Spacer()
+            TextField(placeholder, text: text)
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(.secondary)
+        }
+    }
+
     var basicSection: some View {
         Section {
-            TextField("ニックネーム(必須)", text: $name)
-            TextField("専攻(任意)", text: $major)
+            labeledTextField(title: "ニックネーム(必須)", text: $name, placeholder: "未入力")
+            labeledTextField(title: "専攻(任意)", text: $major, placeholder: "未入力")
             formRow(title: "誕生日(必須)", value: birthdayLabel) { showingBirthdayPicker = true }
             formRow(title: "性別(必須)", value: gender.label) { showingGenderPicker = true }
             formRow(title: "居住地(必須)", value: area.isEmpty ? "-" : area) { showingAreaPicker = true }
+            formRow(title: "大学(必須)", value: universityName.isEmpty ? "選択してください" : universityName) {
+                showingUniversityPicker = true
+            }
             formRow(title: "身長(必須)", value: height.map { "\($0)cm" } ?? "選択してください") { showingHeightPicker = true }
             formRow(title: "国籍(任意・複数選択可)", value: nationalities.isEmpty ? "-" : nationalities.sorted().joined(separator: "・")) {
                 showingNationalityPicker = true
@@ -237,9 +254,6 @@ struct ProfileEditView: View {
             }
             Picker("体型", selection: $bodyType) {
                 ForEach(bodyTypeOptions, id: \.self) { Text($0).tag($0) }
-            }
-            Picker("返信ペース", selection: $replyPace) {
-                ForEach(replyPaceOptions, id: \.self) { Text($0).tag($0) }
             }
             formRow(title: "話せる言語", value: languages.isEmpty ? "-" : languages.sorted().joined(separator: "・")) {
                 showingLanguagePicker = true
@@ -316,13 +330,18 @@ struct ProfileEditView: View {
                 self.smoking = profile.smoking ?? unselectedOption
                 self.bodyType = profile.bodyType ?? unselectedOption
                 self.languages = Set(profile.languages)
-                self.replyPace = profile.replyPace ?? unselectedOption
+                self.universityId = profile.universityId
+                self.universityName = profileManager.university?.name ?? ""
             } else if area.isEmpty {
                 area = prefectures.first ?? ""
             }
         }
         .onChange(of: pickerItem) {oldValue, newValue in
             let targetSlot = pickerTargetSlot
+            // 「画像を変更する」経由の場合だけ設定されている、置き換え対象の古い写真。
+            // 後続の別の追加操作に誤って引き継がれないよう、ここで一旦取り出してリセットする。
+            let oldPhotoToReplace = photoToReplace
+            photoToReplace = nil
             Task {
                 guard let newValue, let data = try? await newValue.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
                     pickerItem = nil
@@ -345,6 +364,12 @@ struct ProfileEditView: View {
                         showingFaceCheckAlert = true
                         return
                     }
+                }
+                // 置き換えの場合は先に古い写真を消してから登録する。
+                // (先に新しい写真を同じスロットへ追加すると、一時的に同じスロットの写真が2枚になり、
+                // 削除時の並び直し処理でスロットがズレてしまうため)
+                if let oldPhotoToReplace {
+                    await profileManager.deletePhoto(photo: oldPhotoToReplace)
                 }
                 await profileManager.addPhoto(image: croppedImage, atSlot: targetSlot)
                 // addPhoto失敗時はerrorMessageが立つだけで画面に何も表示されず、
@@ -383,6 +408,33 @@ struct ProfileEditView: View {
         .sheet(isPresented: $showingHeightPicker) {
             HeightPickerView(height: $height)
         }
+        .sheet(isPresented: $showingUniversityPicker) {
+            UniversityPickerView(universityId: $universityId, universityName: $universityName, area: area)
+        }
+        .confirmationDialog("写真を編集", isPresented: Binding(
+            get: { photoActionSlot != nil },
+            set: { if !$0 { photoActionSlot = nil } }
+        ), titleVisibility: .visible) {
+            Button("画像を変更する") {
+                if let slot = photoActionSlot {
+                    pickerTargetSlot = slot
+                    photoToReplace = photo(forSlot: slot)
+                    showingChangePhotoPicker = true
+                }
+            }
+            if let slot = photoActionSlot, slot != 0, let target = photo(forSlot: slot) {
+                Button("メインにする") {
+                    Task { await profileManager.makeMain(photo: target) }
+                }
+            }
+            if let slot = photoActionSlot, let target = photo(forSlot: slot) {
+                Button("削除する", role: .destructive) {
+                    Task { await profileManager.deletePhoto(photo: target) }
+                }
+            }
+            Button("キャンセル", role: .cancel) {}
+        }
+        .photosPicker(isPresented: $showingChangePhotoPicker, selection: $pickerItem, matching: .images)
         .sheet(isPresented: $showingAIComposer) {
             AIBioComposerView { generated in
                 description = generated
@@ -433,7 +485,7 @@ struct ProfileEditView: View {
         let base = profileManager.profile
         return Profile(
             id: base?.id ?? UUID(),
-            universityId: base?.universityId ?? UUID(),
+            universityId: universityId ?? base?.universityId ?? UUID(),
             name: name,
             description: description,
             gender: gender,
@@ -455,7 +507,6 @@ struct ProfileEditView: View {
             smoking: smoking,
             bodyType: bodyType,
             languages: Array(languages),
-            replyPace: replyPace,
             boostExpiresAtString: base?.boostExpiresAtString,
             createdAtString: base?.createdAtString
         )
@@ -487,8 +538,13 @@ struct ProfileEditView: View {
             showingValidationAlert = true
             return
         }
+        guard let universityId else {
+            validationMessage = "大学を選択してください"
+            showingValidationAlert = true
+            return
+        }
         Task {
-            let suceeded = await profileManager.save(name: name, description: description, gender: gender, birthday: birthday, area: area, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), replyPace: replyPace)
+            let suceeded = await profileManager.save(name: name, description: description, gender: gender, birthday: birthday, area: area, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), universityId: universityId)
             if suceeded {
                 dismiss()
                 await profileManager.load()
@@ -861,6 +917,91 @@ private struct PrefectureListView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// 大学の選択画面。選んだ居住地(都道府県/州)にある大学を優先的に表示しつつ、検索も常にできるようにする。
+struct UniversityPickerView: View {
+    @Binding var universityId: UUID?
+    @Binding var universityName: String
+    let area: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var universities: [University] = []
+    @State private var searchText = ""
+
+    private var relevantUniversities: [University] {
+        let matches = universities.filter { $0.prefecture == area }
+        return matches.isEmpty ? universities : matches
+    }
+    private var filtered: [University] {
+        searchText.isEmpty ? relevantUniversities : universities.filter { $0.name.contains(searchText) }
+    }
+    private var isFilteredByArea: Bool {
+        searchText.isEmpty && relevantUniversities.count < universities.count
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    TextField("大学名で検索", text: $searchText)
+                }
+                if isFilteredByArea {
+                    Section {
+                        Text("居住地(\(area))に合わせて絞り込んでいます。他の大学は検索してください")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Section {
+                    ForEach(filtered) { university in
+                        Button {
+                            universityId = university.id
+                            universityName = university.name
+                            dismiss()
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(university.name)
+                                        .foregroundStyle(.primary)
+                                    Text(university.country)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if universityId == university.id {
+                                    Image(systemName: "checkmark").foregroundStyle(Color.brandBlue)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .navigationTitle("大学")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("キャンセル") { dismiss() }
+                }
+            }
+            .task {
+                await load()
+            }
+        }
+    }
+
+    private func load() async {
+        do {
+            universities = try await supabase()
+                .from("universities")
+                .select("*")
+                .order("name", ascending: true)
+                .execute()
+                .value
+        } catch {
+            print("university list load error: \(error)")
+        }
     }
 }
 

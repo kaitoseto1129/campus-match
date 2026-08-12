@@ -35,6 +35,21 @@ class ProfileManager: ObservableObject {
         reordered.insert(movedPhoto, at: 0)
         await reorder(newOrder: reordered)
     }
+    /// 写真をドラッグ&ドロップした時に、2つのスロットの表示位置(order_number)だけを入れ替える。
+    func swapPhotos(at slotA: Int, and slotB: Int) async {
+        guard slotA != slotB, let photoA = photos.first(where: { $0.orderNumber == slotA }) else { return }
+        let photoB = photos.first(where: { $0.orderNumber == slotB })
+        do {
+            try await supabase().from("profile_photos").update(["order_number": -1]).eq("id", value: photoA.id).execute()
+            if let photoB {
+                try await supabase().from("profile_photos").update(["order_number": slotA]).eq("id", value: photoB.id).execute()
+            }
+            try await supabase().from("profile_photos").update(["order_number": slotB]).eq("id", value: photoA.id).execute()
+            await loadPhotos()
+        } catch {
+            print("swap photos error: \(error)")
+        }
+    }
     func load() async {
         guard let uid = supabase().auth.currentUser?.id else {return}
         isLoading = true
@@ -188,7 +203,7 @@ class ProfileManager: ObservableObject {
             print("university load error: \(error)")
         }
     }
-    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, height: Int, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], replyPace: String) async -> Bool{
+    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, height: Int, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
         guard let uid = supabase().auth.currentUser?.id else { return false}
         isLoading = true
         defer { isLoading = false }
@@ -209,11 +224,11 @@ class ProfileManager: ObservableObject {
             let smoking: String
             let bodyType: String
             let languages: [String]
-            let replyPace: String
+            let universityId: UUID
             enum CodingKeys: String, CodingKey {
                 case name, description, gender, birthday, area, height, major, nationality, nationalities, tagline, drinking, smoking, languages
                 case bodyType = "body_type"
-                case replyPace = "reply_pace"
+                case universityId = "university_id"
             }
         }
 
@@ -239,7 +254,7 @@ class ProfileManager: ObservableObject {
             smoking: smoking,
             bodyType: bodyType,
             languages: languages,
-            replyPace: replyPace
+            universityId: universityId
         )
 
         do {
@@ -283,7 +298,7 @@ class ProfileManager: ObservableObject {
     static var preview: ProfileManager {
         let manager = ProfileManager()
         let uid = UUID()
-        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], replyPace: "すぐ返す", boostExpiresAtString: nil, createdAtString: nil)
+        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], boostExpiresAtString: nil, createdAtString: nil)
         manager.university = University(id: UUID(), name: "サンプル大学", domain: "example.ac.jp", country: "日本", prefecture: "東京都")
 
             manager.photos = [

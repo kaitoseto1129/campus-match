@@ -179,8 +179,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
             Divider()
             infoRow(label: "大学", value: university?.name ?? "-")
             Divider()
-            infoRow(label: "返信ペース", value: profile?.replyPace ?? "-")
-            Divider()
             infoRow(label: "お酒", value: profile?.drinking ?? "-")
             Divider()
             infoRow(label: "タバコ", value: profile?.smoking ?? "-")
