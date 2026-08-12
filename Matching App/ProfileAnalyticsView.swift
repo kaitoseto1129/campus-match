@@ -19,7 +19,7 @@ struct ProfileAnalyticsView: View {
             }
             .padding()
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appListBackground.ignoresSafeArea())
         .navigationTitle("プロフィール分析")
         .navigationBarTitleDisplayMode(.inline)
         .task {

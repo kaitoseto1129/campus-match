@@ -220,8 +220,9 @@ private struct ThanksActionButton: View {
 
     var body: some View {
         Button {
+            guard !isSending else { return }
+            isSending = true
             Task {
-                isSending = true
                 if let match = await likesManager.sendThanks(for: received.like) {
                     matchManager.presentCelebrationImmediately(match: match, profile: received.profile, photoURL: received.photoURL)
                 }
@@ -259,8 +260,11 @@ private struct SentReminderButton: View {
                     .clipShape(RoundedRectangle(cornerRadius: 22))
             } else {
                 Button {
+                    // Task{}内で最初にisSendingを立てると、その反映より先に連打が処理されてしまう
+                    // (=何度でも押せてしまう)ことがあったため、タップの時点で同期的に立てる。
+                    guard !isSending else { return }
+                    isSending = true
                     Task {
-                        isSending = true
                         let success = await sentLikesManager.sendReminder(to: sentLike.profile.id)
                         isSending = false
                         if success {

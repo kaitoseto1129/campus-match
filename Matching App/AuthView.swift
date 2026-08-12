@@ -114,6 +114,27 @@ struct AuthView: View {
             }
             .padding(.top, 8)
         }
+
+        HStack {
+            Rectangle().fill(Color(.systemGray4)).frame(height: 1)
+            Text("または").font(.caption).foregroundStyle(.secondary)
+            Rectangle().fill(Color(.systemGray4)).frame(height: 1)
+        }
+        .padding(.horizontal, 40)
+        .padding(.top, 16)
+
+        VStack(spacing: 10) {
+            socialLoginButton(title: "Googleで続ける", systemImage: "g.circle.fill") {
+                Task { await auth.signInWithOAuth(provider: .google) }
+            }
+            socialLoginButton(title: "Facebookで続ける", systemImage: "f.circle.fill") {
+                Task { await auth.signInWithOAuth(provider: .facebook) }
+            }
+        }
+        .padding(.horizontal, 40)
+        .padding(.top, 10)
+        .disabled(auth.isLoading)
+
         EmptyView()
             .sheet(isPresented: $showingForgotPassword) {
                 NavigationStack {
@@ -161,6 +182,21 @@ struct AuthView: View {
                     Text("\(resetEmail) にパスワード再設定用のメールを送信しました。届いたメール内のリンクから再設定してください。")
                 }
             }
+    }
+
+    private func socialLoginButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: systemImage)
+                Text(title)
+                    .bold()
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            .background(Color(.systemGray6))
+            .foregroundStyle(.primary)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
     }
 
     private func sendPasswordReset() async {

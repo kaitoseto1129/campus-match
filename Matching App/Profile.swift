@@ -40,7 +40,10 @@ struct Profile: Codable, Identifiable {
         return "\(height)cm"
     }
     let major: String?
+    /// 旧・単一選択の国籍。表示のフォールバック用に残しているが、編集・絞り込みはnationalitiesを使う。
     let nationality: String?
+    /// 複数国籍を持つユーザーにも対応した、国籍の複数選択。
+    let nationalities: [String]
     let tagline: String?
     let showLikeCount: Bool
     let remainingLikes: Int
@@ -53,7 +56,6 @@ struct Profile: Codable, Identifiable {
     let bodyType: String?
     let languages: [String]
     let replyPace: String?
-    let replyTime: String?
     let boostExpiresAtString: String?
     var boostExpiresAt: Date? {
         guard let boostExpiresAtString else { return nil }
@@ -74,7 +76,7 @@ struct Profile: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, description, gender, birthday, area, height, major, nationality, tagline
+        case id, name, description, gender, birthday, area, height, major, nationality, nationalities, tagline
         case profileImageUrlString = "profile_image_url"
         case universityId = "university_id"
         case showLikeCount = "show_like_count"
@@ -87,7 +89,6 @@ struct Profile: Codable, Identifiable {
         case bodyType = "body_type"
         case languages
         case replyPace = "reply_pace"
-        case replyTime = "reply_time"
         case boostExpiresAtString = "boost_expires_at"
         case createdAtString = "created_at"
     }
@@ -112,23 +113,21 @@ extension Profile {
         check("写真\(ProfileEditView.minPhotoCount)枚以上", photoCount >= ProfileEditView.minPhotoCount)
         check("一言コメント", !(tagline ?? "").isEmpty)
         check("専攻", !(major ?? "").isEmpty)
-        check("写真6枚以上", photoCount >= 6)
         check("自己紹介200文字以上", (description ?? "").count >= 200)
         let percent = total == 0 ? 0 : Int((Double(done) / Double(total) * 100).rounded())
         return ProfileCompleteness(percent: percent, missingLabels: missing)
     }
 
-    /// 相手との共通点の数を簡易的に算出する(居住地・国籍・お酒・タバコ・体型・返信ペース・時間帯・話せる言語)。
+    /// 相手との共通点の数を簡易的に算出する(居住地・国籍・お酒・タバコ・体型・返信ペース・話せる言語)。
     /// いいね履歴画面の「共通点N」バッジ表示に使う。
     func commonPointsCount(with other: Profile) -> Int {
         var count = 0
         if area == other.area { count += 1 }
-        if let nationality, nationality == other.nationality { count += 1 }
+        if !Set(nationalities).isDisjoint(with: Set(other.nationalities)) { count += 1 }
         if let drinking, drinking == other.drinking { count += 1 }
         if let smoking, smoking == other.smoking { count += 1 }
         if let bodyType, bodyType == other.bodyType { count += 1 }
         if let replyPace, replyPace == other.replyPace { count += 1 }
-        if let replyTime, replyTime == other.replyTime { count += 1 }
         if !Set(languages).isDisjoint(with: Set(other.languages)) { count += 1 }
         return count
     }
@@ -164,6 +163,8 @@ struct University: Codable, Identifiable {
     let name: String
     let domain: String
     let country: String
+    /// 都道府県(日本)または州(アメリカ)。データが無い大学ではnil。
+    let prefecture: String?
 }
 enum Gender: String, Codable {
     case male, female
@@ -228,7 +229,6 @@ let drinkingOptions: [String] = [unselectedOption, "飲む", "時々飲む", "�
 let smokingOptions: [String] = [unselectedOption, "吸わない", "禁煙中", "たまに吸う", "吸う"]
 let bodyTypeOptions: [String] = [unselectedOption, "スリム", "やや細め", "普通", "グラマー", "筋肉質", "ややぽっちゃり", "太め"]
 let replyPaceOptions: [String] = [unselectedOption, "すぐ返す", "まあまあ返す", "たまに返す"]
-let replyTimeOptions: [String] = [unselectedOption, "朝型", "昼型", "夜型", "深夜型"]
 /// 話せる言語。検索して選べるよう、以前より幅広い選択肢を用意している。
 let languageOptions: [String] = [
     "日本語", "英語", "中国語", "韓国語", "フランス語", "スペイン語", "ドイツ語",

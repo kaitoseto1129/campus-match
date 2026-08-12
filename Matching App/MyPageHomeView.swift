@@ -23,9 +23,11 @@ struct MyPageHomeView: View {
     var body: some View {
         NavigationStack(path: $navPath) {
             ZStack(alignment: .top) {
-                Color(.systemGroupedBackground).ignoresSafeArea()
+                // 以前は上部260pt分にしかグラデーションが無く、スクロールして設定欄あたりまで来ると
+                // 色味が完全に無くなって寂しく見えていたため、ベースを画面全体で色みのあるappListBackgroundにした。
+                Color.appListBackground.ignoresSafeArea()
                 LinearGradient(
-                    colors: [Color.brandBlue.opacity(0.5), Color.brandTeal.opacity(0.28), Color(.systemGroupedBackground)],
+                    colors: [Color.brandBlue.opacity(0.5), Color.brandTeal.opacity(0.28), .clear],
                     startPoint: .top,
                     endPoint: .bottom
                 )

@@ -52,6 +52,12 @@ class ProfileManager: ObservableObject {
         }
     }
     func addPhoto(image: UIImage) async {
+        await addPhoto(image: image, atSlot: photos.count)
+    }
+
+    /// 指定したスロット(0=メイン, 1〜3=サブ)に直接写真を登録する。
+    /// メインが空でもサブから先に埋められるように、常に「次の空き」ではなく指定スロットへ入れる。
+    func addPhoto(image: UIImage, atSlot slot: Int) async {
         guard let data = image.resized(maxDimension: 1080).jpegData(compressionQuality: 0.8) else {return }
         guard let uid = supabase().auth.currentUser?.id else {return}
         let commonId = UUID()
@@ -61,9 +67,9 @@ class ProfileManager: ObservableObject {
         do {
             try await supabase().storage.from("profile_photos").upload(filePath, data: data, options: FileOptions(contentType: "image/jpeg"))
             let url = try await supabase().storage.from("profile_photos").getPublicURL(path: filePath)
-            let newPhoto = ProfilePhoto(id: commonId, userId: uid, urlString: url.absoluteString, orderNumber: photos.count)
+            let newPhoto = ProfilePhoto(id: commonId, userId: uid, urlString: url.absoluteString, orderNumber: slot)
             try await supabase().from("profile_photos").insert([newPhoto]).execute()
-            try await loadPhotos()
+            await loadPhotos()
         } catch {
             errorMessage = "写真の保存に失敗しました"
             print("photo upload error: \(error)")
@@ -182,7 +188,7 @@ class ProfileManager: ObservableObject {
             print("university load error: \(error)")
         }
     }
-    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, height: Int, major: String, nationality: String, tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], replyPace: String, replyTime: String) async -> Bool{
+    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, height: Int, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], replyPace: String) async -> Bool{
         guard let uid = supabase().auth.currentUser?.id else { return false}
         isLoading = true
         defer { isLoading = false }
@@ -197,18 +203,17 @@ class ProfileManager: ObservableObject {
             let height: Int
             let major: String
             let nationality: String
+            let nationalities: [String]
             let tagline: String
             let drinking: String
             let smoking: String
             let bodyType: String
             let languages: [String]
             let replyPace: String
-            let replyTime: String
             enum CodingKeys: String, CodingKey {
-                case name, description, gender, birthday, area, height, major, nationality, tagline, drinking, smoking, languages
+                case name, description, gender, birthday, area, height, major, nationality, nationalities, tagline, drinking, smoking, languages
                 case bodyType = "body_type"
                 case replyPace = "reply_pace"
-                case replyTime = "reply_time"
             }
         }
 
@@ -226,14 +231,15 @@ class ProfileManager: ObservableObject {
             area: area,
             height: height,
             major: major,
-            nationality: nationality,
+            // 旧・単一nationality列は表示フォールバック用に、複数選択の先頭値だけ入れておく。
+            nationality: nationalities.first ?? "",
+            nationalities: nationalities,
             tagline: tagline,
             drinking: drinking,
             smoking: smoking,
             bodyType: bodyType,
             languages: languages,
-            replyPace: replyPace,
-            replyTime: replyTime
+            replyPace: replyPace
         )
 
         do {
@@ -277,8 +283,8 @@ class ProfileManager: ObservableObject {
     static var preview: ProfileManager {
         let manager = ProfileManager()
         let uid = UUID()
-        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", height: 165, major: "情報科学", nationality: "日本", tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], replyPace: "すぐ返す", replyTime: "夜型", boostExpiresAtString: nil, createdAtString: nil)
-        manager.university = University(id: UUID(), name: "サンプル大学", domain: "example.ac.jp", country: "日本")
+        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], replyPace: "すぐ返す", boostExpiresAtString: nil, createdAtString: nil)
+        manager.university = University(id: UUID(), name: "サンプル大学", domain: "example.ac.jp", country: "日本", prefecture: "東京都")
 
             manager.photos = [
               ProfilePhoto(id: UUID(), userId: uid, urlString: "https://picsum.photos/seed/1/400", orderNumber: 1),

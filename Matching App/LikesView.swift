@@ -9,6 +9,7 @@ struct LikesView: View {
     @StateObject private var likesManager = LikesManager()
     @StateObject private var profileManager = ProfileManager()
     @EnvironmentObject private var tabRouter: TabRouter
+    @EnvironmentObject private var notificationManager: NotificationCenterManager
     @State private var showingFilterSheet = false
     @State private var navPath = NavigationPath()
 
@@ -61,6 +62,9 @@ struct LikesView: View {
             }
             .onChange(of: tabRouter.popToRootTokens[.likes]) { _, _ in
                 navPath = NavigationPath()
+            }
+            .onChange(of: likesManager.received.count) { _, _ in
+                Task { await notificationManager.refreshPendingLikesCount() }
             }
         }
     }

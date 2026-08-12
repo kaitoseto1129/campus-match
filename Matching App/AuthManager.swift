@@ -43,6 +43,24 @@ final class AuthManager : ObservableObject {
         }
         isLoading = false
     }
+    /// GoogleやFacebookなどのOAuthプロバイダでサインイン/サインアップする。
+    /// 動作させるには、(1)各社の開発者コンソールでのアプリ登録、(2)Supabase Dashboard > Authentication >
+    /// ProvidersでのクライアントID/シークレット登録、(3)Xcode側でこのリダイレクトURLスキーム(campusmatch)を
+    /// URL Typesに追加、の3つが別途必要。未設定の間はここでエラーになる。
+    func signInWithOAuth(provider: Provider) async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            guard let redirectURL = URL(string: "campusmatch://login-callback") else { return }
+            try await supabase().auth.signInWithOAuth(provider: provider, redirectTo: redirectURL)
+            await checkSession()
+        } catch {
+            errorMessage = "\(provider.rawValue.capitalized)ログインに失敗しました。提供者の設定が完了していない可能性があります。"
+            print("oauth sign in error (\(provider)): \(error)")
+        }
+        isLoading = false
+    }
+
     func signUp(email: String, password: String, displayName: String) async {
         isLoading = true
         errorMessage = nil

@@ -8,13 +8,15 @@ import SwiftUI
 private struct LikePlan: Identifiable {
     let likes: Int
     let priceYen: Int
+    let icon: String
+    let isBestValue: Bool
     var id: Int { likes }
 }
 
 private let likePlans: [LikePlan] = [
-    LikePlan(likes: 10, priceYen: 1_000),
-    LikePlan(likes: 50, priceYen: 5_000),
-    LikePlan(likes: 100, priceYen: 10_000),
+    LikePlan(likes: 10, priceYen: 1_000, icon: "hand.thumbsup.fill", isBestValue: false),
+    LikePlan(likes: 50, priceYen: 5_000, icon: "hand.thumbsup.fill", isBestValue: false),
+    LikePlan(likes: 100, priceYen: 10_000, icon: "star.fill", isBestValue: true),
 ]
 
 /// いいね購入時に、金額の異なる複数プランから選べるシート。
@@ -27,47 +29,79 @@ struct LikesPurchaseSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                Text("いいねを購入")
-                    .font(.title3.bold())
-                    .padding(.top, 12)
-                Text("プランを選んでください(実際の決済はまだ行われません)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                VStack(spacing: 12) {
-                    ForEach(likePlans) { plan in
-                        Button {
-                            Task { await purchase(plan) }
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("\(plan.likes)いいね")
-                                        .font(.headline)
-                                    Text("¥\(plan.priceYen.formatted())")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                if purchasingLikes == plan.likes {
-                                    ProgressView()
-                                } else {
-                                    Image(systemName: "chevron.right")
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(purchasingLikes != nil)
+            ScrollView {
+                VStack(spacing: 20) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "hand.thumbsup.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(.white)
+                            .frame(width: 76, height: 76)
+                            .background(Color.brandBlue, in: Circle())
+                        Text("いいねを購入")
+                            .font(.title3.bold())
+                        Text("プランを選んでください(実際の決済はまだ行われません)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     }
-                }
-                .padding(.horizontal)
+                    .padding(.top, 12)
 
-                Spacer()
+                    VStack(spacing: 12) {
+                        ForEach(likePlans) { plan in
+                            Button {
+                                Task { await purchase(plan) }
+                            } label: {
+                                HStack {
+                                    ZStack {
+                                        Circle()
+                                            .fill(plan.isBestValue ? Color.brandOrange.opacity(0.15) : Color.brandBlue.opacity(0.12))
+                                            .frame(width: 46, height: 46)
+                                        Image(systemName: plan.icon)
+                                            .foregroundStyle(plan.isBestValue ? Color.brandOrange : Color.brandBlue)
+                                    }
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack(spacing: 6) {
+                                            Text("\(plan.likes)いいね")
+                                                .font(.headline)
+                                            if plan.isBestValue {
+                                                Text("お得")
+                                                    .font(.caption2.bold())
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 2)
+                                                    .background(Color.brandOrange, in: Capsule())
+                                                    .foregroundStyle(.white)
+                                            }
+                                        }
+                                        Text("¥\(plan.priceYen.formatted())")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    if purchasingLikes == plan.likes {
+                                        ProgressView()
+                                    } else {
+                                        Image(systemName: "chevron.right")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding()
+                                .background(Color(.systemBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(plan.isBestValue ? Color.brandOrange.opacity(0.5) : Color.clear, lineWidth: 2)
+                                }
+                                .shadow(color: .black.opacity(0.05), radius: 6, y: 3)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(purchasingLikes != nil)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.bottom, 20)
             }
+            .background(Color.appListBackground.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

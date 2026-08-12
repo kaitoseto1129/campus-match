@@ -74,6 +74,14 @@ struct ChatView: View {
                 }
                 .padding()
             }
+            .background(
+                LinearGradient(
+                    colors: [Color.brandBlue.opacity(0.08), Color(.systemGroupedBackground)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            )
             .onChange(of: messageManager.messages.last?.id) { _, newLastId in
                 // 末尾のIDが変わった時(=新着メッセージ)だけ自動スクロールする。
                 // 過去メッセージの先頭への追加(loadOlderMessages)では末尾は変わらないため発火しない。
@@ -102,25 +110,24 @@ struct ChatView: View {
 
     @ToolbarContentBuilder
     private var chatToolbar: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
+        // カスタムのsafeAreaInsetヘッダーだと、ナビゲーションバーとの重なり方によっては
+        // 名前・年齢が見えなくなることがあったため、確実に表示されるOS標準のprincipalスロットを使う。
+        ToolbarItem(placement: .principal) {
             Button {
                 showingProfile = true
             } label: {
                 HStack(spacing: 8) {
-                    IconImage(url: otherPhotoURL, size: 32)
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    IconImage(url: otherPhotoURL, size: 30)
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(otherProfile.name)
                             .font(.subheadline.bold())
                             .lineLimit(1)
                         Text(otherProfile.ageLabel)
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .layoutPriority(-1)
                     }
-                    .foregroundStyle(.primary)
-                    .minimumScaleFactor(0.85)
                 }
+                .foregroundStyle(.primary)
             }
             .buttonStyle(.plain)
         }

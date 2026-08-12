@@ -7,6 +7,7 @@ import SwiftUI
 
 struct DiscoverView: View {
     @StateObject private var discoverManager = DiscoverManager()
+    @StateObject private var missionsManager = DailyMissionsManager()
     @EnvironmentObject private var tabRouter: TabRouter
     @State private var showingFilterSheet = false
     @State private var showingMissions = false
@@ -90,19 +91,30 @@ struct DiscoverView: View {
                     Button {
                         showingMissions = true
                     } label: {
-                        Image(systemName: "checklist")
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "list.bullet.clipboard.fill")
+                            if missionsManager.hasClaimableMission {
+                                Circle()
+                                    .fill(Color.brandOrange)
+                                    .frame(width: 9, height: 9)
+                                    .offset(x: 8, y: -6)
+                            }
+                        }
                     }
                 }
             }
             .task {
                 await discoverManager.load()
+                await missionsManager.load()
             }
             .sheet(isPresented: $showingFilterSheet) {
                 FilterSheetView(filter: $discoverManager.filter) { draft in
                     await discoverManager.previewCount(for: draft)
                 }
             }
-            .sheet(isPresented: $showingMissions) {
+            .sheet(isPresented: $showingMissions, onDismiss: {
+                Task { await missionsManager.load() }
+            }) {
                 DailyMissionsView()
             }
             .onChange(of: discoverManager.filter) { _, _ in

@@ -47,6 +47,11 @@ final class DailyMissionsManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    /// 受け取り可能なミッションが1つでもあるか。探す画面のミッションボタンにバッジを出すために使う。
+    var hasClaimableMission: Bool {
+        missions.contains { $0.isComplete && !claimedKeys.contains($0.key) }
+    }
+
     private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .iso8601)
@@ -103,7 +108,7 @@ final class DailyMissionsManager: ObservableObject {
             claimedKeys = Set(claimRows.map(\.missionKey))
 
             missions = [
-                MissionProgress(key: "login", title: "ログインしよう", reward: 1, target: 1, current: loggedInToday ? 1 : 0),
+                MissionProgress(key: "login", title: "ログインボーナス", reward: 2, target: 1, current: loggedInToday ? 1 : 0),
                 MissionProgress(key: "footprint", title: "気になるお相手のプロフィールを見よう", reward: 1, target: 1, current: min(visitsToday.count, 1)),
                 MissionProgress(key: "like5", title: "5人のお相手にいいね!を送ろう", reward: 1, target: 5, current: min(likesToday.count, 5)),
                 MissionProgress(key: "like7", title: "7人のお相手にいいね!を送ろう", reward: 2, target: 7, current: min(likesToday.count, 7)),

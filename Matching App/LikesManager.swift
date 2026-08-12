@@ -61,7 +61,7 @@ final class LikesManager: ObservableObject {
                 query = query.in("area", values: Array(filter.areas))
             }
             if !filter.nationalities.isEmpty {
-                query = query.in("nationality", values: Array(filter.nationalities))
+                query = query.overlaps("nationalities", value: Array(filter.nationalities))
             }
             if filter.isAgeFiltered {
                 query = query

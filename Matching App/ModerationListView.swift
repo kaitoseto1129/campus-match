@@ -17,34 +17,44 @@ struct ModerationListView: View {
     @State private var isLoading = false
 
     var body: some View {
-        Group {
+        ScrollView {
             if profiles.isEmpty && !isLoading {
                 Text(emptyMessage)
                     .foregroundStyle(.secondary)
                     .padding(.top, 60)
                     .frame(maxWidth: .infinity)
             } else {
-                List(profiles) { profile in
-                    HStack(spacing: 12) {
-                        IconImage(url: photoURLs[profile.id], size: 48)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(profile.name)
-                                .font(.subheadline.bold())
-                            Text(profile.ageLabel)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                VStack(spacing: 10) {
+                    ForEach(profiles) { profile in
+                        HStack(spacing: 12) {
+                            IconImage(url: photoURLs[profile.id], size: 48)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(profile.name)
+                                    .font(.subheadline.bold())
+                                Text(profile.ageLabel)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button {
+                                Task { await remove(profile) }
+                            } label: {
+                                Text("解除する")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                                    .background(Color.brandBlue, in: Capsule())
+                            }
                         }
-                        Spacer()
-                        Button("解除する") {
-                            Task { await remove(profile) }
-                        }
-                        .font(.caption.bold())
-                        .foregroundStyle(Color.brandBlue)
+                        .padding()
+                        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
                     }
                 }
-                .listStyle(.plain)
+                .padding()
             }
         }
+        .background(Color.appListBackground.ignoresSafeArea())
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
