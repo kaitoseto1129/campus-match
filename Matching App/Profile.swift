@@ -55,6 +55,11 @@ struct Profile: Codable, Identifiable {
     let smoking: String?
     let bodyType: String?
     let languages: [String]
+    /// 会員ステータス(無料 / 有料 / VIP)。古いレコードや読み込み失敗時は無料会員として扱う。
+    let membershipTier: MembershipTier?
+    var membership: MembershipTier { membershipTier ?? .free }
+    /// 選択した趣味カードのID一覧。
+    let hobbyCards: [String]
     let boostExpiresAtString: String?
     var boostExpiresAt: Date? {
         guard let boostExpiresAtString else { return nil }
@@ -87,9 +92,46 @@ struct Profile: Codable, Identifiable {
         case drinking, smoking
         case bodyType = "body_type"
         case languages
+        case membershipTier = "membership_tier"
+        case hobbyCards = "hobby_cards"
         case boostExpiresAtString = "boost_expires_at"
         case createdAtString = "created_at"
     }
+}
+
+/// 会員ステータス。上位プランは下位プランの特典をすべて含む。
+enum MembershipTier: String, Codable, CaseIterable {
+    case free
+    case premium
+    case vip
+
+    var label: String {
+        switch self {
+        case .free: return "無料会員"
+        case .premium: return "有料会員"
+        case .vip: return "VIPオプション"
+        }
+    }
+
+    /// free < premium < vip の順序。特典判定はこのランクの比較で行う。
+    var rank: Int {
+        switch self {
+        case .free: return 0
+        case .premium: return 1
+        case .vip: return 2
+        }
+    }
+
+    /// マッチした相手にメッセージを送れるか(無料会員は送れない)。
+    var canSendMessages: Bool { rank >= MembershipTier.premium.rank }
+    /// 相手プロフィールで受け取ったいいね数を見られるか。
+    var canSeeLikeCount: Bool { rank >= MembershipTier.premium.rank }
+    /// 身バレ防止のプライベートモードを使えるか。
+    var canUsePrivateMode: Bool { rank >= MembershipTier.vip.rank }
+    /// トークで相手の既読が分かるか。
+    var canSeeReadReceipts: Bool { rank >= MembershipTier.vip.rank }
+    /// 相手プロフィールでマッチ度を見られるか。
+    var canSeeMatchScore: Bool { rank >= MembershipTier.vip.rank }
 }
 
 struct ProfileCompleteness {

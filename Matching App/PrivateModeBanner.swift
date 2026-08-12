@@ -110,17 +110,32 @@ struct PrivacyToggleRows: View {
             Divider().padding(.leading, 16)
 
             VStack(alignment: .leading, spacing: 2) {
+                // プライベートモードはVIPオプション限定の機能。契約していない間は操作できないようにする。
+                let canUsePrivateMode = (profileManager.profile?.membership ?? .free).canUsePrivateMode
                 Toggle(isOn: Binding(
                     get: { profileManager.profile?.privateMode ?? false },
                     set: { newValue in
                         Task { await profileManager.updatePrivateMode(newValue) }
                     }
                 )) {
-                    Text("プライベートモード")
-                        .font(.subheadline)
+                    HStack(spacing: 6) {
+                        Text("プライベートモード")
+                            .font(.subheadline)
+                        if !canUsePrivateMode {
+                            Text("VIP")
+                                .font(.caption2.bold())
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(Color.brandGradient, in: Capsule())
+                        }
+                    }
                 }
                 .tint(Color.brandPurple)
-                Text("ONにすると他ユーザーのプロフィールを見ても足あとが付きません")
+                .disabled(!canUsePrivateMode)
+                Text(canUsePrivateMode
+                     ? "ONにすると、自分からいいねを送った相手以外の「探す」画面にあなたが表示されなくなり、足あとも付きません"
+                     : "VIPオプションを契約すると使えます。ONにすると、自分からいいねを送った相手以外の「探す」画面にあなたが表示されなくなります")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }

@@ -10,6 +10,9 @@ struct SwipeableProfileView<ActionContent: View>: View {
     let profiles: [Profile]
     @State private var currentIndex: Int
     @Environment(\.dismiss) private var dismiss
+    @State private var showingHideConfirm = false
+    @State private var showingBlockConfirm = false
+    @State private var showingReportSheet = false
     @ViewBuilder var actionContent: (Profile, @escaping () -> Void) -> ActionContent
 
     init(profiles: [Profile], startIndex: Int, @ViewBuilder actionContent: @escaping (Profile, @escaping () -> Void) -> ActionContent) {
@@ -42,7 +45,10 @@ struct SwipeableProfileView<ActionContent: View>: View {
     var body: some View {
         TabView(selection: $currentIndex) {
             ForEach(Array(profiles.enumerated()), id: \.element.id) { index, profile in
-                OtherUserProfileView(profile: profile) {
+                // TabViewは表示していないページのビューも同時に生かしているため、
+                // 各ページが自前でツールバーを持つと「…」ボタンがページ数分だけ並んでしまう。
+                // メニューはここで現在のページの分だけ1つ出す。
+                OtherUserProfileView(profile: profile, showsModerationMenu: false) {
                     actionContent(profile, advanceOrDismiss)
                 }
                 .tag(index)
@@ -51,5 +57,51 @@ struct SwipeableProfileView<ActionContent: View>: View {
         .tabViewStyle(.page(indexDisplayMode: .never))
         .navigationTitle(currentProfile?.name ?? "")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ProfileModerationMenu(
+                    onHide: { showingHideConfirm = true },
+                    onBlock: { showingBlockConfirm = true },
+                    onReport: { showingReportSheet = true }
+                )
+            }
+        }
+        .confirmationDialog(
+            "\(currentProfile?.name ?? "この人")さんを非表示にしますか?",
+            isPresented: $showingHideConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("非表示にする", role: .destructive) {
+                guard let target = currentProfile else { return }
+                Task {
+                    await UserModeration.hide(userId: target.id)
+                    advanceOrDismiss()
+                }
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("今後「探す」画面に表示されなくなります")
+        }
+        .confirmationDialog(
+            "\(currentProfile?.name ?? "この人")さんをブロックしますか?",
+            isPresented: $showingBlockConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("ブロックする", role: .destructive) {
+                guard let target = currentProfile else { return }
+                Task {
+                    await UserModeration.block(userId: target.id)
+                    advanceOrDismiss()
+                }
+            }
+            Button("キャンセル", role: .cancel) {}
+        }
+        .sheet(isPresented: $showingReportSheet) {
+            if let target = currentProfile {
+                ReportReasonSheet(targetName: target.name) { reason in
+                    Task { await UserModeration.report(userId: target.id, reason: reason) }
+                }
+            }
+        }
     }
 }

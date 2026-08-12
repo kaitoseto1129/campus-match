@@ -375,65 +375,56 @@ private struct DiscoverLikeButton: View {
     @State private var confirmationMessage = "いいねを送りました"
     @State private var confirmationIcon = "hand.thumbsup.fill"
     @State private var showingInsufficientLikesAlert = false
+    @State private var showingReminderConfirm = false
 
     private var alreadyLiked: Bool { discoverManager.likedIds.contains(candidate.id) }
     private var alreadyReminded: Bool { discoverManager.remindedIds.contains(candidate.id) }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Button {
-                Task {
-                    await discoverManager.hideCandidate(candidate.id)
-                    if let onHidden {
-                        onHidden()
-                    } else {
-                        dismiss()
-                    }
+        // 非表示は画面右上の「…」メニューから行えるため、ここにはボタンを置かない。
+        Button {
+            Task {
+                if alreadyLiked {
+                    // 見てねはいいねを消費するため、送る前に必ず確認する。
+                    showingReminderConfirm = true
+                    return
                 }
-            } label: {
-                VStack(spacing: 2) {
-                    Image(systemName: "eye.slash.fill")
-                        .font(.callout)
-                    Text("非表示")
-                        .font(.caption2)
+                isSending = true
+                let count = await discoverManager.likeCount(for: candidate.id)
+                isSending = false
+                if count >= DiscoverManager.popularMemberThreshold {
+                    showingPopularSheet = true
+                } else {
+                    await sendAndConfirm(isSpecial: false)
                 }
-                .frame(width: 60, height: 54)
-                .background(Color(.systemGray5))
-                .foregroundStyle(.primary)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
-
-            Button {
-                Task {
-                    if alreadyLiked {
-                        await sendReminderAndConfirm()
-                        return
-                    }
-                    isSending = true
-                    let count = await discoverManager.likeCount(for: candidate.id)
-                    isSending = false
-                    if count >= DiscoverManager.popularMemberThreshold {
-                        showingPopularSheet = true
-                    } else {
-                        await sendAndConfirm(isSpecial: false)
-                    }
-                }
-            } label: {
-                HStack {
-                    Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
-                    Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
-                        .bold()
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandPurple))
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 28))
+        } label: {
+            HStack {
+                Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
+                Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
+                    .bold()
             }
-            .disabled(isSending || alreadyReminded)
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandPurple))
+            .foregroundStyle(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 28))
         }
+        .disabled(isSending || alreadyReminded)
         .padding(.horizontal)
         .padding(.bottom, 8)
+        .confirmationDialog(
+            "見てねを送りますか?",
+            isPresented: $showingReminderConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("送る(\(DiscoverManager.reminderLikeCost)いいね消費)") {
+                Task { await sendReminderAndConfirm() }
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("いいねを\(DiscoverManager.reminderLikeCost)つ消費して、\(candidate.name)さんにもう一度アピールします。よろしいですか?")
+        }
         .sheet(isPresented: $showingPopularSheet) {
             PopularMemberSheet(profile: candidate, photoURL: discoverManager.candidatePhotoURLs[candidate.id]) { useSpecial in
                 showingPopularSheet = false
@@ -461,7 +452,7 @@ private struct DiscoverLikeButton: View {
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false
-        dismiss()
+        advanceOrDismiss()
     }
 
     private func sendReminderAndConfirm() async {
@@ -477,7 +468,17 @@ private struct DiscoverLikeButton: View {
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false
-        dismiss()
+        advanceOrDismiss()
+    }
+
+    /// 送信後は、スワイプで見ている途中なら次のお相手へ自動で送り、
+    /// 単体で開いている場合はこれまで通り閉じる。
+    private func advanceOrDismiss() {
+        if let onHidden {
+            onHidden()
+        } else {
+            dismiss()
+        }
     }
 }
 

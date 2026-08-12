@@ -177,6 +177,40 @@ class ProfileManager: ObservableObject {
         }
     }
 
+    /// 会員ステータスを切り替える(課金は未実装のモック)。
+    /// 無料会員から有料プランへ切り替えた時だけ、サーバー側で30いいねが付与される。
+    @discardableResult
+    func purchaseMembership(_ tier: MembershipTier) async -> Bool {
+        do {
+            try await supabase().rpc("purchase_membership", params: ["p_tier": tier.rawValue]).execute()
+            await load()
+            return true
+        } catch {
+            errorMessage = "プランの変更に失敗しました"
+            print("purchase membership error: \(error)")
+            return false
+        }
+    }
+
+    /// 選択した趣味カードを保存する。
+    @discardableResult
+    func saveHobbyCards(_ cards: [String]) async -> Bool {
+        guard let uid = supabase().auth.currentUser?.id else { return false }
+        do {
+            try await supabase()
+                .from("profiles")
+                .update(["hobby_cards": cards])
+                .eq("id", value: uid)
+                .execute()
+            await load()
+            return true
+        } catch {
+            errorMessage = "趣味カードの保存に失敗しました"
+            print("save hobby cards error: \(error)")
+            return false
+        }
+    }
+
     @discardableResult
     func activateBoost() async -> Bool {
         do {
@@ -302,7 +336,7 @@ class ProfileManager: ObservableObject {
     static var preview: ProfileManager {
         let manager = ProfileManager()
         let uid = UUID()
-        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], boostExpiresAtString: nil, createdAtString: nil)
+        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], membershipTier: .free, hobbyCards: ["movie", "cafe", "music"], boostExpiresAtString: nil, createdAtString: nil)
         manager.university = University(id: UUID(), name: "サンプル大学", domain: "example.ac.jp", country: "日本", prefecture: "東京都")
 
             manager.photos = [

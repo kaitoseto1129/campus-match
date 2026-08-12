@@ -24,6 +24,10 @@ struct Matching_AppApp: App {
             Group {
                 if !hasSeenWelcome {
                     WelcomeOnboardingView { hasSeenWelcome = true }
+                } else if auth.isRestoringSession {
+                    // 保存済みセッションの確認が終わる前に分岐すると、ログイン済みでも
+                    // 一瞬ログイン画面が差し込まれてしまうため、確認が終わるまで待つ。
+                    SplashView()
                 } else if auth.isAuthenticated {
                     RootGateView()
                 } else {

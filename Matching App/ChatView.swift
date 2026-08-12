@@ -25,6 +25,9 @@ struct ChatView: View {
     @State private var showingCallRequestConfirm = false
     @State private var showingCancelCallRequestConfirm = false
     @State private var isBlocked = false
+    /// 自分の会員ステータス。無料会員はメッセージを送れず、既読はVIPのみ見える。
+    @State private var myMembership: MembershipTier = .free
+    @State private var showingMembership = false
 
     private var myId: UUID? { supabase().auth.currentUser?.id }
 
@@ -257,12 +260,16 @@ struct ChatView: View {
                 .padding(.bottom, 8)
             }
         }
+        .navigationDestination(isPresented: $showingMembership) {
+            MembershipStatusView(profileManager: ProfileManager())
+        }
         .task {
             await messageManager.load()
             await messageManager.subscribe()
             await notificationManager.refresh()
             if let myId {
                 isBlocked = await UserModeration.isBlocked(between: myId, and: otherProfile.id)
+                myMembership = await MembershipLookup.myTier()
             }
         }
         .onAppear {
@@ -327,7 +334,9 @@ struct ChatView: View {
         }
     }
 
+    /// 既読表示はVIPオプション限定の機能。通常会員のトークでは既読は分からない。
     private func showsReadReceipt(for message: Message) -> Bool {
+        guard myMembership.canSeeReadReceipts else { return false }
         guard let myId, message.senderId == myId, message.isRead else { return false }
         return message.id == messageManager.messages.last?.id
     }
@@ -345,11 +354,40 @@ struct ChatView: View {
                     .foregroundStyle(.secondary)
                     .padding()
                     .frame(maxWidth: .infinity)
+            } else if !myMembership.canSendMessages {
+                upgradePrompt
             } else {
                 inputBar
             }
         }
         .background(.bar)
+    }
+
+    /// 無料会員はマッチしてもメッセージを送れないため、入力欄の代わりにアップグレード導線を出す。
+    private var upgradePrompt: some View {
+        Button {
+            showingMembership = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "crown.fill")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("有料会員になるとメッセージが送れます")
+                        .font(.subheadline.bold())
+                    Text("マッチング相手とメッセージし放題!")
+                        .font(.caption2)
+                        .opacity(0.9)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+            }
+            .foregroundStyle(.white)
+            .padding()
+            .background(Color.brandGradient, in: RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
     }
 
     private var typingIndicatorRow: some View {

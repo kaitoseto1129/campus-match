@@ -17,6 +17,36 @@ private struct ProfileVisitPayload: Encodable {
 
 private struct InsertedProfileVisit: Decodable { let id: UUID }
 
+/// 相手プロフィールの「非表示 / ブロック / 違反報告」メニュー。
+/// プロフィール画面本体とスワイプコンテナの両方から使えるよう部品として切り出している。
+struct ProfileModerationMenu: View {
+    var onHide: () -> Void
+    var onBlock: () -> Void
+    var onReport: () -> Void
+
+    var body: some View {
+        Menu {
+            Button {
+                onHide()
+            } label: {
+                Label("非表示にする", systemImage: "eye.slash")
+            }
+            Button(role: .destructive) {
+                onBlock()
+            } label: {
+                Label("ブロックする", systemImage: "hand.raised.fill")
+            }
+            Button(role: .destructive) {
+                onReport()
+            } label: {
+                Label("違反報告する", systemImage: "exclamationmark.triangle")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+    }
+}
+
 private struct ProfileVisitUpdatePayload: Encodable {
     let photoIdsViewed: [UUID]
     let reachedSection: String?
@@ -28,6 +58,11 @@ private struct ProfileVisitUpdatePayload: Encodable {
 
 struct OtherUserProfileView<ActionContent: View>: View {
     let profile: Profile
+    /// 「非表示/ブロック/違反報告」メニューをこの画面自身のツールバーに出すか。
+    /// SwipeableProfileViewのようにこの画面を複数ページ同時に抱えるコンテナでは、
+    /// 各ページのツールバーが合成されて「…」が人数分並んでしまうため、
+    /// コンテナ側で1つだけ出す場合はfalseにする。
+    var showsModerationMenu: Bool = true
     @ViewBuilder var actionContent: () -> ActionContent
     @EnvironmentObject private var tabRouter: TabRouter
 
@@ -43,6 +78,16 @@ struct OtherUserProfileView<ActionContent: View>: View {
     @State private var visitRecordId: UUID?
     @State private var viewedPhotoIds: Set<UUID> = []
     @State private var furthestSection: ProfileSection?
+    /// 自分の会員ステータス。いいね数の表示・マッチ度の表示の可否を決める。
+    @State private var myMembership: MembershipTier = .free
+    @State private var myProfile: Profile?
+    @State private var showingMembership = false
+
+    /// マッチ度はVIPオプション限定。未契約の場合はnilを渡して代わりに案内を出す。
+    private var matchScore: MatchScore? {
+        guard myMembership.canSeeMatchScore, let myProfile else { return nil }
+        return MatchScore.compute(me: myProfile, other: profile)
+    }
 
     var body: some View {
         ProfileDisplayView(
@@ -53,6 +98,9 @@ struct OtherUserProfileView<ActionContent: View>: View {
             isOnline: isOnline,
             otherProfiles: otherProfiles,
             otherProfilePhotoURLs: otherProfilePhotoURLs,
+            matchScore: matchScore,
+            showsMatchScoreUpsell: !myMembership.canSeeMatchScore,
+            onTapMatchScoreUpsell: { showingMembership = true },
             onSectionAppear: { section in
                 if furthestSection == nil || section.order > furthestSection!.order {
                     furthestSection = section
@@ -72,27 +120,18 @@ struct OtherUserProfileView<ActionContent: View>: View {
             Task { await flushVisitTracking() }
         }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        showingHideConfirm = true
-                    } label: {
-                        Label("非表示にする", systemImage: "eye.slash")
-                    }
-                    Button(role: .destructive) {
-                        showingBlockConfirm = true
-                    } label: {
-                        Label("ブロックする", systemImage: "hand.raised.fill")
-                    }
-                    Button(role: .destructive) {
-                        showingReportSheet = true
-                    } label: {
-                        Label("違反報告する", systemImage: "exclamationmark.triangle")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
+            if showsModerationMenu {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ProfileModerationMenu(
+                        onHide: { showingHideConfirm = true },
+                        onBlock: { showingBlockConfirm = true },
+                        onReport: { showingReportSheet = true }
+                    )
                 }
             }
+        }
+        .navigationDestination(isPresented: $showingMembership) {
+            MembershipStatusView(profileManager: ProfileManager())
         }
         .confirmationDialog("\(profile.name)さんを非表示にしますか?", isPresented: $showingHideConfirm, titleVisibility: .visible) {
             Button("非表示にする", role: .destructive) {
@@ -141,7 +180,9 @@ struct OtherUserProfileView<ActionContent: View>: View {
         } catch {
             print("other user university load error: \(error)")
         }
-        if profile.showLikeCount {
+        // いいね数の表示は有料会員以上の特典。無料会員には出さない。
+        myMembership = await MembershipLookup.myTier()
+        if profile.showLikeCount && myMembership.canSeeLikeCount {
             do {
                 likeCount = try await supabase()
                     .rpc("get_like_count", params: ["target_user_id": profile.id])
@@ -173,6 +214,8 @@ struct OtherUserProfileView<ActionContent: View>: View {
                 .single()
                 .execute()
                 .value
+            // マッチ度の算出にも使うため保持しておく。
+            self.myProfile = myProfile
             guard let myGender = myProfile.gender else { return }
             let oppositeGender: Gender = myGender == .male ? .female : .male
 
@@ -185,6 +228,8 @@ struct OtherUserProfileView<ActionContent: View>: View {
                 .select("*")
                 .eq("university_id", value: myProfile.universityId)
                 .eq("gender", value: oppositeGender.rawValue)
+                // プライベートモード中のユーザーはおすすめにも出さない。
+                .eq("private_mode", value: false)
                 .notIn("id", values: Array(excludedIds))
                 .order("last_active_at", ascending: false)
                 .limit(6)

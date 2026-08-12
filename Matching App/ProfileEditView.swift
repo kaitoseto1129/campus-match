@@ -528,6 +528,8 @@ struct ProfileEditView: View {
             smoking: smoking,
             bodyType: bodyType,
             languages: Array(languages),
+            membershipTier: base?.membershipTier,
+            hobbyCards: base?.hobbyCards ?? [],
             boostExpiresAtString: base?.boostExpiresAtString,
             createdAtString: base?.createdAtString
         )

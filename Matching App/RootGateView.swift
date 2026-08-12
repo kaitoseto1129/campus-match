@@ -16,7 +16,7 @@ struct RootGateView: View {
     var body: some View {
         Group {
             if !hasLoaded {
-                ProgressView()
+                SplashView()
             } else if let profile = profileManager.profile,
                       profile.isProfileComplete,
                       profileManager.photos.count >= ProfileEditView.minPhotoCount {

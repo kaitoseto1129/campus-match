@@ -19,6 +19,7 @@ struct MyPageHomeView: View {
     @State private var showingBoostFailedAlert = false
     @State private var showingBoostConfirm = false
     @State private var showingPurchaseSheet = false
+    @State private var showingHobbyCardPicker = false
 
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -37,6 +38,7 @@ struct MyPageHomeView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         header
+                        hobbyCardsCard
                         profileCompletenessCard
                         boostButton
                         remainingLikesCard
@@ -140,6 +142,89 @@ struct MyPageHomeView: View {
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
             }
+            membershipButton
+        }
+    }
+
+    /// 現在の会員ステータスを表示しつつ、会員ステータス画面へ入る導線。
+    private var membershipButton: some View {
+        let tier = profileManager.profile?.membership ?? .free
+        return NavigationLink {
+            MembershipStatusView(profileManager: profileManager)
+        } label: {
+            HStack {
+                Image(systemName: tier == .free ? "person.fill" : "crown.fill")
+                Text("会員ステータス")
+                    .bold()
+                Text(tier.label)
+                    .font(.caption.bold())
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                    .background(.white.opacity(0.25), in: Capsule())
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+            }
+            .font(.subheadline)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(tier == .free ? AnyShapeStyle(Color.brandNavy) : AnyShapeStyle(Color.brandGradient))
+            .foregroundStyle(.white)
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
+        }
+    }
+
+    /// 登録済みの趣味カードの一覧と、追加・編集の導線。
+    private var hobbyCardsCard: some View {
+        let cards = HobbyCard.cards(for: profileManager.profile?.hobbyCards ?? [])
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("趣味カード")
+                    .font(.subheadline.bold())
+                Spacer()
+                if !cards.isEmpty {
+                    Text("\(cards.count)個")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if cards.isEmpty {
+                Text("趣味カードを登録すると、共通の話題があるお相手に見つけてもらいやすくなります")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(cards) { card in
+                            HobbyCardChip(card: card)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+
+            Button {
+                showingHobbyCardPicker = true
+            } label: {
+                HStack {
+                    Image(systemName: cards.isEmpty ? "plus.circle.fill" : "square.and.pencil")
+                    Text(cards.isEmpty ? "趣味カードを追加する" : "趣味カードを編集する")
+                        .font(.subheadline.bold())
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(Color.brandPurple.opacity(0.12))
+                .foregroundStyle(Color.brandPurple)
+                .clipShape(RoundedRectangle(cornerRadius: 22))
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
+        .sheet(isPresented: $showingHobbyCardPicker) {
+            HobbyCardPickerView(profileManager: profileManager)
         }
     }
 

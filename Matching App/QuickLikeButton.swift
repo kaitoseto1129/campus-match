@@ -20,6 +20,7 @@ struct QuickLikeButton: View {
     @State private var confirmationMessage = "いいねを送りました"
     @State private var confirmationIcon = "hand.thumbsup.fill"
     @State private var showingInsufficientLikesAlert = false
+    @State private var showingReminderConfirm = false
 
     init(profile: Profile, photoURL: URL? = nil) {
         self.profile = profile
@@ -30,7 +31,8 @@ struct QuickLikeButton: View {
         Button {
             Task {
                 if alreadyLiked {
-                    await sendReminderAndConfirm()
+                    // 見てねはいいねを消費するため、送る前に必ず確認する。
+                    showingReminderConfirm = true
                     return
                 }
                 isSending = true
@@ -62,6 +64,18 @@ struct QuickLikeButton: View {
         .disabled(isSending || alreadyReminded)
         .task {
             await loadStatus()
+        }
+        .confirmationDialog(
+            "見てねを送りますか?",
+            isPresented: $showingReminderConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("送る(\(DiscoverManager.reminderLikeCost)いいね消費)") {
+                Task { await sendReminderAndConfirm() }
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("いいねを\(DiscoverManager.reminderLikeCost)つ消費して、\(profile.name)さんにもう一度アピールします。よろしいですか?")
         }
         .sheet(isPresented: $showingPopularSheet) {
             PopularMemberSheet(profile: profile, photoURL: photoURL) { useSpecial in

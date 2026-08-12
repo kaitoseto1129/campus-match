@@ -15,10 +15,14 @@ final class AuthManager : ObservableObject {
     @Published var currentUserId: UUID?
     @Published var errorMessage: String?
     @Published var isLoading = false
-    
+    /// 起動直後の保存済みセッション確認が終わるまでtrue。
+    /// これを見ずに描画すると、確認が終わるまでの一瞬だけログイン画面や空白が挟まってしまう。
+    @Published var isRestoringSession = true
+
     init() {
         Task {
             await checkSession()
+            isRestoringSession = false
         }
     }
     func checkSession() async {

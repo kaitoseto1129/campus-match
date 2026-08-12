@@ -127,6 +127,10 @@ final class DiscoverManager: ObservableObject {
     private func applyCandidateFilters(to base: PostgrestFilterBuilder, filter overrideFilter: DiscoverFilter?) -> PostgrestFilterBuilder {
         let filter = overrideFilter ?? self.filter
         var query = base.eq("gender", value: oppositeGender?.rawValue ?? "")
+        // プライベートモード中のユーザーは「探す」に出さない。
+        // 相手が自分にいいねを送っている場合は上のexcludedIdsで既にここから外れ、
+        // 「いいね」タブ側に出るため、「自分からいいねを送らない限り見つからない」状態になる。
+        query = query.eq("private_mode", value: false)
         if let myId {
             query = query.neq("id", value: myId)
         }

@@ -20,7 +20,7 @@
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="cm-safearea-01"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" name="LaunchBackground"/>
                         <constraints>
                             <constraint firstItem="cm-imageview-01" firstAttribute="centerX" secondItem="cm-view-01" secondAttribute="centerX" id="cm-constraint-01"/>
                             <constraint firstItem="cm-imageview-01" firstAttribute="centerY" secondItem="cm-view-01" secondAttribute="centerY" id="cm-constraint-02"/>
@@ -36,5 +36,8 @@
     </scenes>
     <resources>
         <image name="LaunchLogo" width="180" height="180"/>
+        <namedColor name="LaunchBackground">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
     </resources>
 </document>
