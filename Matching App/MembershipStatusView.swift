@@ -17,6 +17,7 @@ struct MembershipStatusView: View {
     @State private var showingPurchaseConfirm = false
     @State private var showingManageSubscriptions = false
     @State private var isPurchasing = false
+    @State private var isRestoring = false
     @State private var showingFailedAlert = false
     @State private var showingPurchasedToast = false
     @State private var purchasedMessage = ""
@@ -251,6 +252,30 @@ struct MembershipStatusView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                 }
+                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal)
+            } else {
+                Button {
+                    Task {
+                        isRestoring = true
+                        await store.restorePurchases()
+                        await profileManager.load()
+                        isRestoring = false
+                    }
+                } label: {
+                    HStack {
+                        if isRestoring {
+                            ProgressView()
+                        } else {
+                            Text("購入を復元")
+                        }
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                }
+                .disabled(isRestoring)
                 .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
             }

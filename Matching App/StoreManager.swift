@@ -32,14 +32,23 @@ enum StoreProductID {
 enum StoreError: Error {
     case failedVerification
     case productNotFound
+    case serverGrantFailed
+}
+
+private struct VerifyPurchaseParams: Encodable {
+    let transactionJWS: String
+}
+
+private struct VerifyPurchaseResponse: Decodable {
+    let success: Bool
 }
 
 /// App Store経由の課金(いいね購入・有料会員)を扱う。
-/// これまでの「モック課金」(サーバー側RPCを直接叩くだけで実際の決済がない)を置き換え、
-/// 実際にAppleのStoreKitで購入フローを完了させたうえで、検証が取れてからサーバー側の
-/// 特典付与RPC(purchase_likes_mock/purchase_membership)を呼ぶ。
-/// RPC自体はいいね数・会員ステータスを更新するだけの単純な処理なので、
-/// 「本物の決済の後に呼ぶ」ようにするだけで安全に流用できる。
+/// クライアント側でStoreKitの購入・検証(checkVerified)を行った後、実際の特典付与は
+/// Supabase Edge Function「verify-purchase」に取引のJWSを送って行う。
+/// このEdge FunctionがAppleの正規ルート証明書まで署名チェーンを検証したうえで、
+/// service_role限定のRPC(grant_purchased_likes/grant_purchased_membership)を呼ぶため、
+/// クライアントやAPIを直接叩くだけでは特典を得られない構成になっている。
 @MainActor
 final class StoreManager: ObservableObject {
     @Published var products: [Product] = []
@@ -78,16 +87,14 @@ final class StoreManager: ObservableObject {
         products.first { $0.id == StoreProductID.membershipMonthly }
     }
 
-    /// いいねを購入する。成功したら残いいねはRPC内で加算され、trueを返す。
+    /// いいねを購入する。成功したらサーバー側の検証を経て残いいねが加算され、trueを返す。
     @discardableResult
     func purchaseLikes(amount: Int) async -> Bool {
         guard let product = likeProduct(forAmount: amount) else {
             errorMessage = "商品が見つかりませんでした"
             return false
         }
-        return await purchase(product) {
-            try await supabase().rpc("purchase_likes_mock", params: ["p_amount": amount]).execute()
-        }
+        return await purchase(product)
     }
 
     /// 有料会員を購入(契約)する。
@@ -97,8 +104,19 @@ final class StoreManager: ObservableObject {
             errorMessage = "商品が見つかりませんでした"
             return false
         }
-        return await purchase(product) {
-            try await supabase().rpc("purchase_membership", params: ["p_tier": "vip"]).execute()
+        return await purchase(product)
+    }
+
+    /// StoreKitの取引をEdge Function「verify-purchase」に送り、Apple署名の検証が取れたら
+    /// サーバー側で特典を付与してもらう。
+    private func requestServerGrant(jws: String) async throws {
+        let params = VerifyPurchaseParams(transactionJWS: jws)
+        let response: VerifyPurchaseResponse = try await supabase().functions.invoke(
+            "verify-purchase",
+            options: FunctionInvokeOptions(body: params)
+        )
+        guard response.success else {
+            throw StoreError.serverGrantFailed
         }
     }
 
@@ -138,7 +156,7 @@ final class StoreManager: ObservableObject {
         }
     }
 
-    private func purchase(_ product: Product, grantBenefit: @escaping () async throws -> Void) async -> Bool {
+    private func purchase(_ product: Product) async -> Bool {
         purchasingProductID = product.id
         defer { purchasingProductID = nil }
         do {
@@ -146,7 +164,7 @@ final class StoreManager: ObservableObject {
             switch result {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
-                try await grantBenefit()
+                try await requestServerGrant(jws: verification.jwsRepresentation)
                 await transaction.finish()
                 return true
             case .userCancelled:
