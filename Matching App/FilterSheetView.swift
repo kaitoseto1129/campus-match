@@ -11,6 +11,8 @@ struct FilterSheetView: View {
     /// 絞り込み条件を渡すと、その条件でヒットする人数を返す(withの「N人に絞り込み中」のライブ表示用)。
     /// 渡さない画面(いいね一覧など)ではnilのままでよく、その場合ライブ件数は表示しない。
     var countProvider: ((DiscoverFilter) async -> Int)? = nil
+    /// 探す画面の初回チュートリアル中に開かれた場合、「この条件で検索」ボタンを押すよう案内を出す。
+    var showsTutorialHint: Bool = false
     @Environment(\.dismiss) private var dismiss
     @State private var draft: DiscoverFilter
     @State private var universities: [University] = []
@@ -20,9 +22,10 @@ struct FilterSheetView: View {
     /// 居住地選択が奥の階層まで進んだ時、選び終わったらここへ自動で戻すためのpath。
     @State private var path = NavigationPath()
 
-    init(filter: Binding<DiscoverFilter>, countProvider: ((DiscoverFilter) async -> Int)? = nil) {
+    init(filter: Binding<DiscoverFilter>, showsTutorialHint: Bool = false, countProvider: ((DiscoverFilter) async -> Int)? = nil) {
         self._filter = filter
         self._draft = State(initialValue: filter.wrappedValue)
+        self.showsTutorialHint = showsTutorialHint
         self.countProvider = countProvider
     }
 
@@ -126,6 +129,17 @@ struct FilterSheetView: View {
 
     private var bottomBar: some View {
         VStack(spacing: 10) {
+            if showsTutorialHint {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.down")
+                    Text("この「この条件で検索」ボタンを押してみましょう")
+                        .font(.caption.bold())
+                }
+                .foregroundStyle(.white)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(Color.brandOrange, in: RoundedRectangle(cornerRadius: 12))
+            }
             if countProvider != nil {
                 HStack(spacing: 6) {
                     Image(systemName: "magnifyingglass")

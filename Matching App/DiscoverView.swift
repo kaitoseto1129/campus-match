@@ -19,6 +19,11 @@ struct DiscoverView: View {
     var body: some View {
         NavigationStack(path: $navPath) {
             ZStack(alignment: .top) {
+                // appListBackgroundは下の方で真っ白(systemGroupedBackground)に近づいてしまい、
+                // スクロールすると単調に見えるため、探す画面だけは画面全体でうっすら色みが続く
+                // 専用の背景にしている。
+                discoverBackground.ignoresSafeArea()
+
                 // 他の一覧画面より少しだけ色みを強くした、探す画面専用のトップウォッシュ。
                 LinearGradient(
                     colors: [Color.brandPurple.opacity(0.35), Color.brandTeal.opacity(0.22), Color.brandPink.opacity(0.12), .clear],
@@ -86,7 +91,6 @@ struct DiscoverView: View {
                     }
                 }
                 }
-                .background(Color.appListBackground.ignoresSafeArea())
                 .refreshable {
                     await discoverManager.load()
                 }
@@ -126,7 +130,7 @@ struct DiscoverView: View {
                 }
             }
             .sheet(isPresented: $showingFilterSheet) {
-                FilterSheetView(filter: $discoverManager.filter) { draft in
+                FilterSheetView(filter: $discoverManager.filter, showsTutorialHint: tutorialStep == .filter) { draft in
                     await discoverManager.previewCount(for: draft)
                 }
             }
@@ -141,7 +145,7 @@ struct DiscoverView: View {
                     withAnimation { tutorialStep = .filter }
                 }
             }) {
-                DailyMissionsView()
+                DailyMissionsView(showsTutorialHint: tutorialStep == .missions)
             }
             .onChange(of: discoverManager.filter) { _, _ in
                 Task { await discoverManager.load() }
@@ -153,6 +157,18 @@ struct DiscoverView: View {
     }
 
     /// デイリーミッション画面への導線バナー。初回チュートリアルの最初のスポットライト対象。
+    /// 探す画面専用の背景。真っ白にならないよう、画面全体でうっすらブランドカラーが続くようにしている。
+    private var discoverBackground: some View {
+        ZStack {
+            Color(.systemGroupedBackground)
+            LinearGradient(
+                colors: [Color.brandPurple.opacity(0.06), Color.brandTeal.opacity(0.05), Color.brandPink.opacity(0.06)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+
     private var missionsBanner: some View {
         Button {
             showingMissions = true

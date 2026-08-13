@@ -101,7 +101,7 @@ final class AuthManager : ObservableObject {
         do {
             try await supabase()
                 .from("profiles")
-                .update(["last_active_at": ISO8601DateFormatter().string(from: Date())])
+                .update(["last_active_at": ISO8601DateFormatter.matchingApp.string(from: Date())])
                 .eq("id", value: uid)
                 .execute()
         } catch {

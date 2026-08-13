@@ -34,7 +34,16 @@ struct RootGateView: View {
             }
         }
         .task {
-            await profileManager.load()
+            // 通信が一時的に失敗してprofileが取得できないと、既に登録済みのユーザーまで
+            // 誤って「未登録」扱いにしてしまう(=もう一度プロフィール登録画面に飛ばされる)ため、
+            // 取得できるまで数回リトライしてから判定する。
+            for attempt in 0..<3 {
+                await profileManager.load()
+                if profileManager.profile != nil { break }
+                if attempt < 2 {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                }
+            }
             let isComplete = (profileManager.profile?.isProfileComplete ?? false)
                 && profileManager.photos.count >= ProfileEditView.minPhotoCount
             showingOnboarding = !isComplete

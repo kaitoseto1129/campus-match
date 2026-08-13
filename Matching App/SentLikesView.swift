@@ -18,7 +18,14 @@ struct SentLikesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            tabPicker
+            ZStack {
+                LinearGradient(
+                    colors: [Color.brandPurple.opacity(0.16), Color.brandPink.opacity(0.1)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                tabPicker
+            }
 
             ScrollView {
                 switch selectedTab {
@@ -209,6 +216,11 @@ private struct LikeHistoryCardView<Action: View>: View {
         .padding(12)
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.pastelAccent(for: profile.id).opacity(0.4), lineWidth: 1.5)
+        }
+        .shadow(color: Color.pastelAccent(for: profile.id).opacity(0.18), radius: 8, y: 3)
     }
 }
 

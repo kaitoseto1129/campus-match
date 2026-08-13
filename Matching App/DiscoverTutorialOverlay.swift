@@ -52,6 +52,9 @@ struct DiscoverTutorialOverlay: View {
 
     @State private var showingFakeProfile = false
     @State private var simulatedLiked = false
+    /// 体験用のダミー顔写真。アプリ内の他のダミーアカウントと同じ生成アバターサービスを使い、
+    /// 一般的な人物アイコンではなくちゃんと「顔」に見えるようにしている。
+    private static let sampleAvatarURL = URL(string: "https://api.dicebear.com/9.x/adventurer/png?seed=tutorial-sample&size=400&backgroundColor=ffd5dc,ffdfbf,c0aede,d1d4f9,b6e3f4")
 
     var body: some View {
         GeometryReader { proxy in
@@ -183,9 +186,15 @@ struct DiscoverTutorialOverlay: View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack {
                 LinearGradient(colors: [Color.brandPurple.opacity(0.5), Color.brandPink.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                Image(systemName: "person.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(.white.opacity(0.85))
+                AsyncImage(url: Self.sampleAvatarURL) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().scaledToFill()
+                    } else {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 64))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                }
             }
             .frame(width: 170, height: 180)
             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -213,9 +222,15 @@ struct DiscoverTutorialOverlay: View {
 
             ZStack {
                 LinearGradient(colors: [Color.brandPurple.opacity(0.5), Color.brandPink.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                Image(systemName: "person.fill")
-                    .font(.system(size: 90))
-                    .foregroundStyle(.white.opacity(0.85))
+                AsyncImage(url: Self.sampleAvatarURL) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().scaledToFill()
+                    } else {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 90))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                }
             }
             .frame(height: 260)
             .clipShape(RoundedRectangle(cornerRadius: 20))

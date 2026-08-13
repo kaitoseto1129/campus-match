@@ -170,28 +170,35 @@ struct ProfileEditView: View {
         }
     }
     func editablePhotoCell(_ photo: ProfilePhoto, slot: Int) -> some View {
-        ZStack(alignment: .topLeading) {
-            AsyncImage(url: photo.url) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                Color(.systemGray6)
+        // .onTapGesture と .draggable を同じビューに載せると、ジェスチャー同士が競合して
+        // ドラッグでの並び替えが反応しなくなることがあったため、タップはButtonにまとめる
+        // (emptyPhotoSlotと同じ方式。Buttonのタップ認識はdraggableのドラッグ開始と衝突しにくい)。
+        Button {
+            photoActionSlot = slot
+        } label: {
+            ZStack(alignment: .topLeading) {
+                AsyncImage(url: photo.url) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    Color(.systemGray6)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                if photo.isMain {
+                    Text("メイン")
+                        .font(.caption2.bold())
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(.black.opacity(0.6), in:Capsule())
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                        .background(.black.opacity(0.2))
+                        .padding(6)
+                }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            if photo.isMain {
-                Text("メイン")
-                    .font(.caption2.bold())
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(.black.opacity(0.6), in:Capsule())
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                    .background(.black.opacity(0.2))
-                    .padding(6)
-            }
+            .frame(height: 80)
+            .contentShape(Rectangle())
         }
-        .frame(height: 80)
-        .contentShape(Rectangle())
-        .onTapGesture { photoActionSlot = slot }
+        .buttonStyle(.plain)
         .draggable(String(slot))
         .dropDestination(for: String.self) { items, _ in
             guard let sourceSlot = items.first.flatMap(Int.init) else { return false }
@@ -480,16 +487,27 @@ struct ProfileEditView: View {
                     university: profileManager.university,
                     photos: profileManager.photos
                 ) {
-                    Text("これはプレビューです")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding()
+                    HStack(spacing: 10) {
+                        Image(systemName: "eye.fill")
+                            .foregroundStyle(Color.brandPurple)
+                        Text("これは他のユーザーから見たプレビューです")
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.brandPurple.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
                 }
                 .navigationTitle("プレビュー")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("閉じる") { showingPreview = false }
+                            .bold()
+                            .foregroundStyle(Color.brandPurple)
                     }
                 }
             }

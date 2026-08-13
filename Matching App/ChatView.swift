@@ -116,8 +116,9 @@ struct ChatView: View {
     @ToolbarContentBuilder
     private var chatToolbar: some ToolbarContent {
         // カスタムのsafeAreaInsetヘッダーだと、ナビゲーションバーとの重なり方によっては
-        // 名前・年齢が見えなくなることがあったため、確実に表示されるOS標準のprincipalスロットを使う。
-        ToolbarItem(placement: .principal) {
+        // 名前・年齢が見えなくなることがあったため、確実に表示されるOS標準のツールバースロットを使う。
+        // .principalだと中央寄せになってしまうため、戻るボタンのすぐ右に来るtopBarLeadingを使う。
+        ToolbarItem(placement: .topBarLeading) {
             Button {
                 showingProfile = true
             } label: {

@@ -407,7 +407,7 @@ struct MyPageHomeView: View {
         ShareLink(item: "キャンパスマッチ、使ってみて!学生限定のマッチングアプリです。") {
             HStack {
                 Image(systemName: "square.and.arrow.up")
-                Text(profileManager.profile?.shareBonusClaimed == true ? "アプリを紹介する" : "アプリを紹介して50いいねゲット")
+                Text(profileManager.profile?.shareBonusClaimed == true ? "アプリを紹介する(特典は受け取り済み)" : "アプリを紹介して50いいねゲット")
                     .font(.subheadline.bold())
             }
             .frame(maxWidth: .infinity)

@@ -8,12 +8,18 @@ import SwiftUI
 struct DailyMissionsView: View {
     @StateObject private var manager = DailyMissionsManager()
     @Environment(\.dismiss) private var dismiss
+    /// 探す画面の初回チュートリアル中に開かれた場合、ログインボーナス受け取り後に
+    /// 「右上の閉じるボタンを押して次へ」の案内を出す。
+    var showsTutorialHint: Bool = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     header
+                    if showsTutorialHint && manager.claimedKeys.contains("login") {
+                        tutorialCloseHint
+                    }
                     ForEach(manager.missions) { mission in
                         MissionCardView(manager: manager, mission: mission)
                     }
@@ -35,6 +41,18 @@ struct DailyMissionsView: View {
                 await manager.load()
             }
         }
+    }
+
+    private var tutorialCloseHint: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.up.right")
+            Text("受け取れました!右上の「閉じる」を押して次へ進みましょう")
+                .font(.caption.bold())
+        }
+        .foregroundStyle(.white)
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.brandOrange, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var header: some View {

@@ -186,6 +186,14 @@ struct AuthView: View {
             socialLoginButton(title: "Facebookで続ける", systemImage: "f.circle.fill") {
                 Task { await auth.signInWithOAuth(provider: .facebook) }
             }
+            if isSignUp {
+                Text("大学生専用のアプリのため、学校のメールアドレスに紐づくアカウントでご登録ください")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+                    .padding(.top, 2)
+            }
         }
         .disabled(auth.isLoading)
     }
