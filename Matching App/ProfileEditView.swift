@@ -23,7 +23,8 @@ struct ProfileEditView: View {
     @State var gender: Gender? = nil
     @State var birthday: Date = Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date()
     @State var area: String = ""
-    private var areaLabel: String { area.isEmpty ? unselectedOption : area }
+    @State var city: String = ""
+    private var areaLabel: String { area.isEmpty ? unselectedOption : (city.isEmpty ? area : "\(area) \(city)") }
     @State var height: Int? = nil
     @State var major: String = ""
     @State var nationalities: Set<String> = []
@@ -339,6 +340,7 @@ struct ProfileEditView: View {
                 self.gender = profile.gender
                 self.birthday = profile.birthday ?? (Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date())
                 self.area = profile.area
+                self.city = profile.city ?? ""
                 self.height = profile.height
                 self.major = profile.major ?? ""
                 self.nationalities = Set(profile.nationalities)
@@ -428,7 +430,7 @@ struct ProfileEditView: View {
             NationalityMultiSelectView(selected: $nationalities)
         }
         .sheet(isPresented: $showingAreaPicker) {
-            ResidencePickerView(area: $area)
+            ResidencePickerView(area: $area, city: $city)
         }
         .confirmationDialog("性別", isPresented: $showingGenderPicker, titleVisibility: .visible) {
             Button(Gender.male.label) { gender = .male }
@@ -522,6 +524,7 @@ struct ProfileEditView: View {
             birthday: birthday,
             profileImageUrlString: base?.profileImageUrlString,
             area: area,
+            city: city.isEmpty ? nil : city,
             height: height,
             major: major,
             nationality: nationalities.first,
@@ -586,7 +589,7 @@ struct ProfileEditView: View {
             return
         }
         Task {
-            let suceeded = await profileManager.save(name: name, description: description, gender: gender, birthday: birthday, area: area, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), universityId: universityId)
+            let suceeded = await profileManager.save(name: name, description: description, gender: gender, birthday: birthday, area: area, city: city.isEmpty ? nil : city, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), universityId: universityId)
             if suceeded {
                 dismiss()
                 await profileManager.load()
@@ -775,12 +778,14 @@ struct NationalityMultiSelectView: View {
 /// プロフィールの居住地を「国→都道府県/州」の順で選べる画面(絞り込み画面と同じ考え方の単一選択版)。
 struct ResidencePickerView: View {
     @Binding var area: String
+    @Binding var city: String
     @Environment(\.dismiss) private var dismiss
     @State private var country: String
     @State private var searchText = ""
 
-    init(area: Binding<String>) {
+    init(area: Binding<String>, city: Binding<String>) {
         self._area = area
+        self._city = city
         let initial = area.wrappedValue
         if usStates.contains(initial) {
             self._country = State(initialValue: "アメリカ")
@@ -796,6 +801,7 @@ struct ResidencePickerView: View {
                     NavigationLink {
                         CountrySearchView(selectedCountry: $country) {
                             searchText = ""
+                            city = ""
                         }
                     } label: {
                         HStack {
@@ -814,13 +820,13 @@ struct ResidencePickerView: View {
                         Section("地方から選ぶ") {
                             ForEach(japanRegions, id: \.name) { region in
                                 NavigationLink {
-                                    PrefectureListView(options: region.prefectures, title: region.name, area: $area) { dismiss() }
+                                    PrefectureListView(options: region.prefectures, title: region.name, area: $area, city: $city) { dismiss() }
                                 } label: {
                                     HStack {
                                         Text(region.name)
                                         Spacer()
                                         if region.prefectures.contains(area) {
-                                            Text(area).font(.caption).foregroundStyle(Color.brandPurple)
+                                            Text(city.isEmpty ? area : city).font(.caption).foregroundStyle(Color.brandPurple)
                                         }
                                     }
                                 }
@@ -829,7 +835,21 @@ struct ResidencePickerView: View {
                     } else {
                         Section {
                             ForEach(prefectures.filter { $0.contains(searchText) }, id: \.self) { prefecture in
-                                selectableRow(prefecture)
+                                if let municipalities = japanMunicipalities[prefecture] {
+                                    NavigationLink {
+                                        MunicipalityListView(options: municipalities, prefecture: prefecture, area: $area, city: $city) { dismiss() }
+                                    } label: {
+                                        HStack {
+                                            Text(prefecture).foregroundStyle(.primary)
+                                            Spacer()
+                                            if area == prefecture {
+                                                Text(city).font(.caption).foregroundStyle(Color.brandPurple)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    selectableRow(prefecture)
+                                }
                             }
                         }
                     }
@@ -847,6 +867,7 @@ struct ResidencePickerView: View {
                     Section {
                         Button {
                             area = country
+                            city = ""
                             dismiss()
                         } label: {
                             HStack {
@@ -873,6 +894,7 @@ struct ResidencePickerView: View {
     private func selectableRow(_ value: String) -> some View {
         Button {
             area = value
+            city = ""
             dismiss()
         } label: {
             HStack {
@@ -930,6 +952,7 @@ private struct PrefectureListView: View {
     let options: [String]
     let title: String
     @Binding var area: String
+    @Binding var city: String
     var onSelect: () -> Void
     @State private var searchText = ""
 
@@ -944,14 +967,87 @@ private struct PrefectureListView: View {
             }
             Section {
                 ForEach(filtered, id: \.self) { option in
+                    if let municipalities = japanMunicipalities[option] {
+                        NavigationLink {
+                            MunicipalityListView(options: municipalities, prefecture: option, area: $area, city: $city, onSelect: onSelect)
+                        } label: {
+                            HStack {
+                                Text(option).foregroundStyle(.primary)
+                                Spacer()
+                                if area == option {
+                                    Text(city).font(.caption).foregroundStyle(Color.brandPurple)
+                                }
+                            }
+                        }
+                    } else {
+                        Button {
+                            area = option
+                            city = ""
+                            onSelect()
+                        } label: {
+                            HStack {
+                                Text(option).foregroundStyle(.primary)
+                                Spacer()
+                                if area == option {
+                                    Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// 都道府県よりも詳細な市区町村(政令指定都市の区・東京23区など)を選ぶ画面。
+/// 「〇〇全体」を選べば市区町村を指定せず、都道府県単位のままにできる。
+private struct MunicipalityListView: View {
+    let options: [String]
+    let prefecture: String
+    @Binding var area: String
+    @Binding var city: String
+    var onSelect: () -> Void
+    @State private var searchText = ""
+
+    private var filtered: [String] {
+        searchText.isEmpty ? options : options.filter { $0.contains(searchText) }
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Button {
+                    area = prefecture
+                    city = ""
+                    onSelect()
+                } label: {
+                    HStack {
+                        Text("\(prefecture)全体").foregroundStyle(.primary)
+                        Spacer()
+                        if area == prefecture && city.isEmpty {
+                            Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
+                        }
+                    }
+                }
+            }
+            Section {
+                TextField("市区町村を検索", text: $searchText)
+            }
+            Section {
+                ForEach(filtered, id: \.self) { option in
                     Button {
-                        area = option
+                        area = prefecture
+                        city = option
                         onSelect()
                     } label: {
                         HStack {
                             Text(option).foregroundStyle(.primary)
                             Spacer()
-                            if area == option {
+                            if area == prefecture && city == option {
                                 Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                             }
                         }
@@ -960,7 +1056,7 @@ private struct PrefectureListView: View {
                 }
             }
         }
-        .navigationTitle(title)
+        .navigationTitle(prefecture)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

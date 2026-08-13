@@ -145,6 +145,9 @@ final class DiscoverManager: ObservableObject {
         if !filter.areas.isEmpty {
             query = query.in("area", values: Array(filter.areas))
         }
+        if !filter.cities.isEmpty {
+            query = query.in("city", values: Array(filter.cities))
+        }
         if !filter.nationalities.isEmpty {
             query = query.overlaps("nationalities", value: Array(filter.nationalities))
         }

@@ -193,6 +193,7 @@ struct FilterSheetView: View {
 
     private var areaSummary: String {
         if draft.areas.isEmpty { return "指定なし" }
+        if let city = draft.cities.first { return city }
         if draft.areas.count == 1 { return draft.areas.first ?? "" }
         return "\(draft.areas.count)件選択中"
     }
@@ -275,6 +276,7 @@ private struct AreaFilterView: View {
                 NavigationLink {
                     CountrySelectView(selectedCountry: $draft.areaCountry, onChange: {
                         draft.areas = []
+                        draft.cities = []
                         areaSearchText = ""
                     })
                 } label: {
@@ -295,13 +297,13 @@ private struct AreaFilterView: View {
                     Section("地方から選ぶ") {
                         ForEach(japanRegions, id: \.name) { region in
                             NavigationLink {
-                                PrefectureSingleSelectView(options: region.prefectures, title: region.name, searchPlaceholder: "都道府県を検索", selected: $draft.areas, popToRoot: popToRoot)
+                                PrefectureSingleSelectView(options: region.prefectures, title: region.name, searchPlaceholder: "都道府県を検索", draft: $draft, popToRoot: popToRoot)
                             } label: {
                                 HStack {
                                     Text(region.name)
                                     Spacer()
                                     if let selected = draft.areas.first, region.prefectures.contains(selected) {
-                                        Text(selected)
+                                        Text(draft.cities.first ?? selected)
                                             .font(.caption)
                                             .foregroundStyle(Color.brandPurple)
                                     }
@@ -312,9 +314,26 @@ private struct AreaFilterView: View {
                 } else {
                     Section {
                         ForEach(prefectures.filter { $0.contains(areaSearchText) }, id: \.self) { prefecture in
-                            multiSelectRow(title: prefecture, isSelected: draft.areas.contains(prefecture)) {
-                                selectSingle(prefecture, in: &draft.areas)
-                                popToRoot()
+                            if let municipalities = japanMunicipalities[prefecture] {
+                                NavigationLink {
+                                    MunicipalitySingleSelectView(options: municipalities, prefecture: prefecture, draft: $draft, popToRoot: popToRoot)
+                                } label: {
+                                    HStack {
+                                        Text(prefecture)
+                                        Spacer()
+                                        if draft.areas.contains(prefecture) {
+                                            Text(draft.cities.first ?? "")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.brandPurple)
+                                        }
+                                    }
+                                }
+                            } else {
+                                multiSelectRow(title: prefecture, isSelected: draft.areas.contains(prefecture)) {
+                                    selectSingle(prefecture, in: &draft.areas)
+                                    draft.cities = []
+                                    popToRoot()
+                                }
                             }
                         }
                     }
@@ -328,6 +347,7 @@ private struct AreaFilterView: View {
                     ForEach(filteredStates, id: \.self) { state in
                         multiSelectRow(title: state, isSelected: draft.areas.contains(state)) {
                             selectSingle(state, in: &draft.areas)
+                            draft.cities = []
                             popToRoot()
                         }
                     }
@@ -336,6 +356,7 @@ private struct AreaFilterView: View {
                 Section {
                     Button {
                         draft.areas = [draft.areaCountry]
+                        draft.cities = []
                         popToRoot()
                     } label: {
                         HStack {
@@ -530,7 +551,7 @@ private struct PrefectureSingleSelectView: View {
     let options: [String]
     let title: String
     var searchPlaceholder: String = "検索"
-    @Binding var selected: Set<String>
+    @Binding var draft: DiscoverFilter
     var popToRoot: () -> Void
     @State private var searchText = ""
 
@@ -545,14 +566,70 @@ private struct PrefectureSingleSelectView: View {
             }
             Section {
                 ForEach(filtered, id: \.self) { option in
-                    multiSelectRow(title: option, isSelected: selected.contains(option)) {
-                        selected = selected.contains(option) ? [] : [option]
-                        popToRoot()
+                    if let municipalities = japanMunicipalities[option] {
+                        NavigationLink {
+                            MunicipalitySingleSelectView(options: municipalities, prefecture: option, draft: $draft, popToRoot: popToRoot)
+                        } label: {
+                            HStack {
+                                Text(option)
+                                Spacer()
+                                if draft.areas.contains(option) {
+                                    Text(draft.cities.first ?? "")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.brandPurple)
+                                }
+                            }
+                        }
+                    } else {
+                        multiSelectRow(title: option, isSelected: draft.areas.contains(option)) {
+                            draft.areas = draft.areas.contains(option) ? [] : [option]
+                            draft.cities = []
+                            popToRoot()
+                        }
                     }
                 }
             }
         }
         .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// 都道府県よりも詳細な市区町村(政令指定都市の区・東京23区など)の単一選択画面。
+private struct MunicipalitySingleSelectView: View {
+    let options: [String]
+    let prefecture: String
+    @Binding var draft: DiscoverFilter
+    var popToRoot: () -> Void
+    @State private var searchText = ""
+
+    private var filtered: [String] {
+        searchText.isEmpty ? options : options.filter { $0.contains(searchText) }
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                multiSelectRow(title: "\(prefecture)全体", isSelected: draft.areas.contains(prefecture) && draft.cities.isEmpty) {
+                    draft.areas = [prefecture]
+                    draft.cities = []
+                    popToRoot()
+                }
+            }
+            Section {
+                TextField("市区町村を検索", text: $searchText)
+            }
+            Section {
+                ForEach(filtered, id: \.self) { option in
+                    multiSelectRow(title: option, isSelected: draft.cities.contains(option)) {
+                        draft.areas = [prefecture]
+                        draft.cities = [option]
+                        popToRoot()
+                    }
+                }
+            }
+        }
+        .navigationTitle(prefecture)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

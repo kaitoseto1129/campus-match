@@ -241,7 +241,7 @@ class ProfileManager: ObservableObject {
             print("university load error: \(error)")
         }
     }
-    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, height: Int, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
+    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, city: String?, height: Int, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
         guard let uid = supabase().auth.currentUser?.id else { return false}
         isLoading = true
         defer { isLoading = false }
@@ -253,6 +253,7 @@ class ProfileManager: ObservableObject {
             let gender: Gender
             let birthday: String   // ← String に変更
             let area: String
+            let city: String?
             let height: Int
             let major: String
             let nationality: String
@@ -264,7 +265,7 @@ class ProfileManager: ObservableObject {
             let languages: [String]
             let universityId: UUID
             enum CodingKeys: String, CodingKey {
-                case name, description, gender, birthday, area, height, major, nationality, nationalities, tagline, drinking, smoking, languages
+                case name, description, gender, birthday, area, city, height, major, nationality, nationalities, tagline, drinking, smoking, languages
                 case bodyType = "body_type"
                 case universityId = "university_id"
             }
@@ -282,6 +283,7 @@ class ProfileManager: ObservableObject {
             gender: gender,
             birthday: formatter.string(from: birthday),
             area: area,
+            city: city,
             height: height,
             major: major,
             // 旧・単一nationality列は表示フォールバック用に、複数選択の先頭値だけ入れておく。
@@ -336,7 +338,7 @@ class ProfileManager: ObservableObject {
     static var preview: ProfileManager {
         let manager = ProfileManager()
         let uid = UUID()
-        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], membershipTier: .free, hobbyCards: ["movie", "cafe", "music"], boostExpiresAtString: nil, createdAtString: nil)
+        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", city: nil, height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], membershipTier: .free, hobbyCards: ["movie", "cafe", "music"], boostExpiresAtString: nil, createdAtString: nil)
         manager.university = University(id: UUID(), name: "サンプル大学", domain: "example.ac.jp", country: "日本", prefecture: "東京都")
 
             manager.photos = [

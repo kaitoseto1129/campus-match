@@ -19,6 +19,8 @@ struct DiscoverFilter: Equatable {
     var ageMin: Int = DiscoverFilter.ageRange.lowerBound
     var ageMax: Int = DiscoverFilter.ageRange.upperBound
     var areas: Set<String> = []
+    /// 都道府県よりも詳細な市区町村での絞り込み(データがある都道府県のみ)。
+    var cities: Set<String> = []
     /// 居住地の国。都道府県/州のどちらのリストを見せるかの切り替えに使うだけで、
     /// 検索クエリ自体はareas(実際の値)で絞り込む。
     var areaCountry: String = "日本"
@@ -39,7 +41,7 @@ struct DiscoverFilter: Equatable {
         heightMin > Self.heightRange.lowerBound || heightMax < Self.heightRange.upperBound
     }
     var isActive: Bool {
-        isAgeFiltered || isHeightFiltered || !areas.isEmpty || !nationalities.isEmpty || !bodyTypes.isEmpty || universityId != nil || !showAllUniversities
+        isAgeFiltered || isHeightFiltered || !areas.isEmpty || !cities.isEmpty || !nationalities.isEmpty || !bodyTypes.isEmpty || universityId != nil || !showAllUniversities
     }
 
     private static let dayFormatter: DateFormatter = {

@@ -184,7 +184,7 @@ private struct LikeHistoryCardView<Action: View>: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    Text(profile.area)
+                    Text(profile.areaLabel)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     if commonPoints > 0 {
