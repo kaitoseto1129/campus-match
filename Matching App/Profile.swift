@@ -168,7 +168,9 @@ extension Profile {
             if isDone { done += 1 } else { missing.append(label) }
         }
         check("自己紹介", !(description ?? "").isEmpty)
-        check("写真\(ProfileEditView.minPhotoCount)枚以上", photoCount >= ProfileEditView.minPhotoCount)
+        // メイン写真は必須で常に1枚あるため、充実度チェックでは任意のサブ写真も含めた枚数を目安にする。
+        let recommendedPhotoCount = 1 + ProfileEditView.minSubPhotoCount
+        check("写真\(recommendedPhotoCount)枚以上", photoCount >= recommendedPhotoCount)
         check("一言コメント", !(tagline ?? "").isEmpty)
         check("専攻", !(major ?? "").isEmpty)
         check("自己紹介200文字以上", (description ?? "").count >= 200)

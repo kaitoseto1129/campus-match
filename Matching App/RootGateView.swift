@@ -44,8 +44,9 @@ struct RootGateView: View {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                 }
             }
+            // 必須なのはメイン写真(orderNumber 0)のみ。サブ写真は任意なので枚数では判定しない。
             let isComplete = (profileManager.profile?.isProfileComplete ?? false)
-                && profileManager.photos.count >= ProfileEditView.minPhotoCount
+                && profileManager.photos.contains { $0.orderNumber == 0 }
             showingOnboarding = !isComplete
             hasLoaded = true
         }

@@ -80,8 +80,10 @@ struct ProfileEditView: View {
     }
 
     static let minDescriptionLength = 50
+    /// サブ写真の表示枠数(任意項目なので登録は必須ではない)。
     static let minSubPhotoCount = 2
-    static let minPhotoCount = 1 + minSubPhotoCount // メイン1枚 + サブ2枚
+    /// 必須なのはメイン写真1枚のみ。サブ写真は任意。
+    static let minPhotoCount = 1
     static let maxTaglineLength = 20
 
     var taglineSection: some View {
@@ -121,7 +123,7 @@ struct ProfileEditView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("サブ写真(必須・\(Self.minSubPhotoCount)枚)") {
+            Section("サブ写真(任意・\(Self.minSubPhotoCount)枚まで)") {
                 let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
                 let subSlotHints = ["趣味の写真など", "全身の写真など"]
                 LazyVGrid(columns: columns, spacing: 10) {
@@ -581,8 +583,8 @@ struct ProfileEditView: View {
             showingValidationAlert = true
             return
         }
-        if profileManager.photos.count < Self.minPhotoCount {
-            validationMessage = "写真をメイン1枚+サブ\(Self.minSubPhotoCount)枚、合計\(Self.minPhotoCount)枚を追加してください"
+        if photo(forSlot: 0) == nil {
+            validationMessage = "メイン写真を追加してください(サブ写真は任意です)"
             showingValidationAlert = true
             return
         }
