@@ -63,6 +63,9 @@ final class LikesManager: ObservableObject {
             if !filter.nationalities.isEmpty {
                 query = query.overlaps("nationalities", value: Array(filter.nationalities))
             }
+            if !filter.bodyTypes.isEmpty {
+                query = query.in("body_type", values: Array(filter.bodyTypes))
+            }
             if filter.isAgeFiltered {
                 query = query
                     .gte("birthday", value: filter.minBirthdayString)

@@ -18,13 +18,14 @@ struct WelcomeOnboardingView: View {
             VStack(spacing: 0) {
                 TabView(selection: $page) {
                     welcomePage(
-                        icon: "person.2.fill",
+                        showsAppIcon: true,
                         title: "キャンパスマッチへようこそ",
-                        message: "同じ大学・同じキャンパスの学生同士で\n出会える学生限定マッチングアプリです"
+                        message: "キャンパスマッチは大学生専用の\nマッチングアプリです"
                     )
                     .tag(0)
 
                     welcomePage(
+                        showsAppIcon: false,
                         icon: "sparkles",
                         title: "使い方はかんたん",
                         message: "「探す」で気になる人にいいね、\nマッチしたら「トーク」でお話ししましょう"
@@ -50,28 +51,30 @@ struct WelcomeOnboardingView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 28))
                 }
                 .padding(.horizontal, 32)
-                .padding(.bottom, 40)
-
-                if page == 0 {
-                    Button("スキップ") { onFinish() }
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.85))
-                        .padding(.bottom, 24)
-                }
+                .padding(.bottom, 48)
             }
         }
     }
 
-    private func welcomePage(icon: String, title: String, message: String) -> some View {
+    private func welcomePage(showsAppIcon: Bool, icon: String = "", title: String, message: String) -> some View {
         VStack(spacing: 24) {
             Spacer()
-            ZStack {
-                Circle()
-                    .fill(.white.opacity(0.18))
-                    .frame(width: 160, height: 160)
-                Image(systemName: icon)
-                    .font(.system(size: 64))
-                    .foregroundStyle(.white)
+            if showsAppIcon {
+                Image("LaunchLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 140, height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 32))
+                    .shadow(color: .black.opacity(0.2), radius: 16, y: 8)
+            } else {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.18))
+                        .frame(width: 160, height: 160)
+                    Image(systemName: icon)
+                        .font(.system(size: 64))
+                        .foregroundStyle(.white)
+                }
             }
             Text(title)
                 .font(.title2.bold())

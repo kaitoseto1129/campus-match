@@ -53,6 +53,7 @@ struct MainTabView: View {
         .fullScreenCover(item: $matchManager.celebratingMatch) { celebration in
             MatchCelebrationView(
                 myPhotoURL: matchManager.myPhotoURL,
+                myName: matchManager.myName,
                 otherProfile: celebration.profile,
                 otherPhotoURL: celebration.photoURL,
                 matchId: celebration.match.id

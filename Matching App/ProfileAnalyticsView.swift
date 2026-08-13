@@ -10,14 +10,28 @@ struct ProfileAnalyticsView: View {
     @StateObject private var manager = ProfileAnalyticsManager()
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                summaryCards
-                insightsCard
-                photoStatsCard
-                sectionFunnelCard
+        ZStack(alignment: .top) {
+            LinearGradient(
+                colors: [Color.brandPurple.opacity(0.35), Color.brandTeal.opacity(0.2), .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 200)
+            .ignoresSafeArea(edges: .top)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    header
+                    summaryCards
+                    insightsCard
+                    photoStatsCard
+                    sectionFunnelCard
+                }
+                .padding()
             }
-            .padding()
+            .refreshable {
+                await manager.load()
+            }
         }
         .background(Color.appListBackground.ignoresSafeArea())
         .navigationTitle("プロフィール分析")
@@ -25,9 +39,27 @@ struct ProfileAnalyticsView: View {
         .task {
             await manager.load()
         }
-        .refreshable {
-            await manager.load()
+    }
+
+    private var header: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(Color.brandGradient)
+                    .frame(width: 52, height: 52)
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.title3.bold())
+                    .foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("プロフィールの反応をチェック")
+                    .font(.headline)
+                Text("閲覧数やいいねの傾向から、改善のヒントを確認できます")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
+        .padding(.top, 4)
     }
 
     private var summaryCards: some View {
@@ -38,9 +70,14 @@ struct ProfileAnalyticsView: View {
     }
 
     private func statCard(icon: String, color: Color, title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon)
-                .foregroundStyle(color)
+        VStack(alignment: .leading, spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .foregroundStyle(color)
+            }
             Text(value)
                 .font(.title.bold())
             Text(title)
@@ -49,7 +86,8 @@ struct ProfileAnalyticsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .shadow(color: .black.opacity(0.05), radius: 8, y: 3)
     }
 
     private var insightsCard: some View {
@@ -64,6 +102,10 @@ struct ProfileAnalyticsView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
+            } else if manager.insights.isEmpty {
+                Text("データが増えると、ここに改善のヒントが表示されます")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             } else {
                 ForEach(Array(manager.insights.enumerated()), id: \.offset) { _, text in
                     HStack(alignment: .top, spacing: 8) {
@@ -80,13 +122,18 @@ struct ProfileAnalyticsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .shadow(color: .black.opacity(0.05), radius: 8, y: 3)
     }
 
     private var photoStatsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("写真ごとの閲覧数")
-                .font(.headline)
+            HStack(spacing: 6) {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .foregroundStyle(Color.brandTeal)
+                Text("写真ごとの閲覧数")
+                    .font(.headline)
+            }
             if manager.photoStats.isEmpty {
                 Text("写真がまだ登録されていません")
                     .font(.caption)
@@ -98,6 +145,7 @@ struct ProfileAnalyticsView: View {
                         y: .value("写真", index == 0 ? "メイン" : "\(index + 1)枚目")
                     )
                     .foregroundStyle(index == 0 ? Color.brandPurple : Color.brandTeal)
+                    .cornerRadius(6)
                     .annotation(position: .trailing) {
                         Text("\(stat.viewCount)")
                             .font(.caption2.bold())
@@ -108,13 +156,18 @@ struct ProfileAnalyticsView: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .shadow(color: .black.opacity(0.05), radius: 8, y: 3)
     }
 
     private var sectionFunnelCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("どこまで読まれているか")
-                .font(.headline)
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.down.right.and.arrow.up.left")
+                    .foregroundStyle(Color.brandPurple)
+                Text("どこまで読まれているか")
+                    .font(.headline)
+            }
             Text("到達した割合が低いほど、その手前で離脱している人が多いことを示します")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -140,7 +193,7 @@ struct ProfileAnalyticsView: View {
                                     RoundedRectangle(cornerRadius: 6)
                                         .fill(Color(.systemGray5))
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.brandTeal)
+                                        .fill(Color.brandGradient)
                                         .frame(width: geo.size.width * stat.percentage)
                                 }
                             }
@@ -151,7 +204,8 @@ struct ProfileAnalyticsView: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .shadow(color: .black.opacity(0.05), radius: 8, y: 3)
     }
 }
 

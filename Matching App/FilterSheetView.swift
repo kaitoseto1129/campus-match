@@ -77,6 +77,13 @@ struct FilterSheetView: View {
                             Divider().padding(.leading, 16)
 
                             NavigationLink {
+                                MultiSelectFilterView(title: "体型", options: bodyTypeOptions.filter { $0 != unselectedOption }, selected: $draft.bodyTypes)
+                            } label: {
+                                filterRow(title: "体型", value: bodyTypeSummary)
+                            }
+                            Divider().padding(.leading, 16)
+
+                            NavigationLink {
                                 UniversityFilterView(draft: $draft, universities: universities, universityCountries: universityCountries)
                             } label: {
                                 filterRow(title: "大学", value: universitySummary)
@@ -194,6 +201,12 @@ struct FilterSheetView: View {
         if draft.nationalities.isEmpty { return "指定なし" }
         if draft.nationalities.count == 1 { return draft.nationalities.first ?? "" }
         return "\(draft.nationalities.count)件選択中"
+    }
+
+    private var bodyTypeSummary: String {
+        if draft.bodyTypes.isEmpty { return "指定なし" }
+        if draft.bodyTypes.count == 1 { return draft.bodyTypes.first ?? "" }
+        return "\(draft.bodyTypes.count)件選択中"
     }
 
     private var universityCountries: [String] {

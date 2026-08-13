@@ -14,6 +14,9 @@ struct ProfileEditView: View {
     var isOnboarding: Bool = false
     /// マイページの「やることリスト」から遷移した場合、開いた直後にその項目のセクションまで自動スクロールする。
     var initialFocusSectionId: String? = nil
+    /// オンボーディング時、「保存」が成功した瞬間だけ呼ばれる。写真追加などの途中経過では呼ばれないため、
+    /// 「保存を押していないのに次の画面(通知許可など)に進んでしまう」ことがない。
+    var onOnboardingComplete: (() -> Void)? = nil
     @Environment(\.dismiss) var dismiss
     @State var name: String = ""
     @State var description: String = ""
@@ -76,7 +79,8 @@ struct ProfileEditView: View {
     }
 
     static let minDescriptionLength = 50
-    static let minPhotoCount = 4 // メイン1枚 + サブ3枚
+    static let minSubPhotoCount = 2
+    static let minPhotoCount = 1 + minSubPhotoCount // メイン1枚 + サブ2枚
     static let maxTaglineLength = 20
 
     var taglineSection: some View {
@@ -116,18 +120,19 @@ struct ProfileEditView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("サブ写真(必須・3枚)") {
+            Section("サブ写真(必須・\(Self.minSubPhotoCount)枚)") {
                 let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
+                let subSlotHints = ["趣味の写真など", "全身の写真など"]
                 LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(1..<Self.minPhotoCount, id: \.self) { slot in
+                    ForEach(1...Self.minSubPhotoCount, id: \.self) { slot in
                         if let subPhoto = photo(forSlot: slot) {
                             editablePhotoCell(subPhoto, slot: slot)
                         } else {
-                            emptyPhotoSlot(label: "サブ\(slot)", slot: slot)
+                            emptyPhotoSlot(label: slot - 1 < subSlotHints.count ? subSlotHints[slot - 1] : "サブ\(slot)", slot: slot)
                         }
                     }
                 }
-                Text("メインより先に、この3枚から登録しても大丈夫です。写真をドラッグすると並び替えられます")
+                Text("メインより先に、この\(Self.minSubPhotoCount)枚から登録しても大丈夫です。写真をドラッグすると並び替えられます")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -288,23 +293,27 @@ struct ProfileEditView: View {
     }
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                Form {
-                    photosSection
-                    taglineSection
-                    basicSection
-                    lifestyleSection
-                    aboutSection
-                }
-                .onAppear {
-                    if let target = initialFocusSectionId {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            withAnimation { proxy.scrollTo(target, anchor: .top) }
+            ZStack {
+                Color.appListBackground.ignoresSafeArea()
+                ScrollViewReader { proxy in
+                    Form {
+                        photosSection
+                        basicSection
+                        aboutSection
+                        lifestyleSection
+                        taglineSection
+                    }
+                    .scrollContentBackground(.hidden)
+                    .onAppear {
+                        if let target = initialFocusSectionId {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                withAnimation { proxy.scrollTo(target, anchor: .top) }
+                            }
                         }
                     }
                 }
             }
-            .navigationTitle(Text(isOnboarding ? "プロフィールを完成させましょう" : "プロフィール編集"))
+            .navigationTitle(Text(isOnboarding ? "プロフィール登録" : "プロフィール編集"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if !isOnboarding {
@@ -552,7 +561,7 @@ struct ProfileEditView: View {
             return
         }
         if profileManager.photos.count < Self.minPhotoCount {
-            validationMessage = "写真をメイン1枚+サブ3枚、合計\(Self.minPhotoCount)枚を追加してください"
+            validationMessage = "写真をメイン1枚+サブ\(Self.minSubPhotoCount)枚、合計\(Self.minPhotoCount)枚を追加してください"
             showingValidationAlert = true
             return
         }
@@ -581,6 +590,9 @@ struct ProfileEditView: View {
             if suceeded {
                 dismiss()
                 await profileManager.load()
+                if isOnboarding {
+                    onOnboardingComplete?()
+                }
             } else {
                 showingSaveFailAlert = true
             }

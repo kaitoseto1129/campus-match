@@ -108,8 +108,16 @@ enum MembershipTier: String, Codable, CaseIterable {
     var label: String {
         switch self {
         case .free: return "無料会員"
-        case .premium: return "有料会員"
-        case .vip: return "VIPオプション"
+        // premium/vipはUI上は「有料会員」1プランに統合しているため、同じラベルを返す。
+        case .premium, .vip: return "有料会員"
+        }
+    }
+
+    /// 月額料金(円)。無料会員は0円。
+    var monthlyPriceYen: Int {
+        switch self {
+        case .free: return 0
+        case .premium, .vip: return 2000
         }
     }
 

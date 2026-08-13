@@ -25,6 +25,7 @@ struct DiscoverFilter: Equatable {
     var heightMin: Int = DiscoverFilter.heightRange.lowerBound
     var heightMax: Int = DiscoverFilter.heightRange.upperBound
     var nationalities: Set<String> = []
+    var bodyTypes: Set<String> = []
     /// nilなら大学IDでの絞り込みなし。値があればその大学のみ絞り込む。
     var universityId: UUID? = nil
     /// デフォルトはtrue(インターカレッジ、全大学が対象)。falseにすると自分の大学のみに絞り込む。
@@ -38,7 +39,7 @@ struct DiscoverFilter: Equatable {
         heightMin > Self.heightRange.lowerBound || heightMax < Self.heightRange.upperBound
     }
     var isActive: Bool {
-        isAgeFiltered || isHeightFiltered || !areas.isEmpty || !nationalities.isEmpty || universityId != nil || !showAllUniversities
+        isAgeFiltered || isHeightFiltered || !areas.isEmpty || !nationalities.isEmpty || !bodyTypes.isEmpty || universityId != nil || !showAllUniversities
     }
 
     private static let dayFormatter: DateFormatter = {

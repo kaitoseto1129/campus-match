@@ -12,6 +12,7 @@ struct MyPageHomeView: View {
     @EnvironmentObject private var tabRouter: TabRouter
     @State private var navPath = NavigationPath()
     @State private var showingWithdrawConfirm = false
+    @State private var showingLogoutConfirm = false
     @State private var showingWithdrawFailedAlert = false
     @State private var isWithdrawing = false
     @State private var showingShareBonusToast = false
@@ -406,7 +407,7 @@ struct MyPageHomeView: View {
         ShareLink(item: "キャンパスマッチ、使ってみて!学生限定のマッチングアプリです。") {
             HStack {
                 Image(systemName: "square.and.arrow.up")
-                Text(profileManager.profile?.shareBonusClaimed == true ? "アプリを紹介する" : "アプリを紹介して10いいねゲット")
+                Text(profileManager.profile?.shareBonusClaimed == true ? "アプリを紹介する" : "アプリを紹介して50いいねゲット")
                     .font(.subheadline.bold())
             }
             .frame(maxWidth: .infinity)
@@ -428,7 +429,7 @@ struct MyPageHomeView: View {
                 }
             }
         })
-        .sentConfirmationCover(isPresented: $showingShareBonusToast, message: "10いいねを獲得しました!", icon: "gift.fill")
+        .sentConfirmationCover(isPresented: $showingShareBonusToast, message: "50いいねを獲得しました!", icon: "gift.fill")
     }
 
     private var settingsSection: some View {
@@ -443,6 +444,19 @@ struct MyPageHomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
 
             Button {
+                showingLogoutConfirm = true
+            } label: {
+                Text("ログアウト")
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            }
+            .background(Color(.systemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .padding(.top, 12)
+
+            Button {
                 showingWithdrawConfirm = true
             } label: {
                 Text("退会する")
@@ -453,9 +467,15 @@ struct MyPageHomeView: View {
             }
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .padding(.top, 12)
+            .padding(.top, 8)
         }
         .padding(.horizontal)
+        .confirmationDialog("ログアウトしますか?", isPresented: $showingLogoutConfirm, titleVisibility: .visible) {
+            Button("ログアウト", role: .destructive) {
+                Task { await auth.signOut() }
+            }
+            Button("キャンセル", role: .cancel) {}
+        }
     }
 
     private func menuRow<Destination: View>(

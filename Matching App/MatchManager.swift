@@ -11,6 +11,7 @@ import Combine
 final class MatchManager: ObservableObject {
     @Published var celebratingMatch: MatchedChat?
     @Published var myPhotoURL: URL?
+    @Published var myName: String = ""
 
     private var channel: RealtimeChannelV2?
     private var listenTask: Task<Void, Never>?
@@ -21,6 +22,15 @@ final class MatchManager: ObservableObject {
         guard let myId = supabase().auth.currentUser?.id else { return }
         let photoURLs = await loadMainPhotoURLs(userIds: [myId])
         myPhotoURL = photoURLs[myId]
+        if let myProfile: Profile = try? await supabase()
+            .from("profiles")
+            .select("*")
+            .eq("id", value: myId)
+            .single()
+            .execute()
+            .value {
+            myName = myProfile.name
+        }
 
         let ch = supabase().channel("matches:\(myId.uuidString)")
         let insertions = ch.postgresChange(InsertAction.self, table: "matches")

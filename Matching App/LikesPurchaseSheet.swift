@@ -13,10 +13,11 @@ private struct LikePlan: Identifiable {
     var id: Int { likes }
 }
 
+// 枚数が多いほど1いいねあたりの単価が下がる(まとめ買いがお得になる)ようにしている。
 private let likePlans: [LikePlan] = [
     LikePlan(likes: 10, priceYen: 1_000, icon: "hand.thumbsup.fill", isBestValue: false),
-    LikePlan(likes: 50, priceYen: 5_000, icon: "hand.thumbsup.fill", isBestValue: false),
-    LikePlan(likes: 100, priceYen: 10_000, icon: "star.fill", isBestValue: true),
+    LikePlan(likes: 50, priceYen: 4_000, icon: "hand.thumbsup.fill", isBestValue: false),
+    LikePlan(likes: 100, priceYen: 7_000, icon: "star.fill", isBestValue: true),
 ]
 
 /// いいね購入時に、金額の異なる複数プランから選べるシート。

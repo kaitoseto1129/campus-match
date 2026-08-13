@@ -12,6 +12,9 @@ struct DiscoverView: View {
     @State private var showingFilterSheet = false
     @State private var showingMissions = false
     @State private var navPath = NavigationPath()
+    @AppStorage("hasSeenDiscoverTutorial") private var hasSeenDiscoverTutorial = false
+    @State private var tutorialStep: DiscoverTutorialStep?
+    @State private var tutorialAnchors: [String: Anchor<CGRect>] = [:]
 
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -27,6 +30,8 @@ struct DiscoverView: View {
 
                 ScrollView {
                 PrivateModeBanner()
+
+                missionsBanner
 
                 appealBanner
 
@@ -44,6 +49,7 @@ struct DiscoverView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
+                .tutorialAnchor("filter")
 
                 if discoverManager.candidates.isEmpty && !discoverManager.isLoading {
                     Text("表示できるユーザーがいません")
@@ -84,7 +90,15 @@ struct DiscoverView: View {
                 .refreshable {
                     await discoverManager.load()
                 }
+
+                if let tutorialStep {
+                    DiscoverTutorialOverlay(step: $tutorialStep, anchors: tutorialAnchors) {
+                        hasSeenDiscoverTutorial = true
+                    }
+                    .zIndex(1)
+                }
             }
+            .onPreferenceChange(TutorialAnchorKey.self) { tutorialAnchors = $0 }
             .navigationTitle("探す")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -106,14 +120,26 @@ struct DiscoverView: View {
             .task {
                 await discoverManager.load()
                 await missionsManager.load()
+                if !hasSeenDiscoverTutorial {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    withAnimation { tutorialStep = .missions }
+                }
             }
             .sheet(isPresented: $showingFilterSheet) {
                 FilterSheetView(filter: $discoverManager.filter) { draft in
                     await discoverManager.previewCount(for: draft)
                 }
             }
+            .onChange(of: showingFilterSheet) { _, isShowing in
+                if !isShowing, tutorialStep == .filter {
+                    withAnimation { tutorialStep = .candidate }
+                }
+            }
             .sheet(isPresented: $showingMissions, onDismiss: {
                 Task { await missionsManager.load() }
+                if tutorialStep == .missions {
+                    withAnimation { tutorialStep = .filter }
+                }
             }) {
                 DailyMissionsView()
             }
@@ -124,6 +150,42 @@ struct DiscoverView: View {
                 navPath = NavigationPath()
             }
         }
+    }
+
+    /// デイリーミッション画面への導線バナー。初回チュートリアルの最初のスポットライト対象。
+    private var missionsBanner: some View {
+        Button {
+            showingMissions = true
+        } label: {
+            HStack {
+                Image(systemName: "gift.fill")
+                    .foregroundStyle(Color.brandPurple)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("今日のミッションを確認しよう")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.primary)
+                    Text("ログインするだけでいいねがもらえます")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if missionsManager.hasClaimableMission {
+                    Circle()
+                        .fill(Color.brandOrange)
+                        .frame(width: 9, height: 9)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(Color.brandPurple.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
+            .padding(.top, 8)
+        }
+        .buttonStyle(.plain)
+        .tutorialAnchor("missions")
     }
 
     /// 探す画面から直接アピール(ブースト)機能への導線を出す。実際の発動はマイページで行う。
@@ -381,36 +443,55 @@ private struct DiscoverLikeButton: View {
     private var alreadyReminded: Bool { discoverManager.remindedIds.contains(candidate.id) }
 
     var body: some View {
-        // 非表示は画面右上の「…」メニューから行えるため、ここにはボタンを置かない。
-        Button {
-            Task {
-                if alreadyLiked {
-                    // 見てねはいいねを消費するため、送る前に必ず確認する。
-                    showingReminderConfirm = true
-                    return
+        HStack(spacing: 12) {
+            Button {
+                Task {
+                    await discoverManager.hideCandidate(candidate.id)
+                    advanceOrDismiss()
                 }
-                isSending = true
-                let count = await discoverManager.likeCount(for: candidate.id)
-                isSending = false
-                if count >= DiscoverManager.popularMemberThreshold {
-                    showingPopularSheet = true
-                } else {
-                    await sendAndConfirm(isSpecial: false)
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: "eye.slash.fill")
+                        .font(.callout)
+                    Text("非表示")
+                        .font(.caption2)
                 }
+                .frame(width: 60, height: 54)
+                .background(Color(.systemGray5))
+                .foregroundStyle(.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
-        } label: {
-            HStack {
-                Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
-                Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
-                    .bold()
+
+            Button {
+                Task {
+                    if alreadyLiked {
+                        // 見てねはいいねを消費するため、送る前に必ず確認する。
+                        showingReminderConfirm = true
+                        return
+                    }
+                    isSending = true
+                    let count = await discoverManager.likeCount(for: candidate.id)
+                    isSending = false
+                    if count >= DiscoverManager.popularMemberThreshold {
+                        showingPopularSheet = true
+                    } else {
+                        await sendAndConfirm(isSpecial: false)
+                    }
+                }
+            } label: {
+                HStack {
+                    Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
+                    Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
+                        .bold()
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandPurple))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 28))
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandPurple))
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 28))
+            .disabled(isSending || alreadyReminded)
         }
-        .disabled(isSending || alreadyReminded)
         .padding(.horizontal)
         .padding(.bottom, 8)
         .confirmationDialog(
@@ -452,7 +533,8 @@ private struct DiscoverLikeButton: View {
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false
-        advanceOrDismiss()
+        // いいね送信後は自動で次のお相手に移らず、この画面に留まる(離脱するまでは消えない)。
+        // 非表示にした時だけ、明示的にadvanceOrDismiss()で次へ進む。
     }
 
     private func sendReminderAndConfirm() async {
@@ -468,10 +550,9 @@ private struct DiscoverLikeButton: View {
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false
-        advanceOrDismiss()
     }
 
-    /// 送信後は、スワイプで見ている途中なら次のお相手へ自動で送り、
+    /// 非表示にした時、スワイプで見ている途中なら次のお相手へ自動で送り、
     /// 単体で開いている場合はこれまで通り閉じる。
     private func advanceOrDismiss() {
         if let onHidden {

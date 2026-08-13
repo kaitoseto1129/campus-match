@@ -7,6 +7,7 @@ import SwiftUI
 
 struct MatchCelebrationView: View {
     let myPhotoURL: URL?
+    let myName: String
     let otherProfile: Profile
     let otherPhotoURL: URL?
     let matchId: UUID
@@ -45,6 +46,14 @@ struct MatchCelebrationView: View {
                             .shadow(color: .white.opacity(0.9), radius: 14)
                     }
                     .padding(.top, 40)
+
+                    HStack(spacing: 44) {
+                        Text(myName)
+                        Text(otherProfile.name)
+                    }
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.white)
+                    .padding(.top, 10)
 
                     Spacer()
 
@@ -110,6 +119,7 @@ struct MatchCelebrationView: View {
 #Preview {
     MatchCelebrationView(
         myPhotoURL: nil,
+        myName: "自分",
         otherProfile: ProfileManager.preview.profile!,
         otherPhotoURL: nil,
         matchId: UUID()

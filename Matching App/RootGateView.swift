@@ -12,27 +12,32 @@ struct RootGateView: View {
     @State private var hasLoaded = false
     /// プロフィール完成後、初回だけプッシュ通知の許可案内を挟むためのフラグ。
     @AppStorage("hasRequestedNotificationPermission") private var hasRequestedNotificationPermission = false
+    /// 起動時に一度だけ判定し、以後はProfileEditViewの「保存」成功コールバックでしか変えない。
+    /// (写真を1枚追加するたびにphotos.countが変わって再評価されると、保存ボタンを押す前に
+    /// 勝手に次の画面へ進んでしまうことがあったため、途中経過のreactiveな再評価に頼らないようにした)
+    @State private var showingOnboarding = false
 
     var body: some View {
         Group {
             if !hasLoaded {
                 SplashView()
-            } else if let profile = profileManager.profile,
-                      profile.isProfileComplete,
-                      profileManager.photos.count >= ProfileEditView.minPhotoCount {
-                if !hasRequestedNotificationPermission {
-                    NotificationPermissionView {
-                        hasRequestedNotificationPermission = true
-                    }
-                } else {
-                    MainTabView()
+            } else if showingOnboarding {
+                ProfileEditView(profileManager: profileManager, isOnboarding: true) {
+                    showingOnboarding = false
+                }
+            } else if !hasRequestedNotificationPermission {
+                NotificationPermissionView {
+                    hasRequestedNotificationPermission = true
                 }
             } else {
-                ProfileEditView(profileManager: profileManager, isOnboarding: true)
+                MainTabView()
             }
         }
         .task {
             await profileManager.load()
+            let isComplete = (profileManager.profile?.isProfileComplete ?? false)
+                && profileManager.photos.count >= ProfileEditView.minPhotoCount
+            showingOnboarding = !isComplete
             hasLoaded = true
         }
     }

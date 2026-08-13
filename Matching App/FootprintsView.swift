@@ -52,6 +52,7 @@ private struct FootprintCardView: View {
     @State private var isSending = false
     @State private var didSend = false
     @State private var showingInsufficientLikesAlert = false
+    @State private var showingSentConfirmation = false
     @State private var alertMessage = "マイページからいいねを増やしてください。"
 
     var body: some View {
@@ -114,6 +115,7 @@ private struct FootprintCardView: View {
         } message: {
             Text(alertMessage)
         }
+        .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "いいねを送りました", icon: "hand.thumbsup.fill")
     }
 
     private func sendLike() async {
@@ -126,6 +128,9 @@ private struct FootprintCardView: View {
                 .rpc("send_like_atomic", params: SendLikeParams(pToUserId: footprint.profile.id, pIsSpecial: false))
                 .execute()
             didSend = true
+            showingSentConfirmation = true
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            showingSentConfirmation = false
         } catch {
             alertMessage = "残いいねが足りないか、通信に失敗した可能性があります。マイページからいいねを増やしてから、もう一度お試しください。"
             showingInsufficientLikesAlert = true
@@ -141,6 +146,7 @@ private struct FootprintLikeButton: View {
     @State private var isSending = false
     @State private var didSend = false
     @State private var showingInsufficientLikesAlert = false
+    @State private var showingSentConfirmation = false
 
     var body: some View {
         Button {
@@ -149,6 +155,9 @@ private struct FootprintLikeButton: View {
                 let success = await sendLike()
                 isSending = false
                 if success {
+                    showingSentConfirmation = true
+                    try? await Task.sleep(nanoseconds: 900_000_000)
+                    showingSentConfirmation = false
                     dismiss()
                 } else {
                     showingInsufficientLikesAlert = true
@@ -174,6 +183,7 @@ private struct FootprintLikeButton: View {
         } message: {
             Text("残いいねが足りないか、通信に失敗した可能性があります。マイページからいいねを増やしてから、もう一度お試しください。")
         }
+        .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "いいねを送りました", icon: "hand.thumbsup.fill")
     }
 
     private func sendLike() async -> Bool {

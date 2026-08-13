@@ -1,0 +1,308 @@
+//
+//  DiscoverTutorialOverlay.swift
+//  Matching App
+//
+
+import SwiftUI
+
+/// 探す画面の初回チュートリアルでハイライトしたい要素の位置を集めるためのPreferenceKey。
+struct TutorialAnchorKey: PreferenceKey {
+    static var defaultValue: [String: Anchor<CGRect>] = [:]
+    static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
+extension View {
+    /// この要素をチュートリアルのスポットライト対象として登録する。
+    func tutorialAnchor(_ id: String) -> some View {
+        anchorPreference(key: TutorialAnchorKey.self, value: .bounds) { [id: $0] }
+    }
+}
+
+enum DiscoverTutorialStep: Equatable {
+    case missions
+    case filter
+    case candidate
+    case closing
+}
+
+/// 背景を暗転させつつ、対象の四角形だけくり抜いて実際のUIをそのまま操作できるようにするScrim。
+private struct SpotlightScrimShape: Shape {
+    let holeRect: CGRect
+    var cornerRadius: CGFloat = 18
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path(rect)
+        guard holeRect != .zero else { return path }
+        let inset = holeRect.insetBy(dx: -8, dy: -8)
+        path.addPath(Path(roundedRect: inset, cornerRadius: cornerRadius))
+        return path
+    }
+}
+
+/// 探す画面を初めて開いたユーザー向けの簡易チュートリアル。
+/// デイリーミッション → 絞り込み → ダミーの候補カードでいいね送信、の順に案内する。
+/// 実際のUI(ミッション・絞り込み)はそのまま操作でき、候補カードだけはシミュレーションで
+/// 実際のいいねは消費しない。いいねを送ってもカードは消えない(ここが今回の要件)。
+struct DiscoverTutorialOverlay: View {
+    @Binding var step: DiscoverTutorialStep?
+    let anchors: [String: Anchor<CGRect>]
+    var onFinish: () -> Void
+
+    @State private var showingFakeProfile = false
+    @State private var simulatedLiked = false
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                switch step {
+                case .missions:
+                    spotlight(id: "missions", proxy: proxy) {
+                        tooltip(
+                            text: "まずはここをタップして、今日のデイリーミッションとログインボーナスを確認しましょう!",
+                            anchorId: "missions",
+                            proxy: proxy
+                        )
+                    }
+                case .filter:
+                    spotlight(id: "filter", proxy: proxy) {
+                        tooltip(
+                            text: "ここから条件(年齢・居住地・大学など)で絞り込み検索ができます。試しに開いてみましょう。",
+                            anchorId: "filter",
+                            proxy: proxy
+                        )
+                    }
+                case .candidate:
+                    candidateSimulation(proxy: proxy)
+                case .closing:
+                    closingMessage
+                case .none:
+                    EmptyView()
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .transition(.opacity)
+        .sheet(isPresented: $showingFakeProfile) {
+            fakeProfileSheet
+        }
+    }
+
+    // MARK: - スポットライト(実UIをそのまま操作させるステップ)
+
+    @ViewBuilder
+    private func spotlight<Content: View>(id: String, proxy: GeometryProxy, @ViewBuilder tooltip: () -> Content) -> some View {
+        let rect = anchors[id].map { proxy[$0] } ?? .zero
+        ZStack {
+            SpotlightScrimShape(holeRect: rect)
+                .fill(Color.black.opacity(0.68), style: FillStyle(eoFill: true))
+            if rect != .zero {
+                RoundedRectangle(cornerRadius: 26)
+                    .stroke(Color.brandPurple, lineWidth: 3)
+                    .frame(width: rect.width + 16, height: rect.height + 16)
+                    .position(x: rect.midX, y: rect.midY)
+                    .allowsHitTesting(false)
+                    .shadow(color: Color.brandPurple.opacity(0.6), radius: 10)
+            }
+            tooltip()
+            skipButton
+        }
+    }
+
+    private func tooltip(text: String, anchorId: String, proxy: GeometryProxy) -> some View {
+        let rect = anchors[anchorId].map { proxy[$0] } ?? .zero
+        let placeBelow = rect.midY < proxy.size.height / 2
+        return VStack {
+            Text(text)
+                .font(.subheadline.bold())
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.leading)
+                .padding(16)
+                .background(Color.brandPurple, in: RoundedRectangle(cornerRadius: 18))
+                .padding(.horizontal, 32)
+                .frame(maxWidth: .infinity)
+                .position(
+                    x: proxy.size.width / 2,
+                    y: placeBelow
+                        ? min(rect.maxY + 70, proxy.size.height - 60)
+                        : max(rect.minY - 70, 90)
+                )
+        }
+        .allowsHitTesting(false)
+    }
+
+    private var skipButton: some View {
+        VStack {
+            HStack {
+                Spacer()
+                Button("スキップ") {
+                    finish()
+                }
+                .font(.footnote.bold())
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.black.opacity(0.35), in: Capsule())
+                .padding(.top, 60)
+                .padding(.trailing, 20)
+            }
+            Spacer()
+        }
+    }
+
+    // MARK: - ダミー候補カードでのいいね体験シミュレーション
+
+    private func candidateSimulation(proxy: GeometryProxy) -> some View {
+        ZStack {
+            Color.black.opacity(0.68).ignoresSafeArea()
+            skipButton
+
+            VStack(spacing: 18) {
+                Text("最後に、気になるお相手を見つけたときの流れを体験してみましょう")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                Button {
+                    showingFakeProfile = true
+                } label: {
+                    fakeCandidateCard
+                }
+                .buttonStyle(.plain)
+
+                Text("↑ タップしてプロフィールを見てみましょう")
+                    .font(.footnote.bold())
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+        }
+    }
+
+    private var fakeCandidateCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ZStack {
+                LinearGradient(colors: [Color.brandPurple.opacity(0.5), Color.brandPink.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                Image(systemName: "person.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+            .frame(width: 170, height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16).stroke(.white, lineWidth: 2)
+            }
+
+            Text("サンプルさん")
+                .font(.subheadline.bold())
+                .foregroundStyle(.white)
+            Text("20歳・体験用のサンプルです")
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.75))
+        }
+        .padding(10)
+        .background(.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var fakeProfileSheet: some View {
+        VStack(spacing: 20) {
+            Capsule()
+                .fill(Color(.systemGray4))
+                .frame(width: 40, height: 5)
+                .padding(.top, 8)
+
+            ZStack {
+                LinearGradient(colors: [Color.brandPurple.opacity(0.5), Color.brandPink.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                Image(systemName: "person.fill")
+                    .font(.system(size: 90))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+            .frame(height: 260)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("サンプルさん・20歳")
+                    .font(.title3.bold())
+                Text("これは体験用のダミープロフィールです。実際のユーザーには、こんなふうにプロフィールが表示されます。")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+
+            Spacer()
+
+            Button {
+                simulatedLiked = true
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_100_000_000)
+                    showingFakeProfile = false
+                    simulatedLiked = false
+                    step = .closing
+                }
+            } label: {
+                HStack {
+                    Image(systemName: simulatedLiked ? "checkmark" : "hand.thumbsup.fill")
+                    Text(simulatedLiked ? "送信しました!" : "いいねを送る")
+                        .bold()
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(simulatedLiked ? Color.green : Color.brandPurple)
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+            }
+            .disabled(simulatedLiked)
+            .padding(.horizontal)
+            .padding(.bottom, 24)
+
+            Text(simulatedLiked
+                 ? "カードは消えずにこのまま残ります。気になるお相手には何度でも見に戻れます。"
+                 : "※ これは練習です。実際のいいねは消費されません。また、いいねを送ってもこのカードは消えません。")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+                .padding(.bottom, 12)
+        }
+        .presentationDetents([.fraction(0.85)])
+        .presentationDragIndicator(.hidden)
+    }
+
+    // MARK: - 締めのメッセージ
+
+    private var closingMessage: some View {
+        ZStack {
+            Color.black.opacity(0.75).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 46))
+                    .foregroundStyle(Color.brandPink)
+                Text("たくさんの出会いがあることを祈っています!")
+                    .font(.title3.bold())
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                Button {
+                    finish()
+                } label: {
+                    Text("はじめる")
+                        .bold()
+                        .frame(width: 200, height: 50)
+                        .background(Color.brandGradient)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                }
+                .padding(.top, 8)
+            }
+        }
+    }
+
+    private func finish() {
+        withAnimation {
+            step = nil
+        }
+        onFinish()
+    }
+}

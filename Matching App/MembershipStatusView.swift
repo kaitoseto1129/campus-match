@@ -5,8 +5,10 @@
 
 import SwiftUI
 
-/// 現在の会員ステータスと、各プランの特典を確認・切り替えできる画面。
-/// 1ユーザーは無料会員 / 有料会員 / VIPオプションのいずれか1つに属し、上位プランは下位の特典をすべて含む。
+/// 現在の会員ステータスと、プランの特典を確認・切り替えできる画面。
+/// 1ユーザーは無料会員 / 有料会員のいずれか1つに属する。
+/// (以前は有料会員とVIPオプションの2プランだったが、分かりやすさのため1プランに統合した。
+/// DB上のmembership_tier列はpremium/vipの2値が残っているが、UI上はどちらも「有料会員」として扱う)
 struct MembershipStatusView: View {
     @ObservedObject var profileManager: ProfileManager
     @State private var pendingTier: MembershipTier?
@@ -16,6 +18,7 @@ struct MembershipStatusView: View {
     @State private var purchasedMessage = ""
 
     private var currentTier: MembershipTier { profileManager.profile?.membership ?? .free }
+    private var isPaidMember: Bool { currentTier != .free }
 
     var body: some View {
         ZStack {
@@ -24,8 +27,7 @@ struct MembershipStatusView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     currentStatusCard
-                    planCard(.premium)
-                    planCard(.vip)
+                    paidPlanCard
                     freePlanCard
                     noteText
                 }
@@ -40,12 +42,12 @@ struct MembershipStatusView: View {
             await profileManager.load()
         }
         .confirmationDialog(
-            pendingTier.map { "\($0.label)に変更しますか?" } ?? "",
+            pendingTier.map { $0 == .free ? "無料会員に戻しますか?" : "有料会員を契約しますか?" } ?? "",
             isPresented: Binding(get: { pendingTier != nil }, set: { if !$0 { pendingTier = nil } }),
             titleVisibility: .visible
         ) {
             if let tier = pendingTier {
-                Button(tier == .free ? "無料会員に戻す" : "\(tier.label)を契約する") {
+                Button(tier == .free ? "無料会員に戻す" : "有料会員を契約する") {
                     Task { await purchase(tier) }
                 }
             }
@@ -65,18 +67,10 @@ struct MembershipStatusView: View {
     }
 
     private func confirmationMessage(for tier: MembershipTier) -> String {
-        switch tier {
-        case .free:
-            return "無料会員に戻すと、メッセージの送信・いいね数の表示・プライベートモード・既読表示が使えなくなります。"
-        case .premium:
-            return currentTier == .free
-                ? "契約と同時に30いいね!が付与されます。(このアプリでは実際の課金は発生しません)"
-                : "有料会員に変更します。VIP限定の特典は使えなくなります。"
-        case .vip:
-            return currentTier == .free
-                ? "有料会員のすべての特典に加えてVIP特典が使えるようになり、契約と同時に30いいね!が付与されます。(このアプリでは実際の課金は発生しません)"
-                : "VIPオプションに変更します。"
+        if tier == .free {
+            return "無料会員に戻すと、メッセージの送信・いいね数の表示・プライベートモード・既読表示・マッチ度の表示が使えなくなります。"
         }
+        return "月額¥\(tier.monthlyPriceYen.formatted())で契約と同時に30いいね!が付与されます。(このアプリでは実際の課金は発生しません)"
     }
 
     private func purchase(_ tier: MembershipTier) async {
@@ -103,10 +97,10 @@ struct MembershipStatusView: View {
                 .font(.headline)
 
             HStack(spacing: 12) {
-                Image(systemName: currentTier == .free ? "person.fill" : "crown.fill")
+                Image(systemName: isPaidMember ? "crown.fill" : "person.fill")
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
-                    .background(currentTier == .free ? AnyShapeStyle(Color(.systemGray3)) : AnyShapeStyle(Color.brandGradient), in: Circle())
+                    .background(isPaidMember ? AnyShapeStyle(Color.brandGradient) : AnyShapeStyle(Color(.systemGray3)), in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
                     Text(currentTier.label)
                         .font(.title3.bold())
@@ -125,36 +119,39 @@ struct MembershipStatusView: View {
     }
 
     private var currentTierDescription: String {
-        switch currentTier {
-        case .free: return "プロフィール閲覧といいね!が使えます"
-        case .premium: return "メッセージし放題・いいね!数表示が使えます"
-        case .vip: return "有料会員の特典 + VIP特典がすべて使えます"
-        }
+        isPaidMember ? "メッセージし放題・いいね数表示など全特典が使えます" : "プロフィール閲覧といいね!が使えます"
     }
 
-    // MARK: - 各プラン
+    // MARK: - 有料プラン(1本化)
 
-    private func planCard(_ tier: MembershipTier) -> some View {
-        let isCurrent = currentTier == tier
-        return VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(tier.label)
+    private var paidPlanCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("有料会員")
                     .font(.subheadline.bold())
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(tier == .vip ? AnyShapeStyle(Color.brandGradient) : AnyShapeStyle(Color.brandPurple), in: Capsule())
+                    .background(Color.brandGradient, in: Capsule())
                 Spacer()
-                Text(isCurrent ? "契約中" : "未契約")
+                Text(isPaidMember ? "契約中" : "未契約")
                     .font(.caption.bold())
-                    .foregroundStyle(isCurrent ? Color.brandPurple : .secondary)
+                    .foregroundStyle(isPaidMember ? Color.brandPurple : .secondary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 7)
-                    .overlay(Capsule().stroke(isCurrent ? Color.brandPurple : Color(.systemGray3), lineWidth: 1))
+                    .overlay(Capsule().stroke(isPaidMember ? Color.brandPurple : Color(.systemGray3), lineWidth: 1))
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text("¥\(MembershipTier.vip.monthlyPriceYen.formatted())")
+                    .font(.title2.bold())
+                Text("/月")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             VStack(alignment: .leading, spacing: 14) {
-                ForEach(benefits(for: tier), id: \.title) { benefit in
+                ForEach(paidBenefits, id: \.title) { benefit in
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: benefit.icon)
                             .foregroundStyle(Color.brandPurple)
@@ -171,37 +168,31 @@ struct MembershipStatusView: View {
                 }
             }
 
-            if tier == .vip && currentTier == .premium {
-                Text("有料会員の特典もすべて含まれます")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-
             Button {
-                pendingTier = tier
+                pendingTier = .vip
             } label: {
-                Text(isCurrent ? "契約中" : "このプランにする")
+                Text(isPaidMember ? "契約中" : "このプランにする")
                     .font(.subheadline.bold())
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(isCurrent ? AnyShapeStyle(Color(.systemGray3)) : AnyShapeStyle(Color.brandGradient))
+                    .background(isPaidMember ? AnyShapeStyle(Color(.systemGray3)) : AnyShapeStyle(Color.brandGradient))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
             }
-            .disabled(isCurrent)
+            .disabled(isPaidMember)
         }
         .padding()
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 20))
         .overlay {
             RoundedRectangle(cornerRadius: 20)
-                .stroke(isCurrent ? Color.brandPurple : Color.clear, lineWidth: 2)
+                .stroke(isPaidMember ? Color.brandPurple : Color.clear, lineWidth: 2)
         }
         .padding(.horizontal)
     }
 
     private var freePlanCard: some View {
         Group {
-            if currentTier != .free {
+            if isPaidMember {
                 Button {
                     pendingTier = .free
                 } label: {
@@ -232,23 +223,16 @@ struct MembershipStatusView: View {
         let title: String
     }
 
-    private func benefits(for tier: MembershipTier) -> [Benefit] {
-        switch tier {
-        case .free:
-            return []
-        case .premium:
-            return [
-                Benefit(icon: "bubble.left.and.bubble.right.fill", caption: "マッチング相手と", title: "メッセージし放題!"),
-                Benefit(icon: "hand.thumbsup.fill", caption: "お相手の人気度が分かる", title: "いいね!数表示"),
-                Benefit(icon: "gift.fill", caption: "契約と同時に", title: "30いいね!を付与!")
-            ]
-        case .vip:
-            return [
-                Benefit(icon: "eye.slash.fill", caption: "身バレ防止", title: "プライベートモード"),
-                Benefit(icon: "checkmark.message.fill", caption: "トークの", title: "既読がわかる機能"),
-                Benefit(icon: "percent", caption: "お相手との", title: "マッチ度の表示")
-            ]
-        }
+    /// 以前の有料会員+VIPオプションの特典をすべて含む。
+    private var paidBenefits: [Benefit] {
+        [
+            Benefit(icon: "bubble.left.and.bubble.right.fill", caption: "マッチング相手と", title: "メッセージし放題!"),
+            Benefit(icon: "hand.thumbsup.fill", caption: "お相手の人気度が分かる", title: "いいね!数表示"),
+            Benefit(icon: "eye.slash.fill", caption: "身バレ防止", title: "プライベートモード"),
+            Benefit(icon: "checkmark.message.fill", caption: "トークの", title: "既読がわかる機能"),
+            Benefit(icon: "percent", caption: "お相手との", title: "マッチ度の表示"),
+            Benefit(icon: "gift.fill", caption: "契約と同時に", title: "30いいね!を付与!")
+        ]
     }
 }
 
