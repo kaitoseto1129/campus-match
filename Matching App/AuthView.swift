@@ -84,15 +84,12 @@ struct AuthView: View {
 
     private var header: some View {
         VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.brandGradient)
-                    .frame(width: 84, height: 84)
-                    .shadow(color: Color.brandPurple.opacity(0.35), radius: 12, y: 6)
-                Text("CM")
-                    .font(.title.bold())
-                    .foregroundStyle(.white)
-            }
+            Image("LaunchLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 84, height: 84)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .shadow(color: Color.brandPurple.opacity(0.35), radius: 12, y: 6)
             Text("キャンパスマッチ")
                 .font(.title2.bold())
             Text("大学メールアドレスで登録")
@@ -150,6 +147,8 @@ struct AuthView: View {
 
     private var primaryButton: some View {
         Button {
+            guard !auth.isLoading else { return }
+            auth.isLoading = true
             Task {
                 if isSignUp {
                     await auth.signUp(email: email, password: password, displayName: displayName)

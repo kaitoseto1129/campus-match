@@ -39,6 +39,7 @@ struct ProfileEditView: View {
     /// 直近でタップした写真スロット(0=メイン, 1〜3=サブ)。pickerItemが確定した時にどこへ入れるか判定するために使う。
     @State var pickerTargetSlot: Int = 0
     @State var showingSaveFailAlert : Bool = false
+    @State var isSaving = false
     @State var faceCheckMessage: String = ""
     @State var showingFaceCheckAlert: Bool = false
     @State var validationMessage: String = ""
@@ -336,8 +337,12 @@ struct ProfileEditView: View {
                         .font(.subheadline)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
-                        save()
+                    if isSaving {
+                        ProgressView()
+                    } else {
+                        Button("保存") {
+                            save()
+                        }
                     }
                 }
             }
@@ -608,8 +613,11 @@ struct ProfileEditView: View {
             showingValidationAlert = true
             return
         }
+        guard !isSaving else { return }
+        isSaving = true
         Task {
             let suceeded = await profileManager.save(name: name, description: description, gender: gender, birthday: birthday, area: area, city: city.isEmpty ? nil : city, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), universityId: universityId)
+            isSaving = false
             if suceeded {
                 dismiss()
                 await profileManager.load()

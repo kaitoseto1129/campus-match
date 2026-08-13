@@ -34,6 +34,10 @@ struct Matching_AppApp: App {
                     AuthView()
                 }
             }
+            // アプリ全体の既定の色みをブランドカラーに統一する。これを設定していないと、
+            // 個別にtintを指定していない標準コントロール(誕生日・身長ピッカーの「決定」ボタンなど)が
+            // iOS標準の青色のまま表示されてしまい、他の画面の紫基調のデザインから浮いてしまう。
+            .tint(Color.brandPurple)
         }
         .environmentObject(auth)
         .onChange(of: scenePhase) { _, newPhase in
