@@ -28,6 +28,7 @@ struct MembershipStatusView: View {
                 VStack(spacing: 20) {
                     currentStatusCard
                     paidPlanCard
+                    freePlanBenefitsCard
                     freePlanCard
                     noteText
                 }
@@ -68,7 +69,7 @@ struct MembershipStatusView: View {
 
     private func confirmationMessage(for tier: MembershipTier) -> String {
         if tier == .free {
-            return "無料会員に戻すと、メッセージの送信・いいね数の表示・プライベートモード・既読表示・マッチ度の表示が使えなくなります。"
+            return "無料会員に戻すと、メッセージは1日\(MembershipTier.freeDailyMessagePartnerLimit)人までの制限がかかり、いいね数の表示・プライベートモード・既読表示・マッチ度の表示が使えなくなります。"
         }
         return "月額¥\(tier.monthlyPriceYen.formatted())で契約と同時に30いいね!が付与されます。(このアプリでは実際の課金は発生しません)"
     }
@@ -119,7 +120,38 @@ struct MembershipStatusView: View {
     }
 
     private var currentTierDescription: String {
-        isPaidMember ? "メッセージし放題・いいね数表示など全特典が使えます" : "プロフィール閲覧といいね!が使えます"
+        isPaidMember
+            ? "メッセージし放題・いいね数表示など全特典が使えます"
+            : "プロフィール閲覧といいね!が使えます。メッセージは1日\(MembershipTier.freeDailyMessagePartnerLimit)人まで送れます"
+    }
+
+    // MARK: - 無料会員でできること
+
+    private var freePlanBenefitsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("無料会員でできること")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 12) {
+                freeBenefitRow(icon: "person.crop.circle", text: "プロフィール閲覧")
+                freeBenefitRow(icon: "hand.thumbsup.fill", text: "いいねを送る")
+                freeBenefitRow(icon: "bubble.left.and.bubble.right", text: "メッセージ(1日\(MembershipTier.freeDailyMessagePartnerLimit)人まで)")
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
+    }
+
+    private func freeBenefitRow(icon: String, text: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .foregroundStyle(Color.brandTeal)
+                .frame(width: 22)
+            Text(text)
+                .font(.subheadline)
+            Spacer()
+        }
     }
 
     // MARK: - 有料プラン(1本化)
@@ -226,7 +258,7 @@ struct MembershipStatusView: View {
     /// 以前の有料会員+VIPオプションの特典をすべて含む。
     private var paidBenefits: [Benefit] {
         [
-            Benefit(icon: "bubble.left.and.bubble.right.fill", caption: "マッチング相手と", title: "メッセージし放題!"),
+            Benefit(icon: "bubble.left.and.bubble.right.fill", caption: "人数制限なく", title: "メッセージし放題!"),
             Benefit(icon: "hand.thumbsup.fill", caption: "お相手の人気度が分かる", title: "いいね!数表示"),
             Benefit(icon: "eye.slash.fill", caption: "身バレ防止", title: "プライベートモード"),
             Benefit(icon: "checkmark.message.fill", caption: "トークの", title: "既読がわかる機能"),

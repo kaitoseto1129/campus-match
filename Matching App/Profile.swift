@@ -137,8 +137,11 @@ enum MembershipTier: String, Codable, CaseIterable {
         }
     }
 
-    /// マッチした相手にメッセージを送れるか(無料会員は送れない)。
-    var canSendMessages: Bool { rank >= MembershipTier.premium.rank }
+    /// 1日に新しくメッセージを送れる相手の人数(無料会員のみ制限、有料会員は無制限)。
+    /// 無料会員でもメッセージ自体は送れるが、1日に会話できる人数に上限を設けている。
+    static let freeDailyMessagePartnerLimit = 3
+    /// 1日にメッセージできる相手の人数に制限があるか。
+    var hasDailyMessagePartnerLimit: Bool { rank < MembershipTier.premium.rank }
     /// 相手プロフィールで受け取ったいいね数を見られるか。
     var canSeeLikeCount: Bool { rank >= MembershipTier.premium.rank }
     /// 身バレ防止のプライベートモードを使えるか。

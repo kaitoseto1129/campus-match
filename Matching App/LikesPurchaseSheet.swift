@@ -11,7 +11,12 @@ private struct LikePlan: Identifiable {
     let icon: String
     let isBestValue: Bool
     var id: Int { likes }
+    /// 1いいねあたりの単価(円)。
+    var unitPriceYen: Double { Double(priceYen) / Double(likes) }
 }
+
+/// まとめ買いの割引率(%)を、基準単価(10いいねプランの単価)との比較で表示するため。
+private let baseUnitPriceYen: Double = 100
 
 // 枚数が多いほど1いいねあたりの単価が下がる(まとめ買いがお得になる)ようにしている。
 private let likePlans: [LikePlan] = [
@@ -64,8 +69,9 @@ struct LikesPurchaseSheet: View {
                                         HStack(spacing: 6) {
                                             Text("\(plan.likes)いいね")
                                                 .font(.headline)
-                                            if plan.isBestValue {
-                                                Text("お得")
+                                            if plan.unitPriceYen < baseUnitPriceYen {
+                                                let discountPercent = Int(((baseUnitPriceYen - plan.unitPriceYen) / baseUnitPriceYen * 100).rounded())
+                                                Text("\(discountPercent)%OFF")
                                                     .font(.caption2.bold())
                                                     .padding(.horizontal, 8)
                                                     .padding(.vertical, 2)
@@ -73,7 +79,7 @@ struct LikesPurchaseSheet: View {
                                                     .foregroundStyle(.white)
                                             }
                                         }
-                                        Text("¥\(plan.priceYen.formatted())")
+                                        Text("¥\(plan.priceYen.formatted())(1いいね¥\(Int(plan.unitPriceYen)))")
                                             .font(.subheadline)
                                             .foregroundStyle(.secondary)
                                     }

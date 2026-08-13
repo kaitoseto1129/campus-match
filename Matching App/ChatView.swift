@@ -25,8 +25,10 @@ struct ChatView: View {
     @State private var showingCallRequestConfirm = false
     @State private var showingCancelCallRequestConfirm = false
     @State private var isBlocked = false
-    /// 自分の会員ステータス。無料会員はメッセージを送れず、既読はVIPのみ見える。
+    /// 自分の会員ステータス。無料会員は1日にメッセージできる人数に上限があり、既読はVIPのみ見える。
     @State private var myMembership: MembershipTier = .free
+    /// 無料会員の場合、今日この相手に新しくメッセージを送れるか(既に今日やり取りした相手か、まだ上限に達していなければtrue)。
+    @State private var canMessageToday = true
     @State private var showingMembership = false
 
     private var myId: UUID? { supabase().auth.currentUser?.id }
@@ -270,6 +272,7 @@ struct ChatView: View {
             if let myId {
                 isBlocked = await UserModeration.isBlocked(between: myId, and: otherProfile.id)
                 myMembership = await MembershipLookup.myTier()
+                await refreshDailyMessageLimit(myId: myId)
             }
         }
         .onAppear {
@@ -341,6 +344,35 @@ struct ChatView: View {
         return message.id == messageManager.messages.last?.id
     }
 
+    private struct MatchIdRow: Decodable {
+        let matchId: UUID
+        enum CodingKeys: String, CodingKey { case matchId = "match_id" }
+    }
+
+    /// 無料会員は1日に新しくメッセージできる相手が限られる。既にやり取りした相手ならこれまで通り送れる。
+    private func refreshDailyMessageLimit(myId: UUID) async {
+        guard myMembership.hasDailyMessagePartnerLimit else {
+            canMessageToday = true
+            return
+        }
+        do {
+            let startOfDay = ISO8601DateFormatter.matchingApp.string(from: Calendar.current.startOfDay(for: Date()))
+            let rows: [MatchIdRow] = try await supabase()
+                .from("messages")
+                .select("match_id")
+                .eq("sender_id", value: myId)
+                .gte("created_at", value: startOfDay)
+                .execute()
+                .value
+            let partnerMatchIds = Set(rows.map(\.matchId))
+            canMessageToday = partnerMatchIds.contains(messageManager.matchId)
+                || partnerMatchIds.count < MembershipTier.freeDailyMessagePartnerLimit
+        } catch {
+            print("daily message limit check error: \(error)")
+            canMessageToday = true
+        }
+    }
+
     @ViewBuilder
     private var bottomBar: some View {
         VStack(spacing: 0) {
@@ -354,8 +386,8 @@ struct ChatView: View {
                     .foregroundStyle(.secondary)
                     .padding()
                     .frame(maxWidth: .infinity)
-            } else if !myMembership.canSendMessages {
-                upgradePrompt
+            } else if !canMessageToday {
+                dailyLimitPrompt
             } else {
                 inputBar
             }
@@ -363,17 +395,17 @@ struct ChatView: View {
         .background(.bar)
     }
 
-    /// 無料会員はマッチしてもメッセージを送れないため、入力欄の代わりにアップグレード導線を出す。
-    private var upgradePrompt: some View {
+    /// 無料会員が1日の新規メッセージ相手の上限に達した時、入力欄の代わりにアップグレード導線を出す。
+    private var dailyLimitPrompt: some View {
         Button {
             showingMembership = true
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "crown.fill")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("有料会員になるとメッセージが送れます")
+                    Text("本日のメッセージ上限(\(MembershipTier.freeDailyMessagePartnerLimit)人)に達しました")
                         .font(.subheadline.bold())
-                    Text("マッチング相手とメッセージし放題!")
+                    Text("有料会員なら人数制限なくメッセージできます")
                         .font(.caption2)
                         .opacity(0.9)
                 }
