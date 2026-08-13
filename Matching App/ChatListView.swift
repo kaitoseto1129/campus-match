@@ -20,10 +20,15 @@ struct ChatListView: View {
 
                 if chatManager.matches.isEmpty && !chatManager.isLoading {
                     ScrollView {
-                        Text("まだマッチしたお相手がいません")
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 60)
-                            .frame(maxWidth: .infinity)
+                        VStack(spacing: 12) {
+                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Color.brandPurple.opacity(0.4))
+                            Text("まだマッチしたお相手がいません")
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.top, 80)
+                        .frame(maxWidth: .infinity)
                     }
                     .refreshable {
                         await chatManager.load()
@@ -35,6 +40,9 @@ struct ChatListView: View {
                         } label: {
                             HStack(spacing: 12) {
                                 IconImage(url: match.photoURL, size: 54)
+                                    .overlay {
+                                        Circle().stroke(Color.pastelAccent(for: match.profile.id).opacity(0.5), lineWidth: 2)
+                                    }
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack(spacing: 6) {
                                         Text(match.profile.name)
@@ -45,7 +53,8 @@ struct ChatListView: View {
                                     }
                                     Text(previewText(for: match))
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(match.unreadCount > 0 ? .primary : .secondary)
+                                        .fontWeight(match.unreadCount > 0 ? .semibold : .regular)
                                         .lineLimit(1)
                                 }
                                 Spacer()
@@ -64,7 +73,16 @@ struct ChatListView: View {
                                     }
                                 }
                             }
+                            .padding(12)
+                            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(match.unreadCount > 0 ? Color.brandPurple.opacity(0.35) : Color.clear, lineWidth: 1.5)
+                            }
+                            .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
                         }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowSeparator(.hidden)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
                                 pendingBlockMatch = match
