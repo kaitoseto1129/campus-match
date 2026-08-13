@@ -141,19 +141,6 @@ class ProfileManager: ObservableObject {
             print("update show_online_status error: \(error)")
         }
     }
-    /// 複数プラン(10/50/100いいね、いずれも100円=1いいね換算)から選んで購入する。
-    @discardableResult
-    func purchaseLikes(amount: Int) async -> Bool {
-        do {
-            try await supabase().rpc("purchase_likes_mock", params: ["p_amount": amount]).execute()
-            await load()
-            return true
-        } catch {
-            errorMessage = "いいねの購入に失敗しました"
-            print("purchase likes error: \(error)")
-            return false
-        }
-    }
     /// 成功したらtrueを返す(いいねが足りない場合はfalse)。
     @discardableResult
     func claimShareBonus() async -> Bool {
@@ -163,21 +150,6 @@ class ProfileManager: ObservableObject {
             return true
         } catch {
             print("claim share bonus error: \(error)")
-            return false
-        }
-    }
-
-    /// 会員ステータスを切り替える(課金は未実装のモック)。
-    /// 無料会員から有料プランへ切り替えた時だけ、サーバー側で30いいねが付与される。
-    @discardableResult
-    func purchaseMembership(_ tier: MembershipTier) async -> Bool {
-        do {
-            try await supabase().rpc("purchase_membership", params: ["p_tier": tier.rawValue]).execute()
-            await load()
-            return true
-        } catch {
-            errorMessage = "プランの変更に失敗しました"
-            print("purchase membership error: \(error)")
             return false
         }
     }

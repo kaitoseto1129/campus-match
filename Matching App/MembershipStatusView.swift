@@ -4,14 +4,18 @@
 //
 
 import SwiftUI
+import StoreKit
 
-/// 現在の会員ステータスと、プランの特典を確認・切り替えできる画面。
+/// 現在の会員ステータスと、プランの特典を確認・契約できる画面。
 /// 1ユーザーは無料会員 / 有料会員のいずれか1つに属する。
 /// (以前は有料会員とVIPオプションの2プランだったが、分かりやすさのため1プランに統合した。
 /// DB上のmembership_tier列はpremium/vipの2値が残っているが、UI上はどちらも「有料会員」として扱う)
+/// 契約はApp StoreのIn-App Purchase(自動更新サブスクリプション)を通して行う。
 struct MembershipStatusView: View {
     @ObservedObject var profileManager: ProfileManager
-    @State private var pendingTier: MembershipTier?
+    @StateObject private var store = StoreManager()
+    @State private var showingPurchaseConfirm = false
+    @State private var showingManageSubscriptions = false
     @State private var isPurchasing = false
     @State private var showingFailedAlert = false
     @State private var showingPurchasedToast = false
@@ -29,7 +33,7 @@ struct MembershipStatusView: View {
                     currentStatusCard
                     paidPlanCard
                     freePlanBenefitsCard
-                    freePlanCard
+                    manageSubscriptionButton
                     noteText
                 }
                 .padding(.vertical)
@@ -41,50 +45,52 @@ struct MembershipStatusView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await profileManager.load()
+            await store.loadProducts()
+            await store.syncMembershipEntitlement()
+            await profileManager.load()
         }
         .confirmationDialog(
-            pendingTier.map { $0 == .free ? "無料会員に戻しますか?" : "有料会員を契約しますか?" } ?? "",
-            isPresented: Binding(get: { pendingTier != nil }, set: { if !$0 { pendingTier = nil } }),
+            "有料会員を契約しますか?",
+            isPresented: $showingPurchaseConfirm,
             titleVisibility: .visible
         ) {
-            if let tier = pendingTier {
-                Button(tier == .free ? "無料会員に戻す" : "有料会員を契約する") {
-                    Task { await purchase(tier) }
-                }
+            Button("契約する") {
+                Task { await purchase() }
             }
             Button("キャンセル", role: .cancel) {}
         } message: {
-            if let tier = pendingTier {
-                Text(confirmationMessage(for: tier))
-            }
+            Text(subscriptionDisclosureText)
         }
         .alert("プランを変更できませんでした", isPresented: $showingFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("通信環境を確認してもう一度お試しください。")
+            Text(store.errorMessage ?? "通信環境を確認してもう一度お試しください。")
         }
+        .manageSubscriptionsSheet(isPresented: $showingManageSubscriptions)
         .sentConfirmationCover(isPresented: $showingPurchasedToast, message: purchasedMessage, icon: "crown.fill")
         .disabled(isPurchasing)
     }
 
-    private func confirmationMessage(for tier: MembershipTier) -> String {
-        if tier == .free {
-            return "無料会員に戻すと、メッセージは1日\(MembershipTier.freeDailyMessagePartnerLimit)人までの制限がかかり、いいね数の表示・プライベートモード・既読表示・マッチ度の表示が使えなくなります。"
-        }
-        return "月額¥\(tier.monthlyPriceYen.formatted())で契約と同時に30いいね!が付与されます。(このアプリでは実際の課金は発生しません)"
+    /// Appleが自動更新サブスクリプションの購入導線の近くに表示することを求めている開示文言
+    /// (期間・料金・自動更新される旨・解約方法)。
+    private var subscriptionDisclosureText: String {
+        let price = store.membershipProduct?.displayPrice ?? "¥\(MembershipTier.vip.monthlyPriceYen.formatted())"
+        return "月額\(price)の自動更新サブスクリプションです。契約と同時に30いいね!が付与されます。期間終了の24時間前までに解約しない限り自動的に更新され、料金はApple IDのアカウントに請求されます。契約はいつでもこの画面の「サブスクリプションを管理」から解約できます。"
     }
 
-    private func purchase(_ tier: MembershipTier) async {
+    private func purchase() async {
         isPurchasing = true
         let wasFree = currentTier == .free
-        let success = await profileManager.purchaseMembership(tier)
+        let success = await store.purchaseMembership()
         isPurchasing = false
         guard success else {
-            showingFailedAlert = true
+            if store.errorMessage != nil {
+                showingFailedAlert = true
+            }
             return
         }
-        guard tier != .free else { return }
-        purchasedMessage = wasFree ? "\(tier.label)になりました!30いいね!を付与しました" : "\(tier.label)になりました!"
+        await profileManager.load()
+        purchasedMessage = wasFree ? "有料会員になりました!30いいね!を付与しました" : "有料会員になりました!"
         showingPurchasedToast = true
         try? await Task.sleep(nanoseconds: 1_200_000_000)
         showingPurchasedToast = false
@@ -175,7 +181,8 @@ struct MembershipStatusView: View {
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text("¥\(MembershipTier.vip.monthlyPriceYen.formatted())")
+                // 実際の請求額はストアフロントごとに異なるため、StoreKitが返すローカライズ済み価格を優先して表示する。
+                Text(store.membershipProduct?.displayPrice ?? "¥\(MembershipTier.vip.monthlyPriceYen.formatted())")
                     .font(.title2.bold())
                 Text("/月")
                     .font(.caption)
@@ -201,17 +208,23 @@ struct MembershipStatusView: View {
             }
 
             Button {
-                pendingTier = .vip
+                showingPurchaseConfirm = true
             } label: {
-                Text(isPaidMember ? "契約中" : "このプランにする")
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(isPaidMember ? AnyShapeStyle(Color(.systemGray3)) : AnyShapeStyle(Color.brandGradient))
-                    .clipShape(RoundedRectangle(cornerRadius: 25))
+                if isPurchasing {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                } else {
+                    Text(isPaidMember ? "契約中" : "このプランにする")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(isPaidMember ? AnyShapeStyle(Color(.systemGray3)) : AnyShapeStyle(Color.brandGradient))
+                        .clipShape(RoundedRectangle(cornerRadius: 25))
+                }
             }
-            .disabled(isPaidMember)
+            .disabled(isPaidMember || store.membershipProduct == nil)
         }
         .padding()
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 20))
@@ -222,13 +235,17 @@ struct MembershipStatusView: View {
         .padding(.horizontal)
     }
 
-    private var freePlanCard: some View {
+    /// サブスクリプションの解約はAppleの規約上、必ずApple自身の管理画面(Manage Subscriptions)を
+    /// 経由する必要があるため、アプリ側でDBのステータスを直接書き換えることはしない。
+    /// 解約が確定すると、次回このアプリを開いた時にsyncMembershipEntitlement()が
+    /// 自動的に無料会員へ反映する。
+    private var manageSubscriptionButton: some View {
         Group {
             if isPaidMember {
                 Button {
-                    pendingTier = .free
+                    showingManageSubscriptions = true
                 } label: {
-                    Text("無料会員に戻す")
+                    Text("サブスクリプションを管理")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
@@ -241,12 +258,16 @@ struct MembershipStatusView: View {
     }
 
     private var noteText: some View {
-        Text("※ 現在は開発中のため、実際の課金は発生しません。プランはいつでも切り替えられます。")
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 24)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("プランはいつでも「サブスクリプションを管理」から解約できます。解約後も、現在の請求期間の終了までは有料会員の特典をご利用いただけます。")
+            Text("[利用規約](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#terms) ・ [プライバシーポリシー](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#privacy)")
+        }
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .tint(Color.brandPurple)
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 24)
     }
 
     private struct Benefit {

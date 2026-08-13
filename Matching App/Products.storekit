@@ -1,0 +1,150 @@
+{
+  "identifier" : "1814DA3B-EB7C-4261-A8D2-54ABED03C739",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "1000",
+      "familyShareable" : false,
+      "internalID" : "CA25B057-5E82-4C96-9A9C-DB498C930791",
+      "localizations" : [
+        {
+          "description" : "いいねを10個購入します",
+          "displayName" : "いいね 10個",
+          "locale" : "ja_JP"
+        }
+      ],
+      "productID" : "project.Matching-App.likes10",
+      "referenceName" : "いいね10個",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4000",
+      "familyShareable" : false,
+      "internalID" : "AE7FD99F-FBF0-428C-A77B-869F5DE807CF",
+      "localizations" : [
+        {
+          "description" : "いいねを50個購入します(お得)",
+          "displayName" : "いいね 50個",
+          "locale" : "ja_JP"
+        }
+      ],
+      "productID" : "project.Matching-App.likes50",
+      "referenceName" : "いいね50個",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "7000",
+      "familyShareable" : false,
+      "internalID" : "3A42933B-077D-410B-B40A-F30B82031010",
+      "localizations" : [
+        {
+          "description" : "いいねを100個購入します(最もお得)",
+          "displayName" : "いいね 100個",
+          "locale" : "ja_JP"
+        }
+      ],
+      "productID" : "project.Matching-App.likes100",
+      "referenceName" : "いいね100個",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_editorMode" : true,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "ja_JP",
+    "_negativeReviewsEnabled" : false,
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ],
+    "_storefront" : "JPN",
+    "_timeRate" : 1
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "1F254D0E-97F3-467F-80A1-25567623195B",
+      "localizations" : [
+        {
+          "description" : "キャンパスマッチの有料会員プラン",
+          "displayName" : "有料会員",
+          "locale" : "ja_JP"
+        }
+      ],
+      "name" : "有料会員",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "2000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6E2E9C36-3C1F-4B6E-9E1C-2B0D9A5B7C11",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "メッセージ人数の制限なし・いいね数の表示・プライベートモード・既読表示・マッチ度表示・契約時に30いいね付与",
+              "displayName" : "有料会員(月額)",
+              "locale" : "ja_JP"
+            }
+          ],
+          "productID" : "project.Matching-App.membership.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "有料会員月額プラン",
+          "subscriptionGroupID" : "1F254D0E-97F3-467F-80A1-25567623195B",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
