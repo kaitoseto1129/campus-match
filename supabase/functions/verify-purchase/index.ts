@@ -36,13 +36,13 @@ at+qIxUCMG1mihDK1A3UT82NQz60imOlM27jbdoXt2QfyFMm+YhidDkLF1vLUagM
 -----END CERTIFICATE-----`;
 
 // StoreKitのTransaction.jwsRepresentationを渡す前提のbundle idと商品ID。
-const BUNDLE_ID = "project.Matching-App";
+const BUNDLE_ID = "com.campusmatch.app";
 const LIKE_PRODUCT_AMOUNTS: Record<string, number> = {
-  "project.Matching-App.likes10": 10,
-  "project.Matching-App.likes50": 50,
-  "project.Matching-App.likes100": 100,
+  "com.campusmatch.app.likes10": 10,
+  "com.campusmatch.app.likes50": 50,
+  "com.campusmatch.app.likes100": 100,
 };
-const MEMBERSHIP_PRODUCT_ID = "project.Matching-App.membership.monthly";
+const MEMBERSHIP_PRODUCT_ID = "com.campusmatch.app.membership.monthly";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -141,6 +141,9 @@ Deno.serve(async (req: Request) => {
 
     const productId = payload.productId as string;
     const transactionId = payload.transactionId as string;
+    // サブスクリプションの契約を通して不変のID。解約・失効の通知(apple-notifications)は
+    // このIDしか持たないため、ここで保存しておかないと後から利用者を特定できなくなる。
+    const originalTransactionId = (payload.originalTransactionId as string) ?? transactionId;
     if (!productId || !transactionId) {
       return json({ error: "malformed transaction payload" }, 400);
     }
@@ -150,7 +153,12 @@ Deno.serve(async (req: Request) => {
     // リプレイ防止: 同じtransactionIdを二度使えないようにする(unique制約でガード)。
     const { error: redeemError } = await serviceClient
       .from("redeemed_transactions")
-      .insert({ transaction_id: transactionId, user_id: userId, product_id: productId });
+      .insert({
+        transaction_id: transactionId,
+        user_id: userId,
+        product_id: productId,
+        original_transaction_id: originalTransactionId,
+      });
     if (redeemError) {
       return json({ error: "transaction already redeemed" }, 409);
     }

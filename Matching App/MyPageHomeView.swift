@@ -445,9 +445,9 @@ struct MyPageHomeView: View {
             VStack(spacing: 0) {
                 linkRow(icon: "envelope.fill", iconColor: Color.brandTeal, title: "お問い合わせ", url: URL(string: "mailto:kaitoseto1129@gmail.com")!)
                 Divider().padding(.leading, 66)
-                linkRow(icon: "doc.text.fill", iconColor: Color.brandPurple, title: "利用規約", url: URL(string: "https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#terms")!)
+                linkRow(icon: "doc.text.fill", iconColor: Color.brandPurple, title: "利用規約", url: LegalLinks.terms)
                 Divider().padding(.leading, 66)
-                linkRow(icon: "lock.doc.fill", iconColor: Color(.systemGray), title: "プライバシーポリシー", url: URL(string: "https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#privacy")!)
+                linkRow(icon: "lock.doc.fill", iconColor: Color(.systemGray), title: "プライバシーポリシー", url: LegalLinks.privacy)
             }
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))

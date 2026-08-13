@@ -285,7 +285,7 @@ struct MembershipStatusView: View {
     private var noteText: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("プランはいつでも「サブスクリプションを管理」から解約できます。解約後も、現在の請求期間の終了までは有料会員の特典をご利用いただけます。")
-            Text("[利用規約](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#terms) ・ [プライバシーポリシー](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#privacy)")
+            Text("[利用規約](\(LegalLinks.terms.absoluteString)) ・ [プライバシーポリシー](\(LegalLinks.privacy.absoluteString))")
         }
         .font(.caption2)
         .foregroundStyle(.secondary)

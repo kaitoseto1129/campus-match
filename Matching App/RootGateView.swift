@@ -9,6 +9,7 @@ import SwiftUI
 /// 揃っているかを確認し、揃っていなければ先にプロフィール編集を完了してもらう。
 struct RootGateView: View {
     @StateObject private var profileManager = ProfileManager()
+    @StateObject private var store = StoreManager()
     @State private var hasLoaded = false
     /// プロフィール完成後、初回だけプッシュ通知の許可案内を挟むためのフラグ。
     @AppStorage("hasRequestedNotificationPermission") private var hasRequestedNotificationPermission = false
@@ -49,6 +50,10 @@ struct RootGateView: View {
                 && profileManager.photos.contains { $0.orderNumber == 0 }
             showingOnboarding = !isComplete
             hasLoaded = true
+
+            // サブスクの解約・失効は通常Appleからの通知(apple-notifications)で反映されるが、
+            // 通知の遅延・失敗に備えて、起動時にも端末が持つ購入状態と突き合わせておく。
+            await store.syncMembershipEntitlement()
         }
     }
 }

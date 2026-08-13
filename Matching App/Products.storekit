@@ -13,7 +13,7 @@
           "locale" : "ja_JP"
         }
       ],
-      "productID" : "project.Matching-App.likes10",
+      "productID" : "com.campusmatch.app.likes10",
       "referenceName" : "いいね10個",
       "type" : "Consumable"
     },
@@ -28,7 +28,7 @@
           "locale" : "ja_JP"
         }
       ],
-      "productID" : "project.Matching-App.likes50",
+      "productID" : "com.campusmatch.app.likes50",
       "referenceName" : "いいね50個",
       "type" : "Consumable"
     },
@@ -43,7 +43,7 @@
           "locale" : "ja_JP"
         }
       ],
-      "productID" : "project.Matching-App.likes100",
+      "productID" : "com.campusmatch.app.likes100",
       "referenceName" : "いいね100個",
       "type" : "Consumable"
     }
@@ -133,7 +133,7 @@
               "locale" : "ja_JP"
             }
           ],
-          "productID" : "project.Matching-App.membership.monthly",
+          "productID" : "com.campusmatch.app.membership.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "有料会員月額プラン",
           "subscriptionGroupID" : "1F254D0E-97F3-467F-80A1-25567623195B",

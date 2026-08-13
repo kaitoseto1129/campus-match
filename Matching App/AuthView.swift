@@ -184,7 +184,7 @@ struct AuthView: View {
 
     /// 登録前に利用規約・プライバシーポリシーを確認できるようにする(App Store審査の一般的な要件)。
     private var termsAgreementNote: some View {
-        Text("登録すると、[利用規約](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#terms)および[プライバシーポリシー](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#privacy)に同意したものとみなされます")
+        Text("登録すると、[利用規約](\(LegalLinks.terms.absoluteString))および[プライバシーポリシー](\(LegalLinks.privacy.absoluteString))に同意したものとみなされます")
             .font(.caption2)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)

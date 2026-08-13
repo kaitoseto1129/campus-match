@@ -11,10 +11,10 @@ import Combine
 /// App Store In-App Purchaseの商品ID。実際にApp Store Connect側で同じIDの商品を
 /// 作成しないと本番では購入できない(Xcodeでのローカルテストは Products.storekit で可能)。
 enum StoreProductID {
-    static let likes10 = "project.Matching-App.likes10"
-    static let likes50 = "project.Matching-App.likes50"
-    static let likes100 = "project.Matching-App.likes100"
-    static let membershipMonthly = "project.Matching-App.membership.monthly"
+    static let likes10 = "com.campusmatch.app.likes10"
+    static let likes50 = "com.campusmatch.app.likes50"
+    static let likes100 = "com.campusmatch.app.likes100"
+    static let membershipMonthly = "com.campusmatch.app.membership.monthly"
 
     static var likeProductIDs: [String] { [likes10, likes50, likes100] }
     static var allProductIDs: [String] { likeProductIDs + [membershipMonthly] }
@@ -148,7 +148,10 @@ final class StoreManager: ObservableObject {
             let currentTier = await MembershipLookup.myTier()
             if currentTier != .free {
                 do {
-                    try await supabase().rpc("purchase_membership", params: ["p_tier": "free"]).execute()
+                    // 自分を無料会員に戻すことしかできない専用RPC。
+                    // 以前使っていたpurchase_membershipは任意のプランを自分に設定できてしまい、
+                    // 課金せずにVIPになれる状態だったため削除した。
+                    try await supabase().rpc("downgrade_own_membership_to_free").execute()
                 } catch {
                     print("membership sync error: \(error)")
                 }

@@ -1,0 +1,149 @@
+/* キャンパスマッチ 公開ページ共通スタイル */
+:root {
+  --brand: #8f78eb;
+  --brand-pink: #ed8fbf;
+  --text: #1c1c22;
+  --muted: #61616b;
+  --line: #e6e6ee;
+  --bg: #ffffff;
+  --card: #faf9ff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  line-height: 1.9;
+  font-size: 16px;
+}
+
+header {
+  background: linear-gradient(135deg, var(--brand), var(--brand-pink));
+  color: #fff;
+  padding: 40px 24px 32px;
+}
+
+header .inner,
+main,
+footer .inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+header h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+}
+
+header p {
+  margin: 0;
+  opacity: 0.92;
+  font-size: 14px;
+}
+
+header a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+main {
+  padding: 32px 24px 64px;
+}
+
+h2 {
+  font-size: 19px;
+  margin: 40px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--line);
+}
+
+h2:first-of-type { margin-top: 8px; }
+
+h3 {
+  font-size: 16px;
+  margin: 24px 0 8px;
+}
+
+p, li { font-size: 15px; }
+
+ul, ol { padding-left: 1.4em; }
+
+li { margin-bottom: 6px; }
+
+a { color: var(--brand); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 20px;
+  font-size: 14px;
+  display: block;
+  overflow-x: auto;
+}
+
+th, td {
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--card);
+  white-space: nowrap;
+}
+
+.updated {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.note {
+  background: var(--card);
+  border-left: 4px solid var(--brand);
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.nav a {
+  display: inline-block;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 24px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #f2f2f7;
+    --muted: #a0a0ab;
+    --line: #3a3a44;
+    --bg: #17171c;
+    --card: #22222b;
+  }
+}
