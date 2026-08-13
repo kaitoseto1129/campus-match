@@ -80,6 +80,7 @@ struct MyPageHomeView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .padding(.horizontal)
 
+                        supportSection
                         settingsSection
                     }
                     .padding(.top)
@@ -430,6 +431,51 @@ struct MyPageHomeView: View {
             }
         })
         .sentConfirmationCover(isPresented: $showingShareBonusToast, message: "50いいねを獲得しました!", icon: "gift.fill")
+    }
+
+    /// お問い合わせ・利用規約・プライバシーポリシーへの導線。App Storeの審査要件として、
+    /// ユーザーが運営への連絡手段や規約を確認できるようにしている。
+    private var supportSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("サポート")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
+
+            VStack(spacing: 0) {
+                linkRow(icon: "envelope.fill", iconColor: Color.brandTeal, title: "お問い合わせ", url: URL(string: "mailto:kaitoseto1129@gmail.com")!)
+                Divider().padding(.leading, 66)
+                linkRow(icon: "doc.text.fill", iconColor: Color.brandPurple, title: "利用規約", url: URL(string: "https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#terms")!)
+                Divider().padding(.leading, 66)
+                linkRow(icon: "lock.doc.fill", iconColor: Color(.systemGray), title: "プライバシーポリシー", url: URL(string: "https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#privacy")!)
+            }
+            .background(Color(.systemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+        .padding(.horizontal)
+    }
+
+    private func linkRow(icon: String, iconColor: Color, title: String, url: URL) -> some View {
+        Link(destination: url) {
+            HStack(spacing: 14) {
+                Circle()
+                    .fill(iconColor)
+                    .frame(width: 40, height: 40)
+                    .overlay {
+                        Image(systemName: icon)
+                            .foregroundStyle(.white)
+                    }
+                Text(title)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
+            }
+            .padding()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var settingsSection: some View {

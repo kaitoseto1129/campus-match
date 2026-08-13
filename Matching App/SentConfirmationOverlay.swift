@@ -35,6 +35,11 @@ extension View {
                 .background(Color.clear)
                 .presentationBackground(.clear)
         }
+        // いいね送信・見てね・購入完了など、このトーストが出る操作すべてに軽い触覚フィードバックを添える。
+        // 表示された時だけ鳴らし、閉じる時には鳴らさない。
+        .sensoryFeedback(.success, trigger: isPresented.wrappedValue) { oldValue, newValue in
+            newValue && !oldValue
+        }
     }
 }
 

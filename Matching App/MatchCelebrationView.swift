@@ -14,6 +14,7 @@ struct MatchCelebrationView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var showsChat = false
+    @State private var hasAppeared = false
 
     var body: some View {
         NavigationStack {
@@ -94,6 +95,8 @@ struct MatchCelebrationView: View {
                 dismiss()
             }
         }
+        .onAppear { hasAppeared = true }
+        .sensoryFeedback(.success, trigger: hasAppeared)
     }
 
     private var hintRow: some View {

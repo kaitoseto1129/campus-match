@@ -135,6 +135,9 @@ private struct MissionCardView: View {
             LinearGradient(colors: [Color.brandPurple, Color.brandTeal], startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 16)
         )
+        .sensoryFeedback(.success, trigger: isClaimed) { oldValue, newValue in
+            newValue && !oldValue
+        }
     }
 }
 

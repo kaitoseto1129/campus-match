@@ -315,6 +315,7 @@ struct ProfileEditView: View {
                         taglineSection
                     }
                     .scrollContentBackground(.hidden)
+                    .scrollDismissesKeyboard(.interactively)
                     .onAppear {
                         if let target = initialFocusSectionId {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -572,9 +573,19 @@ struct ProfileEditView: View {
         )
     }
 
+    /// マッチングアプリとしてApp Storeの審査要件(17+の年齢制限カテゴリ)を満たすため、
+    /// 18歳未満のユーザーはプロフィールを完成させられないようにする。
+    static let minimumAge = 18
+
     func save() {
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             validationMessage = "ニックネームを入力してください"
+            showingValidationAlert = true
+            return
+        }
+        let age = Calendar.current.dateComponents([.year], from: birthday, to: Date()).year ?? 0
+        if age < Self.minimumAge {
+            validationMessage = "このアプリは\(Self.minimumAge)歳以上の方のみご利用いただけます"
             showingValidationAlert = true
             return
         }
@@ -642,9 +653,14 @@ struct BirthdayPickerView: View {
         self._draft = State(initialValue: birthday.wrappedValue)
     }
 
+    /// 18歳未満になる日付は選べないようにする(アプリの年齢制限に合わせた選択範囲)。
+    private var maximumBirthday: Date {
+        Calendar.current.date(byAdding: .year, value: -ProfileEditView.minimumAge, to: Date()) ?? Date()
+    }
+
     var body: some View {
         NavigationStack {
-            DatePicker("誕生日", selection: $draft, in: ...Date(), displayedComponents: .date)
+            DatePicker("誕生日", selection: $draft, in: ...maximumBirthday, displayedComponents: .date)
                 .datePickerStyle(.wheel)
                 .labelsHidden()
                 .padding()

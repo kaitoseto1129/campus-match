@@ -68,11 +68,16 @@ struct AuthView: View {
 
                     orDivider
                     socialLoginButtons
+
+                    if isSignUp {
+                        termsAgreementNote
+                    }
                 }
                 .padding(.horizontal, 32)
                 .padding(.top, 40)
                 .padding(.bottom, 40)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .task {
             await loadValidDomains()
@@ -177,8 +182,23 @@ struct AuthView: View {
         .padding(.top, 4)
     }
 
+    /// 登録前に利用規約・プライバシーポリシーを確認できるようにする(App Store審査の一般的な要件)。
+    private var termsAgreementNote: some View {
+        Text("登録すると、[利用規約](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#terms)および[プライバシーポリシー](https://claude.ai/code/artifact/56a7a9d8-8f5c-4040-9dd2-8d93be1d0161#privacy)に同意したものとみなされます")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .tint(Color.brandPurple)
+            .padding(.horizontal, 8)
+    }
+
     private var socialLoginButtons: some View {
         VStack(spacing: 10) {
+            // Googleなど他社の外部ログインを提供する場合、App StoreはSign in with Appleも
+            // 同等の選択肢として提供することを求めているため、先頭に配置している(Appleの4.8ガイドライン)。
+            socialLoginButton(title: "Appleで続ける", systemImage: "apple.logo") {
+                Task { await auth.signInWithOAuth(provider: .apple) }
+            }
             socialLoginButton(title: "Googleで続ける", systemImage: "g.circle.fill") {
                 Task { await auth.signInWithOAuth(provider: .google) }
             }
