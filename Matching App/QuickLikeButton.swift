@@ -29,13 +29,14 @@ struct QuickLikeButton: View {
 
     var body: some View {
         Button {
+            if alreadyLiked {
+                // 見てねはいいねを消費するため、送る前に必ず確認する。
+                showingReminderConfirm = true
+                return
+            }
+            guard !isSending else { return }
+            isSending = true
             Task {
-                if alreadyLiked {
-                    // 見てねはいいねを消費するため、送る前に必ず確認する。
-                    showingReminderConfirm = true
-                    return
-                }
-                isSending = true
                 let count = (try? await supabase()
                     .rpc("get_like_count", params: ["target_user_id": profile.id])
                     .execute()

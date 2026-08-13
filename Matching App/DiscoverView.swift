@@ -344,8 +344,9 @@ private struct RemindableCardView: View {
             .buttonStyle(.plain)
 
             Button {
+                guard !isSending else { return }
+                isSending = true
                 Task {
-                    isSending = true
                     let success = await discoverManager.sendReminder(to: profile.id)
                     isSending = false
                     if success {
@@ -479,13 +480,14 @@ private struct DiscoverLikeButton: View {
             }
 
             Button {
+                if alreadyLiked {
+                    // 見てねはいいねを消費するため、送る前に必ず確認する。
+                    showingReminderConfirm = true
+                    return
+                }
+                guard !isSending else { return }
+                isSending = true
                 Task {
-                    if alreadyLiked {
-                        // 見てねはいいねを消費するため、送る前に必ず確認する。
-                        showingReminderConfirm = true
-                        return
-                    }
-                    isSending = true
                     let count = await discoverManager.likeCount(for: candidate.id)
                     isSending = false
                     if count >= DiscoverManager.popularMemberThreshold {

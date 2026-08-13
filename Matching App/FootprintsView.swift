@@ -94,8 +94,11 @@ private struct FootprintCardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Button {
+                // Task{}内で最初にisSendingを立てると、その反映より先に連打が処理されてしまう
+                // (=何度でも押せてしまう)ことがあるため、タップの時点で同期的に立てる。
+                guard !isSending else { return }
+                isSending = true
                 Task {
-                    isSending = true
                     await sendLike()
                     isSending = false
                 }
@@ -150,8 +153,9 @@ private struct FootprintLikeButton: View {
 
     var body: some View {
         Button {
+            guard !isSending else { return }
+            isSending = true
             Task {
-                isSending = true
                 let success = await sendLike()
                 isSending = false
                 if success {

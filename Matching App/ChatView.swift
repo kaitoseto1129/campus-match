@@ -30,6 +30,7 @@ struct ChatView: View {
     /// 無料会員の場合、今日この相手に新しくメッセージを送れるか(既に今日やり取りした相手か、まだ上限に達していなければtrue)。
     @State private var canMessageToday = true
     @State private var showingMembership = false
+    @State private var showingImagePickFailedAlert = false
 
     private var myId: UUID? { supabase().auth.currentUser?.id }
 
@@ -288,12 +289,25 @@ struct ChatView: View {
         }
         .onChange(of: pickerItem) { _, newValue in
             Task {
-                guard let newValue,
-                      let data = try? await newValue.loadTransferable(type: Data.self),
-                      let image = UIImage(data: data) else { return }
-                await messageManager.sendImage(image)
-                pickerItem = nil
+                guard let newValue else { return }
+                defer { pickerItem = nil }
+                do {
+                    guard let data = try await newValue.loadTransferable(type: Data.self),
+                          let image = UIImage(data: data) else {
+                        showingImagePickFailedAlert = true
+                        return
+                    }
+                    await messageManager.sendImage(image)
+                } catch {
+                    showingImagePickFailedAlert = true
+                    print("chat image load error: \(error)")
+                }
             }
+        }
+        .alert("画像を読み込めませんでした", isPresented: $showingImagePickFailedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("もう一度お試しください。")
         }
         .fullScreenCover(isPresented: Binding(
             get: { fullScreenImageURL != nil },

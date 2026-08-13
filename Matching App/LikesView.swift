@@ -204,8 +204,9 @@ private struct LikeCardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Button {
+                guard !isSending else { return }
+                isSending = true
                 Task {
-                    isSending = true
                     if let match = await likesManager.sendThanks(for: received.like) {
                         matchManager.presentCelebrationImmediately(match: match, profile: received.profile, photoURL: received.photoURL)
                     }
@@ -234,9 +235,10 @@ struct ThanksButton: View {
 
     var body: some View {
         Button {
+            guard !isSending else { return }
             guard let matched = likesManager.received.first(where: { $0.profile.id == profile.id }) else { return }
+            isSending = true
             Task {
-                isSending = true
                 if let match = await likesManager.sendThanks(for: matched.like) {
                     matchManager.presentCelebrationImmediately(match: match, profile: matched.profile, photoURL: matched.photoURL)
                 }

@@ -113,8 +113,9 @@ private struct MissionCardView: View {
                     .foregroundStyle(.white)
 
                 Button {
+                    guard !isClaiming else { return }
+                    isClaiming = true
                     Task {
-                        isClaiming = true
                         await manager.claim(mission)
                         isClaiming = false
                     }
