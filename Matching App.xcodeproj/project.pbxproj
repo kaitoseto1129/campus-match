@@ -107,7 +107,7 @@
 				};
 			};
 			buildConfigurationList = F0DEAEE130199E6D002CDF7B /* Build configuration list for PBXProject "Matching App" */;
-			developmentRegion = en;
+			developmentRegion = ja;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
