@@ -10,12 +10,22 @@ import SwiftUI
 struct WelcomeOnboardingView: View {
     var onFinish: () -> Void
     @State private var page = 0
+    /// アメリカの大学生など、日本語以外での利用者がマイページに辿り着く前(登録前)から
+    /// 言語を選べるようにするための切り替え。マイページの「言語」と同じ設定を共有する。
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.japanese.rawValue
 
     var body: some View {
         ZStack {
             Color.brandGradient.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    languageToggle
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+
                 TabView(selection: $page) {
                     welcomePage(
                         showsAppIcon: true,
@@ -60,6 +70,26 @@ struct WelcomeOnboardingView: View {
                 .padding(.horizontal, 32)
                 .padding(.bottom, 48)
             }
+        }
+    }
+
+    private var languageToggle: some View {
+        Menu {
+            Picker("", selection: $appLanguageRaw) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.label).tag(language.rawValue)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "globe")
+                Text((AppLanguage(rawValue: appLanguageRaw) ?? .japanese).label)
+            }
+            .font(.caption.bold())
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.white.opacity(0.2), in: Capsule())
         }
     }
 

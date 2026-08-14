@@ -21,6 +21,8 @@ struct AuthView: View {
     @State private var isSendingReset = false
     @State private var resetErrorMessage: String?
     @State private var showingResetSentAlert = false
+    /// マイページに辿り着く前(未登録・未ログイン状態)でも言語を選べるようにするための設定。
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.japanese.rawValue
 
     /// 大学ドメイン一覧の読み込みに失敗した場合は、誤ってサインアップをブロックしないよう検証をスキップする。
     var isEmailDomainValid: Bool {
@@ -44,11 +46,19 @@ struct AuthView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             Color.appListBackground.ignoresSafeArea()
+
+            HStack {
+                Spacer()
+                languageToggle
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
 
             ScrollView {
                 VStack(spacing: 20) {
+                    Color.clear.frame(height: 28)
                     header
                     modeSwitcher
                     formFields
@@ -85,6 +95,26 @@ struct AuthView: View {
         }
         .sheet(isPresented: $showingForgotPassword) {
             forgotPasswordSheet
+        }
+    }
+
+    private var languageToggle: some View {
+        Menu {
+            Picker("", selection: $appLanguageRaw) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.label).tag(language.rawValue)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "globe")
+                Text((AppLanguage(rawValue: appLanguageRaw) ?? .japanese).label)
+            }
+            .font(.caption.bold())
+            .foregroundStyle(Color.brandPurple)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.brandPurple.opacity(0.12), in: Capsule())
         }
     }
 
