@@ -55,6 +55,8 @@ struct DiscoverTutorialOverlay: View {
 
     @State private var showingFakeProfile = false
     @State private var simulatedLiked = false
+    @State private var simulatedHidden = false
+    @State private var spotlightPulse = false
     /// 体験用のダミー顔写真。アプリ内の他のダミーアカウントと同じ生成アバターサービスを使い、
     /// 一般的な人物アイコンではなくちゃんと「顔」に見えるようにしている。
     private static let sampleAvatarURL = URL(string: "https://api.dicebear.com/9.x/adventurer/png?seed=tutorial-sample&size=400&backgroundColor=ffd5dc,ffdfbf,c0aede,d1d4f9,b6e3f4")
@@ -106,15 +108,35 @@ struct DiscoverTutorialOverlay: View {
             SpotlightScrimShape(holeRect: rect)
                 .fill(Color.black.opacity(0.68), style: FillStyle(eoFill: true))
             if rect != .zero {
+                // どこを押せばいいのか一目で分かるよう、枠を点滅ではなく脈打つように広げて
+                // 「ここです」と指し示す動きを付けている。
                 RoundedRectangle(cornerRadius: 26)
                     .stroke(Color.brandPurple, lineWidth: 3)
                     .frame(width: rect.width + 16, height: rect.height + 16)
                     .position(x: rect.midX, y: rect.midY)
                     .allowsHitTesting(false)
                     .shadow(color: Color.brandPurple.opacity(0.6), radius: 10)
+                RoundedRectangle(cornerRadius: 26)
+                    .stroke(Color.brandOrange, lineWidth: 3)
+                    .frame(width: rect.width + 16, height: rect.height + 16)
+                    .scaleEffect(spotlightPulse ? 1.14 : 1.0)
+                    .opacity(spotlightPulse ? 0 : 1)
+                    .position(x: rect.midX, y: rect.midY)
+                    .allowsHitTesting(false)
+                Image(systemName: "hand.point.up.left.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(.white)
+                    .shadow(radius: 4)
+                    .position(x: rect.maxX, y: rect.maxY + 26)
+                    .allowsHitTesting(false)
             }
             tooltip()
             skipButton
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                spotlightPulse = true
+            }
         }
     }
 
@@ -253,38 +275,93 @@ struct DiscoverTutorialOverlay: View {
 
             Spacer()
 
-            Button {
-                simulatedLiked = true
-                Task {
-                    try? await Task.sleep(nanoseconds: 1_100_000_000)
-                    showingFakeProfile = false
-                    simulatedLiked = false
-                    step = .myPageGuide
-                }
-            } label: {
-                HStack {
-                    Image(systemName: simulatedLiked ? "checkmark" : "hand.thumbsup.fill")
-                    Text(simulatedLiked ? "送信しました!" : "いいねを送る")
-                        .bold()
+            if simulatedHidden {
+                VStack(spacing: 10) {
+                    Image(systemName: "eye.slash.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                    Text("非表示にしました")
+                        .font(.subheadline.bold())
+                    Text("実際に非表示にすると、このお相手は次から「探す」画面に表示されなくなります(いつでもマイページの「非表示リスト」から解除できます)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(simulatedLiked ? Color.green : Color.brandPurple)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 28))
-            }
-            .disabled(simulatedLiked)
-            .padding(.horizontal)
-            .padding(.bottom, 24)
+                .padding(.bottom, 24)
+            } else {
+                HStack(spacing: 12) {
+                    Button {
+                        simulatedHidden = true
+                        Task {
+                            try? await Task.sleep(nanoseconds: 1_400_000_000)
+                            showingFakeProfile = false
+                            simulatedHidden = false
+                            step = .myPageGuide
+                        }
+                    } label: {
+                        VStack(spacing: 2) {
+                            Image(systemName: "eye.slash.fill")
+                            Text("非表示")
+                                .font(.caption2)
+                        }
+                        .frame(width: 60, height: 54)
+                        .background(Color(.systemGray5))
+                        .foregroundStyle(.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
 
-            Text(simulatedLiked
-                 ? "カードは消えずにこのまま残ります。気になるお相手には何度でも見に戻れます。"
-                 : "※ これは練習です。実際のいいねは消費されません。また、いいねを送ってもこのカードは消えません。")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                    Button {
+                        simulatedLiked = true
+                        Task {
+                            try? await Task.sleep(nanoseconds: 1_100_000_000)
+                            showingFakeProfile = false
+                            simulatedLiked = false
+                            step = .myPageGuide
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: simulatedLiked ? "checkmark" : "hand.thumbsup.fill")
+                            Text(simulatedLiked ? "送信しました!" : "いいねを送る")
+                                .bold()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(simulatedLiked ? Color.green : Color.brandPurple)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 28))
+                    }
+                    .overlay {
+                        if !simulatedLiked {
+                            RoundedRectangle(cornerRadius: 28)
+                                .stroke(Color.brandOrange, lineWidth: 3)
+                                .scaleEffect(spotlightPulse ? 1.08 : 1.0)
+                                .opacity(spotlightPulse ? 0 : 1)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .disabled(simulatedLiked)
+                }
                 .padding(.horizontal)
-                .padding(.bottom, 12)
+                .padding(.bottom, 24)
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                        spotlightPulse = true
+                    }
+                }
+            }
+
+            if !simulatedHidden {
+                Text(simulatedLiked
+                     ? "カードは消えずにこのまま残ります。気になるお相手には何度でも見に戻れます。"
+                     : "※ これは練習です。実際のいいね・非表示は行われません。ボタンを押してもこのカードは消えません。")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+            }
         }
         .presentationDetents([.fraction(0.85)])
         .presentationDragIndicator(.hidden)

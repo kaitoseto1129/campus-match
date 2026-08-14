@@ -6,7 +6,8 @@
 import SwiftUI
 
 /// 自己紹介を全部手書きさせると離脱率が上がるため、
-/// 「仕事」「趣味」「好きな食べ物」を選択式で選ぶだけで自己紹介文の下書きを自動生成する画面。
+/// 「サークル・部活」「趣味」「好きな食べ物」を選択式で選ぶだけで自己紹介文の下書きを自動生成する画面。
+/// 大学生専用アプリのため「お仕事」ではなくサークル・部活動を選択項目にしている。
 /// 生成後もテキストは自由に編集できる。
 struct AIBioComposerView: View {
     var onComplete: (String) -> Void
@@ -18,7 +19,7 @@ struct AIBioComposerView: View {
     @State private var generatedText: String = ""
     @State private var showingResult = false
 
-    private let jobOptions = ["サラリーマン", "大学生", "大学院生", "公務員", "自営業", "医療従事者", "エンジニア", "クリエイター"]
+    private let jobOptions = ["運動系サークル", "文化系サークル", "音楽系サークル", "体育会・部活", "ボランティア", "アルバイト", "留学経験あり", "サークル未所属"]
     private let hobbyOptions = ["カフェ巡り", "映画鑑賞", "旅行", "筋トレ", "読書", "音楽鑑賞", "料理", "ドライブ", "アウトドア", "ゲーム", "写真撮影", "ショッピング"]
     private let foodOptions = ["ラーメン", "お寿司", "焼肉", "イタリアン", "カフェ・スイーツ", "和食", "韓国料理", "中華料理"]
 
@@ -31,7 +32,7 @@ struct AIBioComposerView: View {
                             .lineLimit(8...16)
                     }
                 } else {
-                    Section("お仕事・身分(1つ選択)") {
+                    Section("サークル・部活(1つ選択)") {
                         chipGrid(options: jobOptions, isSelected: { $0 == selectedJob }) { option in
                             selectedJob = (selectedJob == option) ? nil : option
                         }
@@ -100,7 +101,7 @@ struct AIBioComposerView: View {
     static func compose(job: String?, hobbies: [String], foods: [String]) -> String {
         var lines: [String] = []
         if let job {
-            lines.append("【仕事】\n\(job)をしています。")
+            lines.append("【サークル・部活】\n\(job)。")
         }
         if !hobbies.isEmpty {
             lines.append("【趣味】\n\(hobbies.joined(separator: "・"))が好きです。休みの日はよく楽しんでいます。")

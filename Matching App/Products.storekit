@@ -128,7 +128,7 @@
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "メッセージ人数の制限なし・いいね数の表示・プライベートモード・既読表示・マッチ度表示・契約時に30いいね付与",
+              "description" : "メッセージ人数の制限なし・いいね数の表示・プライベートモード・既読表示・契約時に30いいね付与",
               "displayName" : "有料会員(月額)",
               "locale" : "ja_JP"
             }

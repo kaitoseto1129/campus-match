@@ -416,7 +416,13 @@ struct ProfileEditView: View {
                 // (先に新しい写真を同じスロットへ追加すると、一時的に同じスロットの写真が2枚になり、
                 // 削除時の並び直し処理でスロットがズレてしまうため)
                 if let oldPhotoToReplace {
-                    await profileManager.deletePhoto(photo: oldPhotoToReplace)
+                    let deleted = await profileManager.deletePhoto(photo: oldPhotoToReplace)
+                    guard deleted else {
+                        faceCheckMessage = profileManager.errorMessage ?? "写真の入れ替えに失敗しました。もう一度お試しください。"
+                        showingFaceCheckAlert = true
+                        profileManager.errorMessage = nil
+                        return
+                    }
                 }
                 await profileManager.addPhoto(image: croppedImage, atSlot: targetSlot)
                 // addPhoto失敗時はerrorMessageが立つだけで画面に何も表示されず、
@@ -826,6 +832,8 @@ struct ResidencePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var country: String
     @State private var searchText = ""
+    /// 州や「その他の国」を直接この画面で選ぶ場合、タップ即確定ではなく保存ボタンで確定する。
+    @State private var pendingArea: String? = nil
 
     init(area: Binding<String>, city: Binding<String>) {
         self._area = area
@@ -910,14 +918,12 @@ struct ResidencePickerView: View {
                 } else {
                     Section {
                         Button {
-                            area = country
-                            city = ""
-                            dismiss()
+                            pendingArea = country
                         } label: {
                             HStack {
                                 Text(country)
                                 Spacer()
-                                if area == country {
+                                if pendingArea == country || (pendingArea == nil && area == country) {
                                     Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                                 }
                             }
@@ -931,20 +937,30 @@ struct ResidencePickerView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") { dismiss() }
                 }
+                if pendingArea != nil {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("保存") {
+                            if let pendingArea {
+                                area = pendingArea
+                                city = ""
+                            }
+                            dismiss()
+                        }
+                        .bold()
+                    }
+                }
             }
         }
     }
 
     private func selectableRow(_ value: String) -> some View {
         Button {
-            area = value
-            city = ""
-            dismiss()
+            pendingArea = value
         } label: {
             HStack {
                 Text(value).foregroundStyle(.primary)
                 Spacer()
-                if area == value {
+                if pendingArea == value || (pendingArea == nil && area == value) {
                     Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                 }
             }
@@ -999,6 +1015,9 @@ private struct PrefectureListView: View {
     @Binding var city: String
     var onSelect: () -> Void
     @State private var searchText = ""
+    /// タップしただけで即座に閉じてしまうと選び間違いに気づきにくいため、
+    /// いったん選択状態にしてから右上の「保存」で確定する形にしている。
+    @State private var pendingSelection: String? = nil
 
     private var filtered: [String] {
         searchText.isEmpty ? options : options.filter { $0.contains(searchText) }
@@ -1025,14 +1044,12 @@ private struct PrefectureListView: View {
                         }
                     } else {
                         Button {
-                            area = option
-                            city = ""
-                            onSelect()
+                            pendingSelection = option
                         } label: {
                             HStack {
                                 Text(option).foregroundStyle(.primary)
                                 Spacer()
-                                if area == option {
+                                if pendingSelection == option || (pendingSelection == nil && area == option) {
                                     Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                                 }
                             }
@@ -1044,6 +1061,19 @@ private struct PrefectureListView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("保存") {
+                    if let pendingSelection {
+                        area = pendingSelection
+                        city = ""
+                    }
+                    onSelect()
+                }
+                .disabled(pendingSelection == nil)
+                .bold()
+            }
+        }
     }
 }
 
@@ -1056,23 +1086,26 @@ private struct MunicipalityListView: View {
     @Binding var city: String
     var onSelect: () -> Void
     @State private var searchText = ""
+    /// nilは「未選択」、空文字は「(市区町村を指定せず)県全体」を表す。
+    @State private var pendingCity: String?? = nil
 
     private var filtered: [String] {
         searchText.isEmpty ? options : options.filter { $0.contains(searchText) }
+    }
+    private var currentSelection: String? {
+        pendingCity ?? (area == prefecture ? city : nil)
     }
 
     var body: some View {
         Form {
             Section {
                 Button {
-                    area = prefecture
-                    city = ""
-                    onSelect()
+                    pendingCity = .some("")
                 } label: {
                     HStack {
                         Text("\(prefecture)全体").foregroundStyle(.primary)
                         Spacer()
-                        if area == prefecture && city.isEmpty {
+                        if currentSelection == "" {
                             Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                         }
                     }
@@ -1084,14 +1117,12 @@ private struct MunicipalityListView: View {
             Section {
                 ForEach(filtered, id: \.self) { option in
                     Button {
-                        area = prefecture
-                        city = option
-                        onSelect()
+                        pendingCity = .some(option)
                     } label: {
                         HStack {
                             Text(option).foregroundStyle(.primary)
                             Spacer()
-                            if area == prefecture && city == option {
+                            if currentSelection == option {
                                 Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
                             }
                         }
@@ -1102,6 +1133,17 @@ private struct MunicipalityListView: View {
         }
         .navigationTitle(prefecture)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("保存") {
+                    area = prefecture
+                    city = currentSelection ?? ""
+                    onSelect()
+                }
+                .disabled(pendingCity == nil)
+                .bold()
+            }
+        }
     }
 }
 
@@ -1113,6 +1155,7 @@ struct UniversityPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var universities: [University] = []
     @State private var searchText = ""
+    @State private var mismatchTarget: University? = nil
 
     private var relevantUniversities: [University] {
         let matches = universities.filter { $0.prefecture == area }
@@ -1123,6 +1166,24 @@ struct UniversityPickerView: View {
     }
     private var isFilteredByArea: Bool {
         searchText.isEmpty && relevantUniversities.count < universities.count
+    }
+
+    /// 登録済みの大学メールアドレスのドメインと一致するかを確認するため、
+    /// サブドメイン発行の大学(例:早稲田の@ruri.waseda.jp)にも対応した判定にしている(AuthViewと同じ考え方)。
+    private func matchesRegisteredEmail(_ university: University) -> Bool {
+        guard let email = supabase().auth.currentUser?.email?.lowercased() else { return true }
+        let d = university.domain.lowercased()
+        return email.hasSuffix("@\(d)") || email.hasSuffix(".\(d)")
+    }
+
+    private func select(_ university: University) {
+        if matchesRegisteredEmail(university) {
+            universityId = university.id
+            universityName = university.name
+            dismiss()
+        } else {
+            mismatchTarget = university
+        }
     }
 
     var body: some View {
@@ -1141,9 +1202,7 @@ struct UniversityPickerView: View {
                 Section {
                     ForEach(filtered) { university in
                         Button {
-                            universityId = university.id
-                            universityName = university.name
-                            dismiss()
+                            select(university)
                         } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
@@ -1172,6 +1231,23 @@ struct UniversityPickerView: View {
             }
             .task {
                 await load()
+            }
+            .confirmationDialog(
+                "登録したメールアドレスとは異なる大学です",
+                isPresented: Binding(get: { mismatchTarget != nil }, set: { if !$0 { mismatchTarget = nil } }),
+                titleVisibility: .visible
+            ) {
+                Button("それでも選択する") {
+                    if let mismatchTarget {
+                        universityId = mismatchTarget.id
+                        universityName = mismatchTarget.name
+                    }
+                    self.mismatchTarget = nil
+                    dismiss()
+                }
+                Button("キャンセル", role: .cancel) { mismatchTarget = nil }
+            } message: {
+                Text("登録に使ったメールアドレスのドメインと、選んだ大学のメールドメインが一致していません。誤って別の大学を選んでいないか確認してください。")
             }
         }
     }

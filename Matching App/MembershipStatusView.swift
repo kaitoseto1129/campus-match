@@ -308,7 +308,6 @@ struct MembershipStatusView: View {
             Benefit(icon: "hand.thumbsup.fill", caption: "お相手の人気度が分かる", title: "いいね!数表示"),
             Benefit(icon: "eye.slash.fill", caption: "身バレ防止", title: "プライベートモード"),
             Benefit(icon: "checkmark.message.fill", caption: "トークの", title: "既読がわかる機能"),
-            Benefit(icon: "percent", caption: "お相手との", title: "マッチ度の表示"),
             Benefit(icon: "gift.fill", caption: "契約と同時に", title: "30いいね!を付与!")
         ]
     }

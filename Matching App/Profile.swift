@@ -148,8 +148,6 @@ enum MembershipTier: String, Codable, CaseIterable {
     var canUsePrivateMode: Bool { rank >= MembershipTier.vip.rank }
     /// トークで相手の既読が分かるか。
     var canSeeReadReceipts: Bool { rank >= MembershipTier.vip.rank }
-    /// 相手プロフィールでマッチ度を見られるか。
-    var canSeeMatchScore: Bool { rank >= MembershipTier.vip.rank }
 }
 
 struct ProfileCompleteness {

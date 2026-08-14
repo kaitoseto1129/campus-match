@@ -22,6 +22,9 @@ struct MyPageHomeView: View {
     @State private var showingBoostConfirm = false
     @State private var showingPurchaseSheet = false
     @State private var showingHobbyCardPicker = false
+    /// マイページを初めて開いた時だけ、主要機能を簡単に紹介するガイドを一度出す。
+    @AppStorage("hasSeenMyPageTutorial") private var hasSeenMyPageTutorial = false
+    @State private var myPageTutorialStep: MyPageTutorialStep? = nil
 
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -87,11 +90,22 @@ struct MyPageHomeView: View {
                     .padding(.top)
                     .padding(.bottom, 100)
                 }
+
+                if myPageTutorialStep != nil {
+                    MyPageTutorialOverlay(step: $myPageTutorialStep) {
+                        hasSeenMyPageTutorial = true
+                    }
+                    .zIndex(1)
+                }
             }
             .navigationTitle("マイページ")
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await profileManager.load()
+                if !hasSeenMyPageTutorial {
+                    try? await Task.sleep(nanoseconds: 400_000_000)
+                    withAnimation { myPageTutorialStep = .hobbyCards }
+                }
             }
             .onChange(of: tabRouter.popToRootTokens[.myPage]) { _, _ in
                 navPath = NavigationPath()

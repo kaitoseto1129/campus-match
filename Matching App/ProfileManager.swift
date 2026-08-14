@@ -268,7 +268,13 @@ class ProfileManager: ObservableObject {
         }
         return false
     }
-    func deletePhoto(photo: ProfilePhoto) async {
+    /// 指定スロットの写真だけを削除する。スロット番号(0=メイン、1〜=サブ)はドラッグ順ではなく
+    /// 「その枠の意味」を表す固定値なので、削除しても他のスロットの番号は詰めない
+    /// (以前はここでnormalizeOrderNumber()を呼んでいたため、例えばサブ写真を削除すると
+    /// 別のサブ写真のorder_numberが繰り上がって、削除直後に同じスロットへ再登録しようとした際に
+    /// order_numberの一意制約に衝突し「写真を追加できません」と表示されるバグの原因になっていた)。
+    @discardableResult
+    func deletePhoto(photo: ProfilePhoto) async -> Bool {
         do {
             try await supabase()
                 .from("profile_photos")
@@ -277,10 +283,12 @@ class ProfileManager: ObservableObject {
                 .execute()
             let filePath = "\(photo.userId.uuidString)/\(photo.id.uuidString).jpg"
             try await supabase().storage.from("profile_photos").remove(paths: [filePath])
-            await normalizeOrderNumber()
             await loadPhotos()
+            return true
         } catch {
+            errorMessage = "写真の削除に失敗しました"
             print("delete error: \(error)")
+            return false
         }
     }
     func normalizeOrderNumber() async {

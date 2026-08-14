@@ -111,7 +111,9 @@ struct PrivacyToggleRows: View {
             Divider().padding(.leading, 16)
 
             VStack(alignment: .leading, spacing: 2) {
-                // プライベートモードはVIPオプション限定の機能。契約していない間は操作できないようにする。
+                // プライベートモードは有料会員限定の機能。契約していない間は操作できないようにする。
+                // (以前は「VIPオプション」という別プラン名で案内していたが、有料会員プランに一本化した際に
+                // 表記を合わせ忘れていたため「有料会員」に統一している)
                 let canUsePrivateMode = (profileManager.profile?.membership ?? .free).canUsePrivateMode
                 Toggle(isOn: Binding(
                     get: { profileManager.profile?.privateMode ?? false },
@@ -123,7 +125,7 @@ struct PrivacyToggleRows: View {
                         Text("プライベートモード")
                             .font(.subheadline)
                         if !canUsePrivateMode {
-                            Text("VIP")
+                            Text("有料会員")
                                 .font(.caption2.bold())
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 7)
@@ -136,7 +138,7 @@ struct PrivacyToggleRows: View {
                 .disabled(!canUsePrivateMode)
                 Text(canUsePrivateMode
                      ? "ONにすると、自分からいいねを送った相手以外の「探す」画面にあなたが表示されなくなり、足あとも付きません"
-                     : "VIPオプションを契約すると使えます。ONにすると、自分からいいねを送った相手以外の「探す」画面にあなたが表示されなくなります")
+                     : "有料会員になると使えます。ONにすると、自分からいいねを送った相手以外の「探す」画面にあなたが表示されなくなります")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }

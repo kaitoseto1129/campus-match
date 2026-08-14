@@ -108,7 +108,7 @@ struct AuthView: View {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "globe")
-                Text((AppLanguage(rawValue: appLanguageRaw) ?? .japanese).label)
+                Text("言語 / Language")
             }
             .font(.caption.bold())
             .foregroundStyle(Color.brandPurple)
@@ -158,6 +158,13 @@ struct AuthView: View {
                 .autocorrectionDisabled()
                 .padding()
                 .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
+            if isSignUp && email.isEmpty {
+                Text("大学から発行されたメールアドレス(例: your_name@university.ac.jp)で登録してください")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 4)
+            }
             HStack {
                 Group {
                     if isPasswordVisible {

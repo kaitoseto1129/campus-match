@@ -21,6 +21,7 @@ struct FilterSheetView: View {
     @State private var countTask: Task<Void, Never>?
     /// 居住地選択が奥の階層まで進んだ時、選び終わったらここへ自動で戻すためのpath。
     @State private var path = NavigationPath()
+    @State private var tutorialPulse = false
 
     init(filter: Binding<DiscoverFilter>, showsTutorialHint: Bool = false, countProvider: ((DiscoverFilter) async -> Int)? = nil) {
         self._filter = filter
@@ -183,10 +184,26 @@ struct FilterSheetView: View {
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
                 }
+                .overlay {
+                    if showsTutorialHint {
+                        Capsule()
+                            .stroke(Color.brandOrange, lineWidth: 3)
+                            .scaleEffect(tutorialPulse ? 1.12 : 1.0)
+                            .opacity(tutorialPulse ? 0 : 1)
+                            .allowsHitTesting(false)
+                    }
+                }
             }
         }
         .padding()
         .background(.bar)
+        .onAppear {
+            if showsTutorialHint {
+                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                    tutorialPulse = true
+                }
+            }
+        }
     }
 
     private func filterRow(title: String, value: String) -> some View {

@@ -15,11 +15,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
     var isOnline: Bool? = nil
     var otherProfiles: [Profile] = []
     var otherProfilePhotoURLs: [UUID: URL] = [:]
-    /// VIPオプション限定のマッチ度。表示しない場合はnil。
-    var matchScore: MatchScore? = nil
-    /// VIPではない閲覧者に、マッチ度が見られることだけ伝えるための案内を出すか。
-    var showsMatchScoreUpsell: Bool = false
-    var onTapMatchScoreUpsell: (() -> Void)? = nil
     var onTapMainPhoto: (() -> Void)? = nil
     /// 閲覧トラッキング用: セクションが画面に現れた時に呼ばれる(自分のプロフィール表示時はnilのまま)。
     var onSectionAppear: ((ProfileSection) -> Void)? = nil
@@ -215,78 +210,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
         }
     }
 
-    /// VIPオプション限定のマッチ度。未契約の閲覧者にはぼかした案内だけを出す。
-    @ViewBuilder
-    var matchScoreSection: some View {
-        if let matchScore {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Text("お相手とのマッチ度")
-                        .font(.subheadline.bold())
-                    Text("VIP")
-                        .font(.caption2.bold())
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2)
-                        .background(Color.brandGradient, in: Capsule())
-                    Spacer()
-                    Text("\(matchScore.percent)%")
-                        .font(.title2.bold())
-                        .foregroundStyle(Color.brandPurple)
-                }
-                ProgressView(value: Double(matchScore.percent), total: 100)
-                    .tint(Color.brandPurple)
-                Text(matchScore.label)
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
-                if !matchScore.reasons.isEmpty {
-                    FlowLayout(spacing: 6) {
-                        ForEach(matchScore.reasons, id: \.self) { reason in
-                            Text(reason)
-                                .font(.caption2)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Color.brandPurple.opacity(0.12), in: Capsule())
-                                .foregroundStyle(Color.brandPurple)
-                        }
-                    }
-                }
-            }
-            .padding()
-            .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
-            .padding(.horizontal)
-            .padding(.top, 16)
-        } else if showsMatchScoreUpsell {
-            Button {
-                onTapMatchScoreUpsell?()
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "percent")
-                        .foregroundStyle(.white)
-                        .frame(width: 34, height: 34)
-                        .background(Color.brandGradient, in: Circle())
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("お相手とのマッチ度を見る")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(.primary)
-                        Text("VIPオプションで相性が何%か分かります")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
-                .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
-                .padding(.horizontal)
-                .padding(.top, 16)
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
     var otherProfilesSection: some View {
         Group {
             if !otherProfiles.isEmpty {
@@ -341,7 +264,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
                         taglineSection
                         subPhotosSection
                         nameAgeAreaSection
-                        matchScoreSection
                         aboutSection
                         basicInfoSection
                         hobbyCardsSection

@@ -83,7 +83,7 @@ struct WelcomeOnboardingView: View {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "globe")
-                Text((AppLanguage(rawValue: appLanguageRaw) ?? .japanese).label)
+                Text("言語 / Language")
             }
             .font(.caption.bold())
             .foregroundStyle(.white)

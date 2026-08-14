@@ -52,6 +52,8 @@ struct LikesPurchaseSheet: View {
                         }
                         .padding(.horizontal)
                     }
+
+                    usageExplainerSection
                 }
                 .padding(.bottom, 20)
             }
@@ -174,6 +176,46 @@ struct LikesPurchaseSheet: View {
         }
         .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
         .disabled(store.purchasingProductID != nil)
+    }
+
+    /// 「いいね」を購入して何に使えるのかが伝わるよう、用途を短くまとめて紹介する。
+    private var usageExplainerSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("いいねは何に使うの?")
+                .font(.subheadline.bold())
+                .padding(.horizontal, 4)
+
+            VStack(spacing: 10) {
+                usageRow(icon: "hand.thumbsup.fill", iconColor: Color.brandPurple, title: "気になるお相手にいいねを送る", detail: "1いいねで1人に送れます。マッチすればトークができます")
+                usageRow(icon: "bell.fill", iconColor: Color.brandTeal, title: "「見てね」でリマインドする", detail: "マッチ済みのお相手にもう一度気づいてもらえます")
+                usageRow(icon: "bolt.fill", iconColor: Color.brandOrange, title: "「アピール」で目立つ", detail: "10いいねで1時間、探す画面のトップに表示されます")
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+        .padding(.horizontal)
+        .padding(.top, 4)
+    }
+
+    private func usageRow(icon: String, iconColor: Color, title: String, detail: String) -> some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(iconColor.opacity(0.12))
+                .frame(width: 40, height: 40)
+                .overlay {
+                    Image(systemName: icon)
+                        .foregroundStyle(iconColor)
+                }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.bold())
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
     }
 
     private func purchase(amount: Int) async {

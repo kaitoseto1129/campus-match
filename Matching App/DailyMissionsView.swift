@@ -8,20 +8,29 @@ import SwiftUI
 struct DailyMissionsView: View {
     @StateObject private var manager = DailyMissionsManager()
     @Environment(\.dismiss) private var dismiss
-    /// 探す画面の初回チュートリアル中に開かれた場合、ログインボーナス受け取り後に
-    /// 「右上の閉じるボタンを押して次へ」の案内を出す。
+    /// 探す画面の初回チュートリアル中に開かれた場合、ログインボーナスの受け取るボタンを
+    /// 光らせて案内し、受け取り後は「右上の閉じるボタンを押して次へ」の案内を出す。
     var showsTutorialHint: Bool = false
+    @State private var showingClaimedToast = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     header
+                    if showsTutorialHint && !manager.claimedKeys.contains("login") {
+                        tutorialTapHint
+                    }
                     if showsTutorialHint && manager.claimedKeys.contains("login") {
                         tutorialCloseHint
                     }
                     ForEach(manager.missions) { mission in
-                        MissionCardView(manager: manager, mission: mission)
+                        MissionCardView(
+                            manager: manager,
+                            mission: mission,
+                            highlightClaim: showsTutorialHint && mission.key == "login",
+                            onClaimed: { showingClaimedToast = true }
+                        )
                     }
                 }
                 .padding()
@@ -40,7 +49,20 @@ struct DailyMissionsView: View {
             .refreshable {
                 await manager.load()
             }
+            .sentConfirmationCover(isPresented: $showingClaimedToast, message: "いいねを受け取りました!", icon: "gift.fill")
         }
+    }
+
+    private var tutorialTapHint: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "hand.tap.fill")
+            Text("ログインボーナスの「受け取る」をタップしてみましょう")
+                .font(.caption.bold())
+        }
+        .foregroundStyle(.white)
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.brandOrange, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var tutorialCloseHint: some View {
@@ -77,18 +99,41 @@ struct DailyMissionsView: View {
 private struct MissionCardView: View {
     @ObservedObject var manager: DailyMissionsManager
     let mission: MissionProgress
+    /// チュートリアル中、このミッションの受け取るボタンを指差して案内する。
+    var highlightClaim: Bool = false
+    var onClaimed: (() -> Void)? = nil
     @State private var isClaiming = false
+    @State private var pulse = false
 
     private var isClaimed: Bool { manager.claimedKeys.contains(mission.key) }
+    /// 達成済みでまだ受け取っていない状態(=一番目立たせたい、押すべき状態)。
+    private var isClaimable: Bool { mission.isComplete && !isClaimed }
+
+    /// 状態(未達成/受取可能/受取済み)がひと目で分かるよう、カード全体の色みを変える。
+    /// 以前は3状態とも同じ紫〜ティールのグラデーションだったため、どれが「押すべきか」分かりにくかった。
+    private var cardBackground: some ShapeStyle {
+        if isClaimed {
+            return AnyShapeStyle(Color(.systemGray5))
+        } else if isClaimable {
+            return AnyShapeStyle(LinearGradient(colors: [Color.brandOrange, Color.brandPurple], startPoint: .topLeading, endPoint: .bottomTrailing))
+        } else {
+            return AnyShapeStyle(LinearGradient(colors: [Color.brandPurple.opacity(0.55), Color.brandTeal.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
+        }
+    }
+    private var foreground: Color { isClaimed ? .secondary : .white }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(mission.title)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(foreground)
                 Spacer()
-                if mission.isComplete {
+                if isClaimed {
+                    Label("受取済み", systemImage: "checkmark.circle.fill")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                } else if mission.isComplete {
                     Text("CLEAR!")
                         .font(.caption.bold())
                         .foregroundStyle(.white)
@@ -107,55 +152,80 @@ private struct MissionCardView: View {
                     .foregroundStyle(Color.brandPurple)
                 }
                 .frame(width: 46, height: 46)
+                .opacity(isClaimed ? 0.5 : 1)
 
                 Image(systemName: "arrow.right")
                     .font(.caption.bold())
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(foreground.opacity(0.85))
 
                 HStack(spacing: 4) {
                     Image(systemName: "hand.thumbsup.fill")
-                    Text("達成でいいねGET!")
+                    Text(isClaimed ? "受け取り済みです" : "達成でいいねGET!")
                 }
                 .font(.caption.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(foreground)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
-                .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 12))
+                .background(.white.opacity(isClaimed ? 0.4 : 0.18), in: RoundedRectangle(cornerRadius: 12))
             }
 
             HStack(spacing: 10) {
                 ProgressView(value: Double(mission.current), total: Double(mission.target))
-                    .tint(.white)
+                    .tint(isClaimed ? Color(.systemGray) : .white)
                 Text("\(mission.current)/\(mission.target)")
                     .font(.caption.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(foreground)
 
-                Button {
-                    guard !isClaiming else { return }
-                    isClaiming = true
-                    Task {
-                        await manager.claim(mission)
-                        isClaiming = false
+                ZStack {
+                    if highlightClaim && isClaimable {
+                        Circle()
+                            .stroke(Color.white, lineWidth: 3)
+                            .scaleEffect(pulse ? 1.35 : 1.0)
+                            .opacity(pulse ? 0 : 0.9)
+                            .frame(width: 60, height: 60)
+                            .allowsHitTesting(false)
                     }
-                } label: {
-                    Text(isClaimed ? "受取済み" : "受け取る")
-                        .font(.caption.bold())
-                        .foregroundStyle(mission.isComplete && !isClaimed ? Color.brandPurple : .white.opacity(0.6))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(mission.isComplete && !isClaimed ? .white : Color.black.opacity(0.25), in: Capsule())
+                    Button {
+                        guard !isClaiming else { return }
+                        isClaiming = true
+                        Task {
+                            await manager.claim(mission)
+                            isClaiming = false
+                            if manager.claimedKeys.contains(mission.key) {
+                                onClaimed?()
+                            }
+                        }
+                    } label: {
+                        Text(isClaimed ? "受取済み" : "受け取る")
+                            .font(.caption.bold())
+                            .foregroundStyle(isClaimable ? Color.brandPurple : .white.opacity(0.6))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(isClaimable ? .white : Color.black.opacity(0.25), in: Capsule())
+                    }
+                    .disabled(!mission.isComplete || isClaimed || isClaiming)
                 }
-                .disabled(!mission.isComplete || isClaimed || isClaiming)
             }
         }
         .padding()
-        .background(
-            LinearGradient(colors: [Color.brandPurple, Color.brandTeal], startPoint: .topLeading, endPoint: .bottomTrailing),
-            in: RoundedRectangle(cornerRadius: 16)
-        )
+        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            if isClaimable {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.brandOrange, lineWidth: 2)
+            }
+        }
+        .shadow(color: isClaimable ? Color.brandOrange.opacity(0.4) : .clear, radius: 10, y: 4)
         .sensoryFeedback(.success, trigger: isClaimed) { oldValue, newValue in
             newValue && !oldValue
+        }
+        .onAppear {
+            if isClaimable {
+                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                    pulse = true
+                }
+            }
         }
     }
 }

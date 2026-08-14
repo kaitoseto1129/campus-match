@@ -78,16 +78,9 @@ struct OtherUserProfileView<ActionContent: View>: View {
     @State private var visitRecordId: UUID?
     @State private var viewedPhotoIds: Set<UUID> = []
     @State private var furthestSection: ProfileSection?
-    /// 自分の会員ステータス。いいね数の表示・マッチ度の表示の可否を決める。
+    /// 自分の会員ステータス。いいね数の表示の可否を決める。
     @State private var myMembership: MembershipTier = .free
     @State private var myProfile: Profile?
-    @State private var showingMembership = false
-
-    /// マッチ度はVIPオプション限定。未契約の場合はnilを渡して代わりに案内を出す。
-    private var matchScore: MatchScore? {
-        guard myMembership.canSeeMatchScore, let myProfile else { return nil }
-        return MatchScore.compute(me: myProfile, other: profile)
-    }
 
     var body: some View {
         ProfileDisplayView(
@@ -98,9 +91,6 @@ struct OtherUserProfileView<ActionContent: View>: View {
             isOnline: isOnline,
             otherProfiles: otherProfiles,
             otherProfilePhotoURLs: otherProfilePhotoURLs,
-            matchScore: matchScore,
-            showsMatchScoreUpsell: !myMembership.canSeeMatchScore,
-            onTapMatchScoreUpsell: { showingMembership = true },
             onSectionAppear: { section in
                 if furthestSection == nil || section.order > furthestSection!.order {
                     furthestSection = section
@@ -129,9 +119,6 @@ struct OtherUserProfileView<ActionContent: View>: View {
                     )
                 }
             }
-        }
-        .navigationDestination(isPresented: $showingMembership) {
-            MembershipStatusView(profileManager: ProfileManager())
         }
         .confirmationDialog("\(profile.name)さんを非表示にしますか?", isPresented: $showingHideConfirm, titleVisibility: .visible) {
             Button("非表示にする", role: .destructive) {
@@ -214,7 +201,7 @@ struct OtherUserProfileView<ActionContent: View>: View {
                 .single()
                 .execute()
                 .value
-            // マッチ度の算出にも使うため保持しておく。
+            // 性別条件を使った「他のユーザーも見てみる」の取得に使うため保持しておく。
             self.myProfile = myProfile
             guard let myGender = myProfile.gender else { return }
             let oppositeGender: Gender = myGender == .male ? .female : .male
