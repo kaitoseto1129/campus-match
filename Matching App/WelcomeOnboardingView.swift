@@ -35,6 +35,13 @@ struct WelcomeOnboardingView: View {
                 .tabViewStyle(.page)
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
 
+                Text("本サービスは18歳以上の大学生の方のみご利用いただけます")
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 12)
+
                 Button {
                     if page == 0 {
                         withAnimation { page = 1 }

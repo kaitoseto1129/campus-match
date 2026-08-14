@@ -214,13 +214,13 @@ struct AuthView: View {
         VStack(spacing: 10) {
             // Googleなど他社の外部ログインを提供する場合、App StoreはSign in with Appleも
             // 同等の選択肢として提供することを求めているため、先頭に配置している(Appleの4.8ガイドライン)。
-            socialLoginButton(title: "Appleで続ける", systemImage: "apple.logo") {
+            socialLoginButton(title: "Appleで続ける", systemImage: "apple.logo", background: .black, foreground: .white) {
                 Task { await auth.signInWithOAuth(provider: .apple) }
             }
-            socialLoginButton(title: "Googleで続ける", systemImage: "g.circle.fill") {
+            socialLoginButton(title: "Googleで続ける", systemImage: "g.circle.fill", background: Color(.systemBackground), foreground: .primary, bordered: true) {
                 Task { await auth.signInWithOAuth(provider: .google) }
             }
-            socialLoginButton(title: "Facebookで続ける", systemImage: "f.circle.fill") {
+            socialLoginButton(title: "Facebookで続ける", systemImage: "f.circle.fill", background: Color(red: 0.09, green: 0.46, blue: 0.82), foreground: .white) {
                 Task { await auth.signInWithOAuth(provider: .facebook) }
             }
             if isSignUp {
@@ -282,7 +282,14 @@ struct AuthView: View {
         }
     }
 
-    private func socialLoginButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    private func socialLoginButton(
+        title: String,
+        systemImage: String,
+        background: Color,
+        foreground: Color,
+        bordered: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             HStack {
                 Image(systemName: systemImage)
@@ -291,9 +298,15 @@ struct AuthView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 48)
-            .background(Color(.systemBackground))
-            .foregroundStyle(.primary)
+            .background(background)
+            .foregroundStyle(foreground)
             .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay {
+                if bordered {
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color(.systemGray4), lineWidth: 1)
+                }
+            }
         }
     }
 

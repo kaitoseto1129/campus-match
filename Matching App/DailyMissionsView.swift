@@ -95,15 +95,34 @@ private struct MissionCardView: View {
                 }
             }
 
-            HStack(spacing: 4) {
-                Image(systemName: "hand.thumbsup.fill")
-                Text("+\(mission.reward)いいね")
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle().fill(.white)
+                    VStack(spacing: -1) {
+                        Text("+\(mission.reward)")
+                            .font(.subheadline.bold())
+                        Text("いいね")
+                            .font(.system(size: 8).bold())
+                    }
+                    .foregroundStyle(Color.brandPurple)
+                }
+                .frame(width: 46, height: 46)
+
+                Image(systemName: "arrow.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white.opacity(0.85))
+
+                HStack(spacing: 4) {
+                    Image(systemName: "hand.thumbsup.fill")
+                    Text("達成でいいねGET!")
+                }
+                .font(.caption.bold())
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 12))
             }
-            .font(.caption.bold())
-            .foregroundStyle(Color.brandPurple)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(.white, in: Capsule())
 
             HStack(spacing: 10) {
                 ProgressView(value: Double(mission.current), total: Double(mission.target))

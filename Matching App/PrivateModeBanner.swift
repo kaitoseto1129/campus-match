@@ -17,7 +17,8 @@ struct PrivateModeBanner: View {
                 Button {
                     showingSettings = true
                 } label: {
-                    HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "eye.slash.fill")
                         Text("プライベートモード中")
                         Spacer()
                         Text("設定する")
@@ -26,8 +27,8 @@ struct PrivateModeBanner: View {
                     .font(.subheadline.bold())
                     .foregroundStyle(.white)
                     .padding(.horizontal)
-                    .padding(.vertical, 10)
-                    .background(Color.brandPurple)
+                    .padding(.vertical, 12)
+                    .background(LinearGradient(colors: [Color.brandTeal, Color.brandTeal.opacity(0.8)], startPoint: .leading, endPoint: .trailing))
                 }
                 .buttonStyle(.plain)
             }
