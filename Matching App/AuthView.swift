@@ -161,7 +161,7 @@ struct AuthView: View {
                 .multilineTextAlignment(.center)
         }
         if let error = auth.errorMessage {
-            Text(error)
+            Text(LocalizedStringKey(error))
                 .font(.caption)
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
@@ -248,7 +248,7 @@ struct AuthView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 if let resetErrorMessage {
-                    Text(resetErrorMessage)
+                    Text(LocalizedStringKey(resetErrorMessage))
                         .font(.caption)
                         .foregroundStyle(.red)
                 }

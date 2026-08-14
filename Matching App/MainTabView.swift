@@ -114,7 +114,7 @@ struct MainTabView: View {
                     }
                 }
                 .frame(height: 30)
-                Text(label)
+                Text(LocalizedStringKey(label))
                     .font(.caption2)
             }
             .foregroundStyle(tabRouter.selectedTab == tab || isHighlighted ? Color.brandPurple : Color(.systemGray))

@@ -262,7 +262,7 @@ struct MyPageHomeView: View {
                                     Image(systemName: "circle")
                                         .foregroundStyle(.secondary)
                                         .font(.caption)
-                                    Text(label)
+                                    Text(LocalizedStringKey(label))
                                         .font(.subheadline)
                                     Spacer()
                                     NavigationLink {
@@ -465,7 +465,7 @@ struct MyPageHomeView: View {
                         Image(systemName: icon)
                             .foregroundStyle(.white)
                     }
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .foregroundStyle(.primary)
                 Spacer()
                 Image(systemName: "arrow.up.right")
@@ -542,7 +542,7 @@ struct MyPageHomeView: View {
                         Image(systemName: icon)
                             .foregroundStyle(.white)
                     }
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .foregroundStyle(.primary)
                 if badgeCount > 0 {
                     Text("\(badgeCount)件")

@@ -83,11 +83,11 @@ struct WelcomeOnboardingView: View {
                         .foregroundStyle(.white)
                 }
             }
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(.title2.bold())
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
-            Text(message)
+            Text(LocalizedStringKey(message))
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.9))
                 .multilineTextAlignment(.center)

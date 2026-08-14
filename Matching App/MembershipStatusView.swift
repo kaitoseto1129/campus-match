@@ -65,7 +65,7 @@ struct MembershipStatusView: View {
         .alert("プランを変更できませんでした", isPresented: $showingFailedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(store.errorMessage ?? "通信環境を確認してもう一度お試しください。")
+            Text(LocalizedStringKey(store.errorMessage ?? "通信環境を確認してもう一度お試しください。"))
         }
         .manageSubscriptionsSheet(isPresented: $showingManageSubscriptions)
         .sentConfirmationCover(isPresented: $showingPurchasedToast, message: purchasedMessage, icon: "crown.fill")

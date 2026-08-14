@@ -158,7 +158,7 @@ struct ProfileEditView: View {
                     VStack(spacing: 4) {
                         Image(systemName: "plus")
                             .font(.title2)
-                        Text(label)
+                        Text(LocalizedStringKey(label))
                             .font(.caption2)
                             .multilineTextAlignment(.center)
                     }
@@ -213,7 +213,7 @@ struct ProfileEditView: View {
     private func formRow(title: String, value: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .foregroundStyle(.primary)
                 Spacer()
                 Text(value)
@@ -231,10 +231,10 @@ struct ProfileEditView: View {
     /// (以前はプレースホルダーが入力すると消えてしまい、何の項目か分かりづらかった)
     private func labeledTextField(title: String, text: Binding<String>, placeholder: String) -> some View {
         HStack {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .foregroundStyle(.primary)
             Spacer()
-            TextField(placeholder, text: text)
+            TextField(LocalizedStringKey(placeholder), text: text)
                 .multilineTextAlignment(.trailing)
                 .foregroundStyle(.secondary)
         }
@@ -534,7 +534,7 @@ struct ProfileEditView: View {
         .alert("入力内容を確認してください", isPresented: $showingValidationAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(validationMessage)
+            Text(LocalizedStringKey(validationMessage))
         }
     }
 

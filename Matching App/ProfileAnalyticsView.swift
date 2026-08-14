@@ -80,7 +80,7 @@ struct ProfileAnalyticsView: View {
             }
             Text(value)
                 .font(.title.bold())
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

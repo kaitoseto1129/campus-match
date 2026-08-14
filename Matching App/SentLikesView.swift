@@ -78,7 +78,7 @@ struct SentLikesView: View {
     }
 
     private func emptyState(message: String) -> some View {
-        Text(message)
+        Text(LocalizedStringKey(message))
             .foregroundStyle(.secondary)
             .padding(.top, 60)
     }

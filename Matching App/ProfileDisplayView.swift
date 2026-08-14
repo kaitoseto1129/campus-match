@@ -321,7 +321,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
 
     func infoRow(label: String, value: String) -> some View {
         HStack {
-            Text(label)
+            Text(LocalizedStringKey(label))
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)

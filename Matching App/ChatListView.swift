@@ -185,7 +185,7 @@ struct ChatListView: View {
 
     private func sortChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(.subheadline.bold())
                 .foregroundStyle(isSelected ? .white : .primary)
                 .padding(.horizontal, 16)

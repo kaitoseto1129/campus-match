@@ -14,7 +14,7 @@ struct SentConfirmationOverlay: View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .foregroundStyle(Color.brandPurple)
-            Text(message)
+            Text(LocalizedStringKey(message))
                 .font(.subheadline.bold())
         }
         .padding(.horizontal, 20)

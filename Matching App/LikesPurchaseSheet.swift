@@ -65,7 +65,7 @@ struct LikesPurchaseSheet: View {
             .alert("購入に失敗しました", isPresented: $showingFailedAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text(store.errorMessage ?? "もう一度お試しください。")
+                Text(LocalizedStringKey(store.errorMessage ?? "もう一度お試しください。"))
             }
             .sentConfirmationCover(isPresented: $showingSuccessToast, message: "購入が完了しました", icon: "hand.thumbsup.fill")
             .task {

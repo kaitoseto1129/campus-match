@@ -191,7 +191,7 @@ struct FilterSheetView: View {
 
     private func filterRow(title: String, value: String) -> some View {
         HStack {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .foregroundStyle(.primary)
             Spacer()
             Text(value)
@@ -264,7 +264,7 @@ struct FilterSheetView: View {
 private func multiSelectRow(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
     Button(action: action) {
         HStack {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .foregroundStyle(.primary)
             Spacer()
             if isSelected {

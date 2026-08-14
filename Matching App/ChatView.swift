@@ -245,7 +245,7 @@ struct ChatView: View {
         )) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(messageManager.errorMessage ?? "")
+            Text(LocalizedStringKey(messageManager.errorMessage ?? ""))
         }
         .navigationDestination(isPresented: $showingProfile) {
             OtherUserProfileView(profile: otherProfile) {
