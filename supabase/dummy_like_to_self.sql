@@ -1,19 +1,25 @@
--- Supabase Dashboard > SQL Editor で実行してください(MCP接続が切れているため、このセッションでは
--- 直接適用できていません)。
+-- テスト用: 自分の実アカウント(複数)宛てに、ダミーアカウントからランダムに1件ずつ「いいね」を送る。
+-- いいねタブの「相手から」に表示され、通知や「ありがとう」ボタンでのマッチ成立の動作確認に使える。
 --
--- テスト用: ダミーアカウントの中からランダムに1人を選び、あなたの実アカウント(ログイン中の
--- メールアドレス)宛てに「いいね」を送った状態を作る。いいねタブの「相手から」に表示され、
--- 通知や「ありがとう」ボタンでのマッチ成立の動作確認に使える。
+-- 対象アカウントのメールアドレスは実行のたびに書き換えて使う想定。
+-- (毎回すべてのテストアカウントに送るのがデフォルトの使い方)
 
 insert into public.likes (from_user_id, to_user_id, is_special)
-select p.id, u.id, false
-from public.profiles p
-cross join auth.users u
-where u.email = 'kaitoseto1129@gmail.com'
-  and p.id <> u.id
-  and not exists (
-    select 1 from public.likes l where l.from_user_id = p.id and l.to_user_id = u.id
+select sub.from_id, sub.to_id, false
+from (
+  select
+    (select p.id from public.profiles p
+     where p.id <> u.id
+       and not exists (select 1 from public.likes l where l.from_user_id = p.id and l.to_user_id = u.id)
+     order by random() limit 1) as from_id,
+    u.id as to_id
+  from auth.users u
+  where u.email in (
+    'kseto@andrew.cmu.edu',
+    '2kseto@andrew.cmu.edu',
+    'hiroshi@andrew.cmu.edu',
+    'sanae@andrew.cmu.edu'
   )
-order by random()
-limit 1
+) sub
+where sub.from_id is not null
 returning from_user_id, to_user_id;
