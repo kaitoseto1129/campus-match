@@ -7,12 +7,41 @@
 
 import SwiftUI
 
+/// 端末の言語設定に関わらず、アプリ内から表示言語を固定できるようにするための設定。
+/// マイページの「言語」からいつでも切り替えられる。「システムに従う」がデフォルトで、
+/// これまで通り端末の言語設定に応じて自動で切り替わる。
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case system
+    case japanese = "ja"
+    case english = "en"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .system: return "システムに従う / System"
+        case .japanese: return "日本語"
+        case .english: return "English"
+        }
+    }
+
+    /// nilを返すとSwiftUIは端末の言語設定をそのまま使う。
+    var locale: Locale? {
+        switch self {
+        case .system: return nil
+        case .japanese: return Locale(identifier: "ja")
+        case .english: return Locale(identifier: "en")
+        }
+    }
+}
+
 @main
 struct Matching_AppApp: App {
     @StateObject var auth = AuthManager()
     @Environment(\.scenePhase) private var scenePhase
     /// 初回起動時だけウェルカム画面を出すためのフラグ(端末に永続化される)。
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
 
     init() {
         // AsyncImageで読み込むプロフィール写真・アイコン等がディスクにキャッシュされるようにする(デフォルトは小さめ)。
@@ -38,6 +67,7 @@ struct Matching_AppApp: App {
             // 個別にtintを指定していない標準コントロール(誕生日・身長ピッカーの「決定」ボタンなど)が
             // iOS標準の青色のまま表示されてしまい、他の画面の紫基調のデザインから浮いてしまう。
             .tint(Color.brandPurple)
+            .environment(\.locale, (AppLanguage(rawValue: appLanguageRaw) ?? .system).locale ?? Locale.autoupdatingCurrent)
         }
         .environmentObject(auth)
         .onChange(of: scenePhase) { _, newPhase in

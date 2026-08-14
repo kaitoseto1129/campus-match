@@ -13,6 +13,7 @@ struct MyPageHomeView: View {
     @State private var navPath = NavigationPath()
     @State private var showingWithdrawConfirm = false
     @State private var showingLogoutConfirm = false
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
     @State private var showingWithdrawFailedAlert = false
     @State private var isWithdrawing = false
     @State private var showingShareBonusToast = false
@@ -443,6 +444,8 @@ struct MyPageHomeView: View {
                 .padding(.horizontal, 4)
 
             VStack(spacing: 0) {
+                languageRow
+                Divider().padding(.leading, 66)
                 linkRow(icon: "envelope.fill", iconColor: Color.brandTeal, title: "お問い合わせ", url: URL(string: "mailto:kaitoseto1129@gmail.com")!)
                 Divider().padding(.leading, 66)
                 linkRow(icon: "doc.text.fill", iconColor: Color.brandPurple, title: "利用規約", url: LegalLinks.terms)
@@ -453,6 +456,39 @@ struct MyPageHomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
         .padding(.horizontal)
+    }
+
+    /// 端末の言語設定に関わらず、アプリ内の表示言語を固定できる。
+    private var languageRow: some View {
+        Menu {
+            Picker("", selection: $appLanguageRaw) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.label).tag(language.rawValue)
+                }
+            }
+        } label: {
+            HStack(spacing: 14) {
+                Circle()
+                    .fill(Color.brandOrange)
+                    .frame(width: 40, height: 40)
+                    .overlay {
+                        Image(systemName: "globe")
+                            .foregroundStyle(.white)
+                    }
+                Text("言語 / Language")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text((AppLanguage(rawValue: appLanguageRaw) ?? .system).label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func linkRow(icon: String, iconColor: Color, title: String, url: URL) -> some View {
