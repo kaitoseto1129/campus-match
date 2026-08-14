@@ -343,17 +343,20 @@ let residenceCountries: [String] = [
     "カナダ", "オーストラリア", "シンガポール", "タイ", "ベトナム", "インドネシア", "その他"
 ]
 
+// アメリカの大学・学生向けの項目なので、日本語話者向けアプリの中でも州名は英語表記のまま扱う
+// (カタカナ表記にすると米国の大学のprefectureと突き合わせづらく、当の米国人利用者にも不自然なため)。
 let usStates: [String] = [
-    "アラバマ州", "アラスカ州", "アリゾナ州", "アーカンソー州", "カリフォルニア州",
-    "コロラド州", "コネチカット州", "デラウェア州", "フロリダ州", "ジョージア州",
-    "ハワイ州", "アイダホ州", "イリノイ州", "インディアナ州", "アイオワ州",
-    "カンザス州", "ケンタッキー州", "ルイジアナ州", "メイン州", "メリーランド州",
-    "マサチューセッツ州", "ミシガン州", "ミネソタ州", "ミシシッピ州", "ミズーリ州",
-    "モンタナ州", "ネブラスカ州", "ネバダ州", "ニューハンプシャー州", "ニュージャージー州",
-    "ニューメキシコ州", "ニューヨーク州", "ノースカロライナ州", "ノースダコタ州", "オハイオ州",
-    "オクラホマ州", "オレゴン州", "ペンシルベニア州", "ロードアイランド州", "サウスカロライナ州",
-    "サウスダコタ州", "テネシー州", "テキサス州", "ユタ州", "バーモント州",
-    "バージニア州", "ワシントン州", "ウェストバージニア州", "ウィスコンシン州", "ワイオミング州"
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California",
+    "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+    "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+    "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri",
+    "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+    "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+    "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+    "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
+    "District of Columbia"
 ]
 
 /// ライフスタイル系ピッカーの「未選択」を表す共通のプレースホルダー値。
