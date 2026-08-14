@@ -13,6 +13,7 @@ struct AuthView: View {
     @State var isSignUp = true
     @State var email: String = ""
     @State var password: String = ""
+    @State private var isPasswordVisible = false
     @State var displayName: String = ""
     @State private var validDomains: [String] = []
     @State private var showingForgotPassword = false
@@ -127,10 +128,27 @@ struct AuthView: View {
                 .autocorrectionDisabled()
                 .padding()
                 .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
-            SecureField("パスワード", text: $password)
+            HStack {
+                Group {
+                    if isPasswordVisible {
+                        TextField("パスワード", text: $password)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    } else {
+                        SecureField("パスワード", text: $password)
+                    }
+                }
                 .textFieldStyle(.plain)
-                .padding()
-                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
+
+                Button {
+                    isPasswordVisible.toggle()
+                } label: {
+                    Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding()
+            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
         }
     }
 

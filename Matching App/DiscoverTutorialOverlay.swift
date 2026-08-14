@@ -24,6 +24,7 @@ enum DiscoverTutorialStep: Equatable {
     case missions
     case filter
     case candidate
+    case myPageGuide
     case closing
 }
 
@@ -48,6 +49,8 @@ private struct SpotlightScrimShape: Shape {
 struct DiscoverTutorialOverlay: View {
     @Binding var step: DiscoverTutorialStep?
     let anchors: [String: Anchor<CGRect>]
+    /// 「マイページを見てみる」を選んだ時にタブを切り替えるために使う。
+    var onGoToMyPage: () -> Void
     var onFinish: () -> Void
 
     @State private var showingFakeProfile = false
@@ -78,6 +81,8 @@ struct DiscoverTutorialOverlay: View {
                     }
                 case .candidate:
                     candidateSimulation(proxy: proxy)
+                case .myPageGuide:
+                    myPageGuideMessage
                 case .closing:
                     closingMessage
                 case .none:
@@ -254,7 +259,7 @@ struct DiscoverTutorialOverlay: View {
                     try? await Task.sleep(nanoseconds: 1_100_000_000)
                     showingFakeProfile = false
                     simulatedLiked = false
-                    step = .closing
+                    step = .myPageGuide
                 }
             } label: {
                 HStack {
@@ -283,6 +288,50 @@ struct DiscoverTutorialOverlay: View {
         }
         .presentationDetents([.fraction(0.85)])
         .presentationDragIndicator(.hidden)
+    }
+
+    // MARK: - マイページの案内
+
+    private var myPageGuideMessage: some View {
+        ZStack {
+            Color.black.opacity(0.75).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.system(size: 46))
+                    .foregroundStyle(Color.brandPurple)
+                Text("最後に「マイページ」もチェックしましょう")
+                    .font(.title3.bold())
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                Text("プロフィールの編集、いいねの購入、有料会員プランの確認、安心・安全ガイドなどはすべて画面右下の「マイページ」タブからアクセスできます")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                VStack(spacing: 10) {
+                    Button {
+                        finish()
+                        onGoToMyPage()
+                    } label: {
+                        Text("マイページを見てみる")
+                            .bold()
+                            .frame(width: 220, height: 50)
+                            .background(Color.brandGradient)
+                            .foregroundStyle(.white)
+                            .clipShape(Capsule())
+                    }
+                    Button {
+                        withAnimation { step = .closing }
+                    } label: {
+                        Text("あとで見る")
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                }
+                .padding(.top, 8)
+            }
+        }
     }
 
     // MARK: - 締めのメッセージ

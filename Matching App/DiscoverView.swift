@@ -96,7 +96,11 @@ struct DiscoverView: View {
                 }
 
                 if let tutorialStep {
-                    DiscoverTutorialOverlay(step: $tutorialStep, anchors: tutorialAnchors) {
+                    DiscoverTutorialOverlay(
+                        step: $tutorialStep,
+                        anchors: tutorialAnchors,
+                        onGoToMyPage: { tabRouter.selectedTab = .myPage }
+                    ) {
                         hasSeenDiscoverTutorial = true
                     }
                     .zIndex(1)
