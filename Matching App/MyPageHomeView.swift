@@ -22,6 +22,7 @@ struct MyPageHomeView: View {
     @State private var showingBoostConfirm = false
     @State private var showingPurchaseSheet = false
     @State private var showingHobbyCardPicker = false
+    @State private var showingShareSheet = false
     /// マイページを初めて開いた時だけ、主要機能を簡単に紹介するガイドを一度出す。
     /// 画面中央に説明カードを出すだけでなく、実際のセクションをスポットライトで指し示し、
     /// 実際にタップ・操作してもらいながら紹介する(探す画面のチュートリアルと同じ考え方)。
@@ -68,15 +69,17 @@ struct MyPageHomeView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         header
+                        // 残いいねは最も確認する頻度が高いので、プロフィール直下に大きく置く。
+                        remainingLikesCard
                         if (profileManager.profile?.membership ?? .free) == .free {
                             membershipUpsellBanner
                         }
-                        hobbyCardsCard
                         profileCompletenessCard
                         boostButton
-                        remainingLikesCard
                         purchaseLikesButton
                         shareAppButton
+                        // 趣味カードは「後からゆっくり整える」項目なので、下のほうに置く。
+                        hobbyCardsCard
                         VStack(spacing: 0) {
                             menuRow(icon: "chart.bar.fill", iconColor: .indigo, title: "分析", anchorId: "myPageAnalytics", onTap: {
                                 if myPageTutorialStep == .analytics { advanceMyPageTutorial(from: .analytics) }
@@ -472,20 +475,26 @@ struct MyPageHomeView: View {
     }
 
     private var remainingLikesCard: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "hand.thumbsup.fill")
-                .foregroundStyle(Color.brandPurple)
-            Text("残いいね!")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer()
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: "hand.thumbsup.fill")
+                    .font(.caption)
+                Text("残いいね!")
+                    .font(.caption.bold())
+            }
+            .foregroundStyle(.white.opacity(0.9))
+
             Text("\(profileManager.profile?.remainingLikes ?? 0)")
-                .font(.title2.bold())
+                .font(.system(size: 52, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .contentTransition(.numericText())
+                .animation(.snappy, value: profileManager.profile?.remainingLikes)
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 6, y: 3)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .background(Color.brandGradient)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: Color.brandPurple.opacity(0.3), radius: 10, y: 5)
         .padding(.horizontal)
     }
 
@@ -510,11 +519,18 @@ struct MyPageHomeView: View {
         }
     }
 
+    /// アプリの紹介。
+    /// 以前は共有シートを開いた時点(ボタンを押しただけ)でボーナスを付与していたため、
+    /// 実際には誰にも共有していなくてもいいねがもらえてしまっていた。
+    /// ShareLinkの完了ハンドラを使い、共有が完了した時だけ付与するようにしている。
     private var shareAppButton: some View {
-        ShareLink(item: "キャンパスマッチ、使ってみて!学生限定のマッチングアプリです。") {
+        let alreadyClaimed = profileManager.profile?.shareBonusClaimed == true
+        return Button {
+            showingShareSheet = true
+        } label: {
             HStack {
                 Image(systemName: "square.and.arrow.up")
-                Text(profileManager.profile?.shareBonusClaimed == true ? "アプリを紹介する(特典は受け取り済み)" : "アプリを紹介して50いいねゲット")
+                Text(alreadyClaimed ? "アプリを紹介する(特典は受け取り済み)" : "アプリを紹介して50いいねゲット")
                     .font(.subheadline.bold())
             }
             .frame(maxWidth: .infinity)
@@ -525,19 +541,25 @@ struct MyPageHomeView: View {
         }
         .padding(.horizontal)
         .padding(.top, 8)
-        .simultaneousGesture(TapGesture().onEnded {
-            Task {
-                let alreadyClaimed = profileManager.profile?.shareBonusClaimed ?? false
-                let success = await profileManager.claimShareBonus()
-                if success && !alreadyClaimed {
-                    showingShareBonusToast = true
-                    try? await Task.sleep(nanoseconds: 900_000_000)
-                    showingShareBonusToast = false
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: [Self.shareMessage]) { completed in
+                showingShareSheet = false
+                // 共有をキャンセルした場合は付与しない。
+                guard completed, !alreadyClaimed else { return }
+                Task {
+                    let success = await profileManager.claimShareBonus()
+                    if success {
+                        showingShareBonusToast = true
+                        try? await Task.sleep(nanoseconds: 900_000_000)
+                        showingShareBonusToast = false
+                    }
                 }
             }
-        })
+        }
         .sentConfirmationCover(isPresented: $showingShareBonusToast, message: "50いいねを獲得しました!", icon: "gift.fill")
     }
+
+    private static let shareMessage = "キャンパスマッチ、使ってみて!学生限定のマッチングアプリです。"
 
     /// お問い合わせ・利用規約・プライバシーポリシーへの導線。App Storeの審査要件として、
     /// ユーザーが運営への連絡手段や規約を確認できるようにしている。

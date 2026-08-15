@@ -106,8 +106,6 @@ final class LikesManager: ObservableObject {
                     commonPoints: myProfile?.commonPointsCount(with: profile) ?? 0
                 )
             }
-            // 「見てね」(再アピール)されたものを先頭に表示する。
-            results.sort { $0.like.isReminded && !$1.like.isReminded }
             received = results
         } catch {
             errorMessage = "いいねを読み込めませんでした"

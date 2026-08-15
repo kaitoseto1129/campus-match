@@ -8,6 +8,7 @@ import SwiftUI
 struct DailyMissionsView: View {
     @StateObject private var manager = DailyMissionsManager()
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var tabRouter: TabRouter
     /// 探す画面の初回チュートリアル中に開かれた場合、ログインボーナスの受け取るボタンを
     /// 光らせて案内し、受け取り後は「右上の閉じるボタンを押して次へ」の案内を出す。
     var showsTutorialHint: Bool = false
@@ -32,7 +33,12 @@ struct DailyMissionsView: View {
                                 manager: manager,
                                 mission: mission,
                                 highlightClaim: showsTutorialHint && mission.key == "login",
-                                onClaimed: { showClaimedToast(message: "いいねを受け取りました!") }
+                                onClaimed: { showClaimedToast(message: "いいねを受け取りました!") },
+                                // 未達成のミッションは、達成できる画面(探す)へそのまま送る。
+                                onGoToAction: {
+                                    tabRouter.selectTab(.discover)
+                                    dismiss()
+                                }
                             )
                         }
                         if manager.hasClaimableMission {
@@ -159,6 +165,8 @@ private struct MissionCardView: View {
     /// チュートリアル中、このミッションの受け取るボタンを指差して案内する。
     var highlightClaim: Bool = false
     var onClaimed: (() -> Void)? = nil
+    /// 未達成のミッションから、達成できる画面へ移動するためのコールバック。
+    var onGoToAction: (() -> Void)? = nil
     @State private var isClaiming = false
     @State private var pulse = false
 
@@ -264,6 +272,23 @@ private struct MissionCardView: View {
                     .disabled(!mission.isComplete || isClaimed || isClaiming)
                 }
             }
+
+            // まだ達成していないミッションは、どこで達成できるのかが分かりにくかったため、
+            // その場から達成できる画面へ移動できるボタンを出す。
+            if !mission.isComplete, let actionLabel = mission.actionLabel, let onGoToAction {
+                Button(action: onGoToAction) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.forward.circle.fill")
+                        Text(actionLabel)
+                            .bold()
+                    }
+                    .font(.caption)
+                    .foregroundStyle(Color.brandPurple)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 38)
+                    .background(.white, in: Capsule())
+                }
+            }
         }
         .padding()
         .background(cardBackground, in: RoundedRectangle(cornerRadius: 16))
@@ -289,4 +314,5 @@ private struct MissionCardView: View {
 
 #Preview {
     DailyMissionsView()
+        .environmentObject(TabRouter())
 }

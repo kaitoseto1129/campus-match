@@ -236,7 +236,6 @@ struct LikesPurchaseSheet: View {
 
             VStack(spacing: 10) {
                 usageRow(icon: "hand.thumbsup.fill", iconColor: Color.brandPurple, title: "気になるお相手にいいねを送る", detail: "1いいねで1人に送れます。マッチすればトークができます")
-                usageRow(icon: "bell.fill", iconColor: Color.brandTeal, title: "「見てね」でリマインドする", detail: "マッチ済みのお相手にもう一度気づいてもらえます")
                 usageRow(icon: "bolt.fill", iconColor: Color.brandOrange, title: "「アピール」で目立つ", detail: "10いいねで1時間、探す画面のトップに表示されます")
             }
             .padding()

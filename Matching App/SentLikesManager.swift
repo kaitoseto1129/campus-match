@@ -89,29 +89,4 @@ final class SentLikesManager: ObservableObject {
         isLoading = false
     }
 
-    @discardableResult
-    func sendReminder(to userId: UUID) async -> Bool {
-        do {
-            try await supabase()
-                .rpc("send_reminder_atomic", params: ["p_to_user_id": userId])
-                .execute()
-            if let index = sent.firstIndex(where: { $0.profile.id == userId }) {
-                let old = sent[index]
-                sent[index] = SentLike(
-                    like: Like(id: old.like.id, fromUserId: old.like.fromUserId, toUserId: old.like.toUserId, remindedAtString: ISO8601DateFormatter.matchingApp.string(from: Date()), isSpecial: old.like.isSpecial),
-                    profile: old.profile,
-                    photoURL: old.photoURL,
-                    isMatched: old.isMatched,
-                    photoCount: old.photoCount,
-                    isOnline: old.isOnline,
-                    commonPoints: old.commonPoints
-                )
-            }
-            return true
-        } catch {
-            errorMessage = "いいねが足りません"
-            print("send reminder error: \(error)")
-            return false
-        }
-    }
 }

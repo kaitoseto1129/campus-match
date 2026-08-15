@@ -6,35 +6,29 @@
 import SwiftUI
 import Supabase
 
-/// 特定のManagerに依存せず、単体でいいね/見てねを送信できる汎用ボタン。
+/// 特定のManagerに依存せず、単体でいいねを送信できる汎用ボタン。
 /// プロフィール下部の「他のユーザー」おすすめ一覧などから遷移した先で使う。
 struct QuickLikeButton: View {
     let profile: Profile
     let photoURL: URL?
+    /// スワイプで複数人を見ている場合に、送信後「次のお相手へ」進めるためのコールバック。
+    var onSent: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var isSending = false
     @State private var alreadyLiked = false
-    @State private var alreadyReminded = false
     @State private var showingPopularSheet = false
     @State private var showingSentConfirmation = false
-    @State private var confirmationMessage = "いいねを送りました"
-    @State private var confirmationIcon = "hand.thumbsup.fill"
     @State private var showingInsufficientLikesAlert = false
-    @State private var showingReminderConfirm = false
 
-    init(profile: Profile, photoURL: URL? = nil) {
+    init(profile: Profile, photoURL: URL? = nil, onSent: (() -> Void)? = nil) {
         self.profile = profile
         self.photoURL = photoURL
+        self.onSent = onSent
     }
 
     var body: some View {
         Button {
-            if alreadyLiked {
-                // 見てねはいいねを消費するため、送る前に必ず確認する。
-                showingReminderConfirm = true
-                return
-            }
-            guard !isSending else { return }
+            guard !isSending, !alreadyLiked else { return }
             isSending = true
             Task {
                 let count = (try? await supabase()
@@ -50,33 +44,21 @@ struct QuickLikeButton: View {
             }
         } label: {
             HStack {
-                Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
-                Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
+                Image(systemName: alreadyLiked ? "checkmark" : "hand.thumbsup.fill")
+                Text(alreadyLiked ? "いいね送信済み" : "いいねを送る")
                     .bold()
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandPurple))
+            .background(alreadyLiked ? AnyShapeStyle(Color.gray) : AnyShapeStyle(Color.brandPurple))
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
         }
         .padding(.horizontal)
         .padding(.bottom, 8)
-        .disabled(isSending || alreadyReminded)
+        .disabled(isSending || alreadyLiked)
         .task {
             await loadStatus()
-        }
-        .confirmationDialog(
-            "見てねを送りますか?",
-            isPresented: $showingReminderConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("送る(\(DiscoverManager.reminderLikeCost)いいね消費)") {
-                Task { await sendReminderAndConfirm() }
-            }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            Text("いいねを\(DiscoverManager.reminderLikeCost)つ消費して、\(profile.name)さんにもう一度アピールします。よろしいですか?")
         }
         .sheet(isPresented: $showingPopularSheet) {
             PopularMemberSheet(profile: profile, photoURL: photoURL) { useSpecial in
@@ -84,7 +66,7 @@ struct QuickLikeButton: View {
                 Task { await sendAndConfirm(isSpecial: useSpecial) }
             }
         }
-        .sentConfirmationCover(isPresented: $showingSentConfirmation, message: confirmationMessage, icon: confirmationIcon)
+        .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "いいねを送りました", icon: "hand.thumbsup.fill")
         .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -102,10 +84,7 @@ struct QuickLikeButton: View {
                 .eq("to_user_id", value: profile.id)
                 .execute()
                 .value
-            if let like = existing.first {
-                alreadyLiked = true
-                alreadyReminded = like.isReminded && !like.canSendReminder
-            }
+            alreadyLiked = !existing.isEmpty
         } catch {
             print("quick like status error: \(error)")
         }
@@ -119,28 +98,16 @@ struct QuickLikeButton: View {
             showingInsufficientLikesAlert = true
             return
         }
-        confirmationMessage = "いいねを送りました"
-        confirmationIcon = "hand.thumbsup.fill"
+        alreadyLiked = true
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false
-        dismiss()
-    }
-
-    private func sendReminderAndConfirm() async {
-        isSending = true
-        let success = await sendReminder()
-        isSending = false
-        guard success else {
-            showingInsufficientLikesAlert = true
-            return
+        // 送ったお相手をもう一度見せても操作できることがないため、そのまま次のお相手へ送る。
+        if let onSent {
+            onSent()
+        } else {
+            dismiss()
         }
-        confirmationMessage = "\(DiscoverManager.reminderLikeCost)いいね使いました"
-        confirmationIcon = "bell.fill"
-        showingSentConfirmation = true
-        try? await Task.sleep(nanoseconds: 900_000_000)
-        showingSentConfirmation = false
-        dismiss()
     }
 
     private func sendLike(isSpecial: Bool) async -> Bool {
@@ -151,18 +118,6 @@ struct QuickLikeButton: View {
             return true
         } catch {
             print("quick like send error: \(error)")
-            return false
-        }
-    }
-
-    private func sendReminder() async -> Bool {
-        do {
-            try await supabase()
-                .rpc("send_reminder_atomic", params: ["p_to_user_id": profile.id])
-                .execute()
-            return true
-        } catch {
-            print("quick reminder send error: \(error)")
             return false
         }
     }

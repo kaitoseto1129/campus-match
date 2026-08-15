@@ -176,23 +176,8 @@ private struct LikeCardView: View {
                 .frame(maxWidth: .infinity)
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay {
-                    if received.like.isReminded {
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.purple, lineWidth: 3)
-                    }
-                }
             }
             .buttonStyle(.plain)
-
-            if received.like.isReminded {
-                Text("見てね!")
-                    .font(.caption2.bold())
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.purple, in: Capsule())
-                    .foregroundStyle(.white)
-            }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(received.profile.name)

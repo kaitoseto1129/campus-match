@@ -14,11 +14,10 @@ final class DiscoverManager: ObservableObject {
     @Published var totalCandidateCount: Int = 0
     @Published var hasMoreCandidates = true
     @Published var isLoadingMore = false
-    @Published var remindableProfiles: [Profile] = []
-    @Published var remindablePhotoURLs: [UUID: URL] = [:]
     @Published var boostedProfiles: [Profile] = []
     @Published var likedIds: Set<UUID> = []
-    @Published var remindedIds: Set<UUID> = []
+    /// 自分がいまアピール(ブースト)中かどうか。探す画面のバナー表示に使う。
+    @Published var isBoostActive = false
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var filter = DiscoverFilter()
@@ -51,6 +50,7 @@ final class DiscoverManager: ObservableObject {
             }
             myUniversityId = myProfile.universityId
             oppositeGender = myGender == .male ? .female : .male
+            isBoostActive = myProfile.isBoosted
 
             let likeRows: [Like] = try await supabase()
                 .from("likes")
@@ -59,8 +59,6 @@ final class DiscoverManager: ObservableObject {
                 .execute()
                 .value
             likedIds = Set(likeRows.filter { $0.fromUserId == myId }.map(\.toUserId))
-            // みてねは月1回まで送れるため、直近30日以内に送った相手だけを「送信済み」として無効化する。
-            remindedIds = Set(likeRows.filter { $0.fromUserId == myId && $0.isReminded && !$0.canSendReminder }.map(\.toUserId))
 
             let matchRows: [Match] = try await supabase()
                 .from("matches")
@@ -71,7 +69,6 @@ final class DiscoverManager: ObservableObject {
             let matchedPartnerIds = Set(matchRows.map { $0.userAId == myId ? $0.userBId : $0.userAId })
 
             // 自分に届いたいいね・自分が既に送ったいいねの相手は、探すのグリッドには出さない。
-            // 既に送った相手は「みてね!で再アプローチ」枠(remindableProfiles)にまとめて表示する。
             var excludedIds: Set<UUID> = matchedPartnerIds
             for like in likeRows where like.toUserId == myId {
                 excludedIds.insert(like.fromUserId)
@@ -87,23 +84,6 @@ final class DiscoverManager: ObservableObject {
             totalCandidateCount = try await fetchCandidateCount()
             await fetchNextCandidatePage()
             await loadBoostedProfiles()
-
-            // 既にいいね済み・未マッチの相手(みてね!で再アプローチできる相手)
-            let remindableIds = likedIds.subtracting(matchedPartnerIds)
-            if remindableIds.isEmpty {
-                remindableProfiles = []
-                remindablePhotoURLs = [:]
-            } else {
-                let remindable: [Profile] = try await supabase()
-                    .from("profiles")
-                    .select("*")
-                    .in("id", values: Array(remindableIds))
-                    .order("last_active_at", ascending: false)
-                    .execute()
-                    .value
-                remindableProfiles = remindable
-                remindablePhotoURLs = await loadMainPhotoURLs(userIds: remindable.map(\.id))
-            }
         } catch {
             errorMessage = "ユーザー一覧を読み込めませんでした"
             print("discover load error: \(error)")
@@ -242,8 +222,6 @@ final class DiscoverManager: ObservableObject {
 
     /// この相手が「人気会員」(受け取ったいいねが多い)かどうかを判定する。
     static let popularMemberThreshold = 100
-    /// 見てね(再アピール)の消費いいね数。
-    static let reminderLikeCost = 3
 
     func likeCount(for userId: UUID) async -> Int {
         do {
@@ -261,22 +239,21 @@ final class DiscoverManager: ObservableObject {
     func hideCandidate(_ userId: UUID) async {
         await UserModeration.hide(userId: userId)
         candidates.removeAll { $0.id == userId }
-        remindableProfiles.removeAll { $0.id == userId }
         boostedProfiles.removeAll { $0.id == userId }
         totalCandidateCount = max(0, totalCandidateCount - 1)
     }
 
+    /// 探す画面のバナーからアピール(ブースト)を発動する。
+    /// マイページまで移動しなくてもその場で使えるようにするために用意している。
     @discardableResult
-    func sendReminder(to userId: UUID) async -> Bool {
+    func activateBoost() async -> Bool {
         do {
-            try await supabase()
-                .rpc("send_reminder_atomic", params: ["p_to_user_id": userId])
-                .execute()
-            remindedIds.insert(userId)
+            try await supabase().rpc("activate_boost").execute()
+            isBoostActive = true
+            await load()
             return true
         } catch {
-            errorMessage = "いいねが足りません"
-            print("send reminder error: \(error)")
+            print("activate boost error: \(error)")
             return false
         }
     }

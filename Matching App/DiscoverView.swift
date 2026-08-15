@@ -15,6 +15,10 @@ struct DiscoverView: View {
     @AppStorage("hasSeenDiscoverTutorial") private var hasSeenDiscoverTutorial = false
     @State private var tutorialStep: DiscoverTutorialStep?
     @State private var tutorialAnchors: [String: Anchor<CGRect>] = [:]
+    @State private var showingBoostConfirm = false
+    @State private var showingBoostFailedAlert = false
+    @State private var showingBoostedToast = false
+    @State private var isBoosting = false
 
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -72,9 +76,6 @@ struct DiscoverView: View {
                     }
                     .padding()
 
-                    // 一番上には出さず、少しスクロールしてから見えるようにする。
-                    remindableSection
-
                     if !restBatch.isEmpty {
                         LazyVGrid(columns: columns, spacing: 12) {
                             ForEach(Array(restBatch.enumerated()), id: \.element.id) { offset, candidate in
@@ -108,23 +109,8 @@ struct DiscoverView: View {
             }
             .onPreferenceChange(TutorialAnchorKey.self) { tutorialAnchors = $0 }
             .navigationTitle("探す")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingMissions = true
-                    } label: {
-                        ZStack(alignment: .topTrailing) {
-                            Image(systemName: "list.bullet.clipboard.fill")
-                            if missionsManager.hasClaimableMission {
-                                Circle()
-                                    .fill(Color.brandOrange)
-                                    .frame(width: 9, height: 9)
-                                    .offset(x: 8, y: -6)
-                            }
-                        }
-                    }
-                }
-            }
+            // ミッションへの導線は画面上部のバナー(missionsBanner)にまとめている。
+            // 以前はツールバーにも同じ導線があり、同じ画面に入口が2つ並んでいた。
             .task {
                 await discoverManager.load()
                 await missionsManager.load()
@@ -149,7 +135,9 @@ struct DiscoverView: View {
                     withAnimation { tutorialStep = .filter }
                 }
             }) {
+                // sheetは別の階層に出るため、EnvironmentObjectを明示的に引き継ぐ必要がある。
                 DailyMissionsView(showsTutorialHint: tutorialStep == .missions)
+                    .environmentObject(tabRouter)
             }
             .onChange(of: discoverManager.filter) { _, _ in
                 Task { await discoverManager.load() }
@@ -208,26 +196,35 @@ struct DiscoverView: View {
         .tutorialAnchor("missions")
     }
 
-    /// 探す画面から直接アピール(ブースト)機能への導線を出す。実際の発動はマイページで行う。
+    /// 探す画面のアピール(ブースト)導線。
+    /// 以前はマイページへ飛ばすだけだったが、目的の操作までが遠かったため、
+    /// この場で確認ダイアログを出してそのまま発動できるようにしている。
     private var appealBanner: some View {
         Button {
-            tabRouter.selectedTab = .myPage
+            showingBoostConfirm = true
         } label: {
             HStack {
                 Image(systemName: "bolt.fill")
                     .foregroundStyle(Color.brandOrange)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("アピールを使う")
+                    Text(discoverManager.isBoostActive ? "アピール中" : "アピールを使う")
                         .font(.subheadline.bold())
                         .foregroundStyle(.primary)
-                    Text("10いいねで1時間、この画面のトップに表示されます")
+                    Text(discoverManager.isBoostActive
+                         ? "いまこの画面のトップに表示されています"
+                         : "10いいねで1時間、この画面のトップに表示されます")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if !discoverManager.isBoostActive {
+                    Text("使う")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(Color.brandOrange, in: Capsule())
+                }
             }
             .padding()
             .background(Color.brandOrange.opacity(0.1))
@@ -236,6 +233,32 @@ struct DiscoverView: View {
             .padding(.top, 8)
         }
         .buttonStyle(.plain)
+        .disabled(discoverManager.isBoostActive || isBoosting)
+        .confirmationDialog("アピールしますか?", isPresented: $showingBoostConfirm, titleVisibility: .visible) {
+            Button("アピールする(10いいね消費)") {
+                Task {
+                    isBoosting = true
+                    let success = await discoverManager.activateBoost()
+                    isBoosting = false
+                    if success {
+                        showingBoostedToast = true
+                        try? await Task.sleep(nanoseconds: 900_000_000)
+                        showingBoostedToast = false
+                    } else {
+                        showingBoostFailedAlert = true
+                    }
+                }
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("残いいねを10消費して、1時間だけ探す画面のトップに表示されるようになります。")
+        }
+        .alert("アピールを利用できませんでした", isPresented: $showingBoostFailedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("残いいねが10未満の可能性があります。")
+        }
+        .sentConfirmationCover(isPresented: $showingBoostedToast, message: "アピールを開始しました!", icon: "bolt.fill")
     }
 
     private var boostedSection: some View {
@@ -286,103 +309,6 @@ struct DiscoverView: View {
         }
     }
 
-    private var remindableSection: some View {
-        Group {
-            if !discoverManager.remindableProfiles.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("みてね!で気になるお相手に再アプローチしよう!")
-                        .font(.subheadline.bold())
-                        .padding(.horizontal)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(Array(discoverManager.remindableProfiles.enumerated()), id: \.element.id) { index, profile in
-                                RemindableCardView(discoverManager: discoverManager, profile: profile, startIndex: index)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.vertical, 16)
-                .background(
-                    LinearGradient(
-                        colors: [Color.purple.opacity(0.12), Color.brandPink.opacity(0.12)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .padding(.top, 12)
-            }
-        }
-    }
-}
-
-private struct RemindableCardView: View {
-    @ObservedObject var discoverManager: DiscoverManager
-    let profile: Profile
-    let startIndex: Int
-    @State private var isSending = false
-    @State private var showingSentConfirmation = false
-    @State private var showingInsufficientLikesAlert = false
-
-    private var alreadyReminded: Bool { discoverManager.remindedIds.contains(profile.id) }
-
-    var body: some View {
-        VStack(spacing: 6) {
-            NavigationLink {
-                SwipeableProfileView(profiles: discoverManager.remindableProfiles, startIndex: startIndex) { p, advance in
-                    DiscoverLikeButton(discoverManager: discoverManager, candidate: p, onHidden: advance)
-                }
-            } label: {
-                AsyncImage(url: discoverManager.remindablePhotoURLs[profile.id]) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().scaledToFill()
-                    default:
-                        Color(.systemGray6)
-                    }
-                }
-                .frame(width: 130, height: 160)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-            .buttonStyle(.plain)
-
-            Button {
-                guard !isSending else { return }
-                isSending = true
-                Task {
-                    let success = await discoverManager.sendReminder(to: profile.id)
-                    isSending = false
-                    if success {
-                        showingSentConfirmation = true
-                        try? await Task.sleep(nanoseconds: 900_000_000)
-                        showingSentConfirmation = false
-                    } else {
-                        showingInsufficientLikesAlert = true
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: alreadyReminded ? "checkmark" : "eye.fill")
-                    Text(alreadyReminded ? "送信済み" : "みてね!")
-                }
-                .font(.caption.bold())
-                .frame(maxWidth: .infinity)
-                .frame(height: 32)
-                .background(alreadyReminded ? Color.gray : Color.purple)
-                .foregroundStyle(.white)
-                .clipShape(Capsule())
-            }
-            .disabled(isSending || alreadyReminded)
-        }
-        .frame(width: 130)
-        .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "\(DiscoverManager.reminderLikeCost)いいね使いました", icon: "bell.fill")
-        .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("マイページからいいねを増やしてください。")
-        }
-    }
 }
 
 private struct DiscoverCardView: View {
@@ -458,10 +384,8 @@ private struct DiscoverLikeButton: View {
     @State private var confirmationMessage = "いいねを送りました"
     @State private var confirmationIcon = "hand.thumbsup.fill"
     @State private var showingInsufficientLikesAlert = false
-    @State private var showingReminderConfirm = false
 
     private var alreadyLiked: Bool { discoverManager.likedIds.contains(candidate.id) }
-    private var alreadyReminded: Bool { discoverManager.remindedIds.contains(candidate.id) }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -484,12 +408,7 @@ private struct DiscoverLikeButton: View {
             }
 
             Button {
-                if alreadyLiked {
-                    // 見てねはいいねを消費するため、送る前に必ず確認する。
-                    showingReminderConfirm = true
-                    return
-                }
-                guard !isSending else { return }
+                guard !isSending, !alreadyLiked else { return }
                 isSending = true
                 Task {
                     let count = await discoverManager.likeCount(for: candidate.id)
@@ -502,32 +421,20 @@ private struct DiscoverLikeButton: View {
                 }
             } label: {
                 HStack {
-                    Image(systemName: alreadyReminded ? "checkmark" : (alreadyLiked ? "bell.fill" : "hand.thumbsup.fill"))
-                    Text(alreadyReminded ? "見てね送信済み" : (alreadyLiked ? "見てね" : "いいねを送る"))
+                    Image(systemName: alreadyLiked ? "checkmark" : "hand.thumbsup.fill")
+                    Text(alreadyLiked ? "いいね送信済み" : "いいねを送る")
                         .bold()
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(alreadyReminded ? Color.gray : (alreadyLiked ? Color.purple : Color.brandPurple))
+                .background(alreadyLiked ? AnyShapeStyle(Color.gray) : AnyShapeStyle(Color.brandPurple))
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
             }
-            .disabled(isSending || alreadyReminded)
+            .disabled(isSending || alreadyLiked)
         }
         .padding(.horizontal)
         .padding(.bottom, 8)
-        .confirmationDialog(
-            "見てねを送りますか?",
-            isPresented: $showingReminderConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("送る(\(DiscoverManager.reminderLikeCost)いいね消費)") {
-                Task { await sendReminderAndConfirm() }
-            }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            Text("いいねを\(DiscoverManager.reminderLikeCost)つ消費して、\(candidate.name)さんにもう一度アピールします。よろしいですか?")
-        }
         .sheet(isPresented: $showingPopularSheet) {
             PopularMemberSheet(profile: candidate, photoURL: discoverManager.candidatePhotoURLs[candidate.id]) { useSpecial in
                 showingPopularSheet = false
@@ -555,26 +462,11 @@ private struct DiscoverLikeButton: View {
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false
-        // いいね送信後は自動で次のお相手に移らず、この画面に留まる(離脱するまでは消えない)。
-        // 非表示にした時だけ、明示的にadvanceOrDismiss()で次へ進む。
+        // 送ったお相手をもう一度見せても操作できることがないため、そのまま次のお相手へ送る。
+        advanceOrDismiss()
     }
 
-    private func sendReminderAndConfirm() async {
-        isSending = true
-        let success = await discoverManager.sendReminder(to: candidate.id)
-        isSending = false
-        guard success else {
-            showingInsufficientLikesAlert = true
-            return
-        }
-        confirmationMessage = "\(DiscoverManager.reminderLikeCost)いいね使いました"
-        confirmationIcon = "bell.fill"
-        showingSentConfirmation = true
-        try? await Task.sleep(nanoseconds: 900_000_000)
-        showingSentConfirmation = false
-    }
-
-    /// 非表示にした時、スワイプで見ている途中なら次のお相手へ自動で送り、
+    /// 非表示・いいね送信のあと、スワイプで見ている途中なら次のお相手へ自動で送り、
     /// 単体で開いている場合はこれまで通り閉じる。
     private func advanceOrDismiss() {
         if let onHidden {

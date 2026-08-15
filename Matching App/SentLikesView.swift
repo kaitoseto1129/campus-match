@@ -91,8 +91,8 @@ struct SentLikesView: View {
             photoCount: received.photoCount,
             isOnline: received.isOnline,
             commonPoints: received.commonPoints,
-            ribbonLabel: received.like.isReminded ? "見てね!" : received.profile.joinBadgeLabel,
-            ribbonColor: received.like.isReminded ? .purple : Color.brandOrange,
+            ribbonLabel: received.profile.joinBadgeLabel,
+            ribbonColor: Color.brandOrange,
             destination: AnyView(
                 SwipeableProfileView(profiles: likesManager.received.map(\.profile), startIndex: index) { profile in
                     ThanksButton(likesManager: likesManager, profile: profile)
@@ -117,7 +117,7 @@ struct SentLikesView: View {
                 SwipeableProfileView(profiles: sentLikesManager.sent.map(\.profile), startIndex: index) { _ in EmptyView() }
             )
         ) {
-            SentReminderButton(sentLikesManager: sentLikesManager, sentLike: sentLike)
+            SentLikeStatusLabel(sentLike: sentLike)
         }
     }
 }
@@ -253,61 +253,22 @@ private struct ThanksActionButton: View {
     }
 }
 
-private struct SentReminderButton: View {
-    @ObservedObject var sentLikesManager: SentLikesManager
+/// 送ったいいねの状態表示。いいねは1人につき1回なので、ここに操作ボタンは置かない。
+private struct SentLikeStatusLabel: View {
     let sentLike: SentLike
-    @State private var isSending = false
-    @State private var showingSentConfirmation = false
-    @State private var showingInsufficientLikesAlert = false
 
     var body: some View {
-        Group {
-            if sentLike.isMatched {
-                Text("マッチ済み")
-                    .bold()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(Color(.systemGray5))
-                    .foregroundStyle(.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 22))
-            } else {
-                Button {
-                    // Task{}内で最初にisSendingを立てると、その反映より先に連打が処理されてしまう
-                    // (=何度でも押せてしまう)ことがあったため、タップの時点で同期的に立てる。
-                    guard !isSending else { return }
-                    isSending = true
-                    Task {
-                        let success = await sentLikesManager.sendReminder(to: sentLike.profile.id)
-                        isSending = false
-                        if success {
-                            showingSentConfirmation = true
-                            try? await Task.sleep(nanoseconds: 900_000_000)
-                            showingSentConfirmation = false
-                        } else {
-                            showingInsufficientLikesAlert = true
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: sentLike.like.canSendReminder ? "bell.fill" : "checkmark")
-                        Text(sentLike.like.canSendReminder ? "見てね" : "みてね!済み")
-                    }
-                    .bold()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(sentLike.like.canSendReminder ? Color.purple : Color(.systemGray5))
-                    .foregroundStyle(sentLike.like.canSendReminder ? .white : .secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 22))
-                }
-                .disabled(isSending || !sentLike.like.canSendReminder)
-                .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "\(DiscoverManager.reminderLikeCost)いいね使いました", icon: "bell.fill")
-                .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
-                    Button("OK", role: .cancel) {}
-                } message: {
-                    Text("マイページからいいねを増やしてください。")
-                }
-            }
+        let isMatched = sentLike.isMatched
+        HStack(spacing: 4) {
+            Image(systemName: isMatched ? "checkmark.circle.fill" : "paperplane.fill")
+            Text(isMatched ? "マッチ済み" : "いいね送信済み")
         }
+        .font(.subheadline.bold())
+        .frame(maxWidth: .infinity)
+        .frame(height: 44)
+        .background(isMatched ? Color.brandPurple.opacity(0.12) : Color(.systemGray6))
+        .foregroundStyle(isMatched ? Color.brandPurple : Color.secondary)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
     }
 }
 
