@@ -275,6 +275,25 @@ struct DiscoverTutorialOverlay: View {
 
             Spacer()
 
+            // どこを押せばいいか分からない、という声があったため、
+            // 実際のボタンの真上に矢印付きの案内を出して指し示す。
+            if !simulatedHidden && !simulatedLiked {
+                VStack(spacing: 4) {
+                    Text("下の「いいねを送る」を押してみましょう")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.brandOrange, in: Capsule())
+                    Image(systemName: "arrowtriangle.down.fill")
+                        .font(.caption)
+                        .foregroundStyle(Color.brandOrange)
+                }
+                .offset(y: spotlightPulse ? 4 : -4)
+                .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: spotlightPulse)
+                .padding(.bottom, 4)
+            }
+
             if simulatedHidden {
                 VStack(spacing: 10) {
                     Image(systemName: "eye.slash.fill")
@@ -354,8 +373,8 @@ struct DiscoverTutorialOverlay: View {
 
             if !simulatedHidden {
                 Text(simulatedLiked
-                     ? "カードは消えずにこのまま残ります。気になるお相手には何度でも見に戻れます。"
-                     : "※ これは練習です。実際のいいね・非表示は行われません。ボタンを押してもこのカードは消えません。")
+                     ? "いいねを送ると、自動で次のお相手が表示されます。"
+                     : "※ これは練習です。実際のいいね・非表示は行われません。")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

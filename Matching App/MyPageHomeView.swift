@@ -372,12 +372,23 @@ struct MyPageHomeView: View {
                                     Text(LocalizedStringKey(label))
                                         .font(.subheadline)
                                     Spacer()
-                                    NavigationLink {
-                                        ProfileEditView(profileManager: profileManager, initialFocusSectionId: ProfileEditView.sectionId(for: label))
-                                    } label: {
-                                        Text("編集する")
-                                            .font(.caption.bold())
-                                            .foregroundStyle(Color.brandPurple)
+                                    // 趣味カードだけはプロフィール編集画面ではなく専用の選択画面で設定する。
+                                    if label.contains("趣味カード") {
+                                        Button {
+                                            showingHobbyCardPicker = true
+                                        } label: {
+                                            Text("設定する")
+                                                .font(.caption.bold())
+                                                .foregroundStyle(Color.brandPurple)
+                                        }
+                                    } else {
+                                        NavigationLink {
+                                            ProfileEditView(profileManager: profileManager, initialFocusSectionId: ProfileEditView.sectionId(for: label))
+                                        } label: {
+                                            Text("編集する")
+                                                .font(.caption.bold())
+                                                .foregroundStyle(Color.brandPurple)
+                                        }
                                     }
                                 }
                                 .padding(.vertical, 6)

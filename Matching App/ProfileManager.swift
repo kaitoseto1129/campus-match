@@ -203,7 +203,7 @@ class ProfileManager: ObservableObject {
             print("university load error: \(error)")
         }
     }
-    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, city: String?, height: Int, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
+    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, city: String?, height: Int?, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
         guard let uid = supabase().auth.currentUser?.id else { return false}
         isLoading = true
         defer { isLoading = false }
@@ -216,7 +216,8 @@ class ProfileManager: ObservableObject {
             let birthday: String   // ← String に変更
             let area: String
             let city: String?
-            let height: Int
+            /// 身長は必須ではなくなったため、未設定(nil)を許容する。
+            let height: Int?
             let major: String
             let nationality: String
             let nationalities: [String]

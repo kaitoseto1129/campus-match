@@ -172,6 +172,11 @@ extension Profile {
         check("一言コメント", !(tagline ?? "").isEmpty)
         check("専攻", !(major ?? "").isEmpty)
         check("自己紹介200文字以上", (description ?? "").count >= 200)
+        // 初回登録では聞かず、あとからゆっくり埋めてもらう項目。
+        // ここに並ぶことで「やることリスト」から設定できる。
+        check("身長", height != nil)
+        check("趣味カード", !hobbyCards.isEmpty)
+        check("話せる言語", !languages.isEmpty)
         let percent = total == 0 ? 0 : Int((Double(done) / Double(total) * 100).rounded())
         return ProfileCompleteness(percent: percent, missingLabels: missing)
     }

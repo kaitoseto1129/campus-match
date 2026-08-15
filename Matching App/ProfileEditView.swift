@@ -22,6 +22,9 @@ struct ProfileEditView: View {
     @State var description: String = ""
     @State var gender: Gender? = nil
     @State var birthday: Date = Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date()
+    /// 誕生日は日付型の性質上「未入力」を表現できないため、実際に選んだかどうかを別に持つ。
+    /// これがないと初期値(20歳)が入力済みに見えてしまう。
+    @State var hasChosenBirthday: Bool = false
     @State var area: String = ""
     @State var city: String = ""
     private var areaLabel: String { area.isEmpty ? unselectedOption : (city.isEmpty ? area : "\(area) \(city)") }
@@ -76,7 +79,9 @@ struct ProfileEditView: View {
         if missingLabel.contains("自己紹介") { return "about" }
         if missingLabel.contains("写真") { return "photos" }
         if missingLabel.contains("一言コメント") { return "tagline" }
-        if missingLabel.contains("専攻") { return "basic" }
+        // 初回登録では聞かず、あとから埋めてもらう項目。
+        if missingLabel.contains("専攻") || missingLabel.contains("身長") { return "details" }
+        if missingLabel.contains("話せる言語") { return "lifestyle" }
         return "basic"
     }
 
@@ -240,25 +245,75 @@ struct ProfileEditView: View {
         }
     }
 
+    /// 必須項目。入力済みかどうかで行の見た目(チェック/未入力バッジ)を変える。
+    private func requiredRow(title: String, value: String?, action: @escaping () -> Void) -> some View {
+        let isFilled = !(value ?? "").isEmpty
+        return Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: isFilled ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isFilled ? Color.brandTeal : Color(.systemGray3))
+                Text(LocalizedStringKey(title))
+                    .foregroundStyle(.primary)
+                Spacer()
+                if isFilled {
+                    Text(value ?? "")
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                } else {
+                    Text("未入力")
+                        .font(.caption.bold())
+                        .foregroundStyle(Color.brandOrange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.brandOrange.opacity(0.14), in: Capsule())
+                }
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(Color(.systemGray3))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// 必須項目だけを集めたセクション。オンボーディング中はここだけを見せる。
     var basicSection: some View {
         Section {
-            labeledTextField(title: "ニックネーム(必須)", text: $name, placeholder: "未入力")
-            labeledTextField(title: "専攻(任意)", text: $major, placeholder: "未入力")
-            formRow(title: "誕生日(必須)", value: birthdayLabel) { showingBirthdayPicker = true }
-            formRow(title: "性別(必須)", value: gender?.label ?? unselectedOption) { showingGenderPicker = true }
-            formRow(title: "居住地(必須)", value: areaLabel) { showingAreaPicker = true }
-            formRow(title: "大学(必須)", value: universityName.isEmpty ? "選択してください" : universityName) {
+            HStack(spacing: 10) {
+                Image(systemName: name.isEmpty ? "circle" : "checkmark.circle.fill")
+                    .foregroundStyle(name.isEmpty ? Color(.systemGray3) : Color.brandTeal)
+                Text("ニックネーム")
+                Spacer()
+                TextField("未入力", text: $name)
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(.secondary)
+            }
+            requiredRow(title: "誕生日", value: hasChosenBirthday ? birthdayLabel : nil) { showingBirthdayPicker = true }
+            requiredRow(title: "性別", value: gender?.label) { showingGenderPicker = true }
+            requiredRow(title: "居住地", value: area.isEmpty ? nil : areaLabel) { showingAreaPicker = true }
+            requiredRow(title: "大学", value: universityName.isEmpty ? nil : universityName) {
                 showingUniversityPicker = true
             }
-            formRow(title: "身長(必須)", value: height.map { "\($0)cm" } ?? "選択してください") { showingHeightPicker = true }
-            formRow(title: "国籍(任意・複数選択可)", value: nationalities.isEmpty ? "-" : nationalities.sorted().joined(separator: "・")) {
-                showingNationalityPicker = true
-            }
         } header: {
-            Label("基本情報", systemImage: "person.text.rectangle")
+            Label("基本情報(必須)", systemImage: "person.text.rectangle")
                 .foregroundStyle(Color.brandPurple)
         }
         .id("basic")
+    }
+
+    /// あとから設定できる任意項目。オンボーディング中は表示せず、
+    /// マイページの「やることリスト」から後で埋めてもらう。
+    var optionalDetailsSection: some View {
+        Section {
+            labeledTextField(title: "専攻", text: $major, placeholder: "未入力")
+            formRow(title: "身長", value: height.map { "\($0)cm" } ?? "未設定") { showingHeightPicker = true }
+            formRow(title: "国籍(複数選択可)", value: nationalities.isEmpty ? "未設定" : nationalities.sorted().joined(separator: "・")) {
+                showingNationalityPicker = true
+            }
+        } header: {
+            Label("くわしいプロフィール(任意)", systemImage: "sparkles")
+                .foregroundStyle(Color.brandPurple)
+        }
+        .id("details")
     }
 
     private var birthdayLabel: String {
@@ -302,17 +357,63 @@ struct ProfileEditView: View {
         }
         .id("about")
     }
+    /// 必須項目の充足状況。オンボーディングの進捗バーに使う。
+    private var requiredItems: [(label: String, isFilled: Bool)] {
+        [
+            ("メイン写真", photo(forSlot: 0) != nil),
+            ("ニックネーム", !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty),
+            ("誕生日", hasChosenBirthday),
+            ("性別", gender != nil),
+            ("居住地", !area.isEmpty),
+            ("大学", universityId != nil),
+            ("自己紹介", description.count >= Self.minDescriptionLength)
+        ]
+    }
+    private var filledRequiredCount: Int { requiredItems.filter(\.isFilled).count }
+    private var requiredProgress: Double {
+        guard !requiredItems.isEmpty else { return 1 }
+        return Double(filledRequiredCount) / Double(requiredItems.count)
+    }
+
+    /// 登録に必要な項目が、あといくつ残っているかをひと目で分かるようにする。
+    private var onboardingProgressHeader: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("あと\(requiredItems.count - filledRequiredCount)項目で完了!")
+                    .font(.subheadline.bold())
+                Spacer()
+                Text("\(filledRequiredCount) / \(requiredItems.count)")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color.brandPurple)
+            }
+            ProgressView(value: requiredProgress)
+                .tint(Color.brandPurple)
+                .animation(.snappy, value: requiredProgress)
+            Text("ここで入力するのは必須項目だけです。くわしいプロフィールは登録後にゆっくり追加できます。")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.appListBackground.ignoresSafeArea()
                 ScrollViewReader { proxy in
                     Form {
+                        if isOnboarding {
+                            Section { onboardingProgressHeader }
+                        }
                         photosSection
                         basicSection
                         aboutSection
-                        lifestyleSection
-                        taglineSection
+                        // オンボーディング中は必須項目だけに絞り、任意項目は後から埋めてもらう。
+                        if !isOnboarding {
+                            optionalDetailsSection
+                            lifestyleSection
+                            taglineSection
+                        }
                     }
                     .scrollContentBackground(.hidden)
                     .scrollDismissesKeyboard(.interactively)
@@ -348,11 +449,22 @@ struct ProfileEditView: View {
                 }
             }
         }
+        // 大学はサインアップ時に、登録した大学メールのドメインからサーバー側で自動設定される。
+        // ただしプロフィール本体より後に大学名の取得が完了することがあり、その場合
+        // onAppearの時点では名前が空で「選択してください」と表示され、
+        // 実際には紐づいているのに未選択に見えてしまっていた。読み込み完了時にも反映する。
+        .onChange(of: profileManager.university?.id) { _, _ in
+            if let university = profileManager.university {
+                universityId = university.id
+                universityName = university.name
+            }
+        }
         .onAppear {
             if let profile = profileManager.profile {
                 self.name = profile.name
                 self.description = profile.description ?? ""
                 self.gender = profile.gender
+                self.hasChosenBirthday = profile.birthday != nil
                 self.birthday = profile.birthday ?? (Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date())
                 self.area = profile.area
                 self.city = profile.city ?? ""
@@ -442,7 +554,7 @@ struct ProfileEditView: View {
             }
         }
         .sheet(isPresented: $showingBirthdayPicker) {
-            BirthdayPickerView(birthday: $birthday)
+            BirthdayPickerView(birthday: $birthday) { hasChosenBirthday = true }
         }
         .sheet(isPresented: $showingLanguagePicker) {
             LanguageMultiSelectView(selected: $languages)
@@ -610,8 +722,8 @@ struct ProfileEditView: View {
             showingValidationAlert = true
             return
         }
-        guard let height else {
-            validationMessage = "身長を選択してください"
+        guard hasChosenBirthday else {
+            validationMessage = "誕生日を選択してください"
             showingValidationAlert = true
             return
         }
@@ -651,11 +763,14 @@ struct ProfileEditView: View {
 /// 誕生日をカレンダーグリッドではなく、年・月・日のホイールで手早く選べるようにした画面。
 struct BirthdayPickerView: View {
     @Binding var birthday: Date
+    /// 「決定」を押して実際に選んだことを呼び出し元に伝える(初期値との区別に使う)。
+    var onConfirm: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var draft: Date
 
-    init(birthday: Binding<Date>) {
+    init(birthday: Binding<Date>, onConfirm: (() -> Void)? = nil) {
         self._birthday = birthday
+        self.onConfirm = onConfirm
         self._draft = State(initialValue: birthday.wrappedValue)
     }
 
@@ -679,6 +794,7 @@ struct BirthdayPickerView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("決定") {
                         birthday = draft
+                        onConfirm?()
                         dismiss()
                     }
                 }

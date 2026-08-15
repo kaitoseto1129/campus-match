@@ -33,7 +33,17 @@ struct DailyMissionsView: View {
                                 manager: manager,
                                 mission: mission,
                                 highlightClaim: showsTutorialHint && mission.key == "login",
-                                onClaimed: { showClaimedToast(message: "いいねを受け取りました!") },
+                                onClaimed: {
+                                    showClaimedToast(message: "いいねを受け取りました!")
+                                    // チュートリアル中は、受け取れたらそのまま次のステップへ進めるよう自動で閉じる。
+                                    // (以前は「閉じる」を自分で探して押す必要があり、そこで迷いやすかった)
+                                    if showsTutorialHint && mission.key == "login" {
+                                        Task {
+                                            try? await Task.sleep(nanoseconds: 1_300_000_000)
+                                            dismiss()
+                                        }
+                                    }
+                                },
                                 // 未達成のミッションは、達成できる画面(探す)へそのまま送る。
                                 onGoToAction: {
                                     tabRouter.selectTab(.discover)
