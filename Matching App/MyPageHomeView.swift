@@ -548,14 +548,22 @@ struct MyPageHomeView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
 
+            // 以前は外部URL/mailtoを開く実装だったが、公開前のURLは404になり、
+            // mailtoもメール未設定の端末では無反応だったため、すべてアプリ内画面に置き換えた。
             VStack(spacing: 0) {
                 languageRow
                 Divider().padding(.leading, 66)
-                linkRow(icon: "envelope.fill", iconColor: Color.brandTeal, title: "お問い合わせ", url: URL(string: "mailto:kaitoseto1129@gmail.com")!)
+                menuRow(icon: "envelope.fill", iconColor: Color.brandTeal, title: "お問い合わせ") {
+                    ContactView()
+                }
                 Divider().padding(.leading, 66)
-                linkRow(icon: "doc.text.fill", iconColor: Color.brandPurple, title: "利用規約", url: LegalLinks.terms)
+                menuRow(icon: "doc.text.fill", iconColor: Color.brandPurple, title: "利用規約") {
+                    LegalDocumentView(document: .terms)
+                }
                 Divider().padding(.leading, 66)
-                linkRow(icon: "lock.doc.fill", iconColor: Color(.systemGray), title: "プライバシーポリシー", url: LegalLinks.privacy)
+                menuRow(icon: "lock.doc.fill", iconColor: Color(.systemGray), title: "プライバシーポリシー") {
+                    LegalDocumentView(document: .privacy)
+                }
             }
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))

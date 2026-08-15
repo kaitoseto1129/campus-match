@@ -60,6 +60,11 @@ struct Matching_AppApp: App {
                     SplashView()
                 } else if auth.isAuthenticated {
                     RootGateView()
+                } else if let pendingEmail = auth.pendingVerificationEmail {
+                    // 登録は受け付けたが、まだメールアドレスの本人確認が済んでいない状態。
+                    NavigationStack {
+                        EmailVerificationView(email: pendingEmail)
+                    }
                 } else {
                     AuthView()
                 }

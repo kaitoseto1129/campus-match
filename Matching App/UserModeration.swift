@@ -77,6 +77,9 @@ enum UserModeration {
         await recordAction(userId: userId, action: "block")
     }
 
+    /// 相手を通報する。
+    /// 通報した相手がその後も「探す」に出てくると、嫌な相手を見続けることになってしまうため、
+    /// 通報と同時に非表示にして自分の画面から消す。
     static func report(userId: UUID, reason: String) async {
         guard let myId = supabase().auth.currentUser?.id else { return }
         do {
@@ -87,7 +90,30 @@ enum UserModeration {
         } catch {
             print("report error: \(error)")
         }
+        await hide(userId: userId)
+        await notifyOperator(reportedId: userId, reason: reason)
     }
+
+    /// 通報を運営者のメールへ通知する。
+    /// 通報自体はDBに保存済みなので、通知に失敗してもユーザーには影響させない。
+    private static func notifyOperator(reportedId: UUID, reason: String) async {
+        struct Params: Encodable {
+            let reportedId: String
+            let reason: String
+        }
+        do {
+            _ = try await supabase().functions.invoke(
+                "notify-report",
+                options: FunctionInvokeOptions(
+                    body: Params(reportedId: reportedId.uuidString, reason: reason)
+                )
+            ) as VoidResponse
+        } catch {
+            print("notify report error: \(error)")
+        }
+    }
+
+    private struct VoidResponse: Decodable {}
 
     /// 自分がactionした(非表示/ブロックした)相手の一覧を取得する。
     static func actedUserIds(actorId: UUID, action: String) async -> [UUID] {

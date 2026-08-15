@@ -18,6 +18,10 @@ final class AuthManager : ObservableObject {
     /// 起動直後の保存済みセッション確認が終わるまでtrue。
     /// これを見ずに描画すると、確認が終わるまでの一瞬だけログイン画面や空白が挟まってしまう。
     @Published var isRestoringSession = true
+    /// メールアドレスの本人確認待ちのアドレス。
+    /// Supabaseの「Confirm email」がONの間、サインアップ直後はセッションが発行されず、
+    /// 確認コードを検証するまでログインできない。その待機状態をUIに伝えるために使う。
+    @Published var pendingVerificationEmail: String?
 
     init() {
         Task {
@@ -47,35 +51,95 @@ final class AuthManager : ObservableObject {
         }
         isLoading = false
     }
-    /// GoogleやFacebookなどのOAuthプロバイダでサインイン/サインアップする。
-    /// 動作させるには、(1)各社の開発者コンソールでのアプリ登録、(2)Supabase Dashboard > Authentication >
-    /// ProvidersでのクライアントID/シークレット登録、(3)Xcode側でこのリダイレクトURLスキーム(campusmatch)を
-    /// URL Typesに追加、の3つが別途必要。未設定の間はここでエラーになる。
-    func signInWithOAuth(provider: Provider) async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            guard let redirectURL = URL(string: "campusmatch://login-callback") else { return }
-            try await supabase().auth.signInWithOAuth(provider: provider, redirectTo: redirectURL)
-            await checkSession()
-        } catch {
-            errorMessage = "\(provider.rawValue.capitalized)ログインに失敗しました。提供者の設定が完了していない可能性があります。"
-            print("oauth sign in error (\(provider)): \(error)")
-        }
-        isLoading = false
-    }
-
     func signUp(email: String, password: String, displayName: String) async {
         isLoading = true
         errorMessage = nil
         do {
-            try await supabase().auth.signUp(email: email, password: password, data: ["display_name": .string(displayName)])
-            await checkSession()
+            let response = try await supabase().auth.signUp(
+                email: email,
+                password: password,
+                data: ["display_name": .string(displayName)]
+            )
+            if response.session == nil {
+                // 「Confirm email」がONの場合、この時点ではセッションが発行されない。
+                // 確認コードを入力してもらうまでログインさせない。
+                pendingVerificationEmail = email
+            } else {
+                await checkSession()
+            }
         } catch let error {
             errorMessage = Self.describe(error)
             print("sign up error: \(error)")
         }
         isLoading = false
+    }
+
+    /// 登録したメールアドレス宛に届いた6桁の確認コードを検証し、本人確認を完了させる。
+    /// 成功するとセッションが発行され、そのままログイン状態になる。
+    @discardableResult
+    func verifyEmailCode(_ code: String) async -> Bool {
+        guard let email = pendingVerificationEmail else { return false }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            try await supabase().auth.verifyOTP(
+                email: email,
+                token: code.trimmingCharacters(in: .whitespaces),
+                type: .signup
+            )
+            await checkSession()
+            if isAuthenticated {
+                pendingVerificationEmail = nil
+                return true
+            }
+            errorMessage = "確認に失敗しました。もう一度お試しください"
+            return false
+        } catch {
+            errorMessage = Self.describeVerification(error)
+            print("verify email code error: \(error)")
+            return false
+        }
+    }
+
+    /// 確認コードを再送する。
+    @discardableResult
+    func resendVerificationEmail() async -> Bool {
+        guard let email = pendingVerificationEmail else { return false }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            try await supabase().auth.resend(email: email, type: .signup)
+            return true
+        } catch {
+            errorMessage = Self.describeVerification(error)
+            print("resend verification error: \(error)")
+            return false
+        }
+    }
+
+    /// 本人確認を中断して登録画面に戻る。
+    func cancelEmailVerification() {
+        pendingVerificationEmail = nil
+        errorMessage = nil
+    }
+
+    private static func describeVerification(_ error: Error) -> String {
+        guard let authError = error as? AuthError, case .api(let message, let code, _, _) = authError else {
+            return "確認に失敗しました。通信環境を確認してください"
+        }
+        switch code {
+        case .otpExpired:
+            return "コードの有効期限が切れています。再送してください"
+        case .overEmailSendRateLimit:
+            return "確認メールの送信が集中しています。しばらく待ってから再度お試しください"
+        default:
+            if message.localizedCaseInsensitiveContains("invalid") || message.localizedCaseInsensitiveContains("expired") {
+                return "コードが正しくありません。もう一度ご確認ください"
+            }
+            return message
+        }
     }
 
     /// サーバーから返るエラーコード・詳細メッセージを含めて具体的に表示する。

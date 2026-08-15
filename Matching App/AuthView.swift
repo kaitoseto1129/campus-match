@@ -21,6 +21,8 @@ struct AuthView: View {
     @State private var isSendingReset = false
     @State private var resetErrorMessage: String?
     @State private var showingResetSentAlert = false
+    @State private var showingTerms = false
+    @State private var showingPrivacy = false
     /// マイページに辿り着く前(未登録・未ログイン状態)でも言語を選べるようにするための設定。
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.japanese.rawValue
 
@@ -77,10 +79,8 @@ struct AuthView: View {
                         }
                     }
 
-                    orDivider
-                    socialLoginButtons
-
                     if isSignUp {
+                        universityMailNote
                         termsAgreementNote
                     }
                 }
@@ -228,48 +228,51 @@ struct AuthView: View {
         .disabled(!isFormValid || auth.isLoading)
     }
 
-    private var orDivider: some View {
-        HStack {
-            Rectangle().fill(Color(.systemGray4)).frame(height: 1)
-            Text("または").font(.caption).foregroundStyle(.secondary)
-            Rectangle().fill(Color(.systemGray4)).frame(height: 1)
-        }
-        .padding(.top, 4)
-    }
-
-    /// 登録前に利用規約・プライバシーポリシーを確認できるようにする(App Store審査の一般的な要件)。
-    private var termsAgreementNote: some View {
-        Text("登録すると、[利用規約](\(LegalLinks.terms.absoluteString))および[プライバシーポリシー](\(LegalLinks.privacy.absoluteString))に同意したものとみなされます")
+    private var universityMailNote: some View {
+        Text("大学生専用のアプリのため、学校のメールアドレスでご登録ください")
             .font(.caption2)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
-            .tint(Color.brandPurple)
             .padding(.horizontal, 8)
     }
 
-    private var socialLoginButtons: some View {
-        VStack(spacing: 10) {
-            // Googleなど他社の外部ログインを提供する場合、App StoreはSign in with Appleも
-            // 同等の選択肢として提供することを求めているため、先頭に配置している(Appleの4.8ガイドライン)。
-            socialLoginButton(title: "Appleで続ける", systemImage: "apple.logo", background: .black, foreground: .white) {
-                Task { await auth.signInWithOAuth(provider: .apple) }
+    /// 登録前に利用規約・プライバシーポリシーを確認できるようにする(App Store審査の一般的な要件)。
+    /// 外部URLは公開状況によっては開けないため、アプリ内の画面をシートで開く。
+    private var termsAgreementNote: some View {
+        VStack(spacing: 6) {
+            Text("登録すると、以下に同意したものとみなされます")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 6) {
+                Button("利用規約") { showingTerms = true }
+                Text("・").foregroundStyle(.secondary)
+                Button("プライバシーポリシー") { showingPrivacy = true }
             }
-            socialLoginButton(title: "Googleで続ける", systemImage: "g.circle.fill", background: Color(.systemBackground), foreground: .primary, bordered: true) {
-                Task { await auth.signInWithOAuth(provider: .google) }
-            }
-            socialLoginButton(title: "Facebookで続ける", systemImage: "f.circle.fill", background: Color(red: 0.09, green: 0.46, blue: 0.82), foreground: .white) {
-                Task { await auth.signInWithOAuth(provider: .facebook) }
-            }
-            if isSignUp {
-                Text("大学生専用のアプリのため、学校のメールアドレスに紐づくアカウントでご登録ください")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 8)
-                    .padding(.top, 2)
+            .font(.caption2.bold())
+            .tint(Color.brandPurple)
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 8)
+        .sheet(isPresented: $showingTerms) {
+            NavigationStack {
+                LegalDocumentView(document: .terms)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("閉じる") { showingTerms = false }
+                        }
+                    }
             }
         }
-        .disabled(auth.isLoading)
+        .sheet(isPresented: $showingPrivacy) {
+            NavigationStack {
+                LegalDocumentView(document: .privacy)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("閉じる") { showingPrivacy = false }
+                        }
+                    }
+            }
+        }
     }
 
     private var forgotPasswordSheet: some View {
@@ -316,34 +319,6 @@ struct AuthView: View {
             Button("OK") { showingForgotPassword = false }
         } message: {
             Text("\(resetEmail) にパスワード再設定用のメールを送信しました。届いたメール内のリンクから再設定してください。")
-        }
-    }
-
-    private func socialLoginButton(
-        title: String,
-        systemImage: String,
-        background: Color,
-        foreground: Color,
-        bordered: Bool = false,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: systemImage)
-                Text(title)
-                    .bold()
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 48)
-            .background(background)
-            .foregroundStyle(foreground)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .overlay {
-                if bordered {
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color(.systemGray4), lineWidth: 1)
-                }
-            }
         }
     }
 
