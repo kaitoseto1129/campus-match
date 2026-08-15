@@ -7,67 +7,125 @@ import SwiftUI
 
 /// マイページを初めて開いたユーザー向けの簡易ガイド。探す画面のチュートリアルから
 /// 「マイページを見てみる」で来た場合はもちろん、マイページに直接たどり着いた場合も
-/// 一度だけ表示する。趣味カード→プロフィール充実度→アピール→分析→足あと→締め、の順に紹介する。
-enum MyPageTutorialStep: Int, CaseIterable {
+/// 一度だけ表示する。画面中央にカードを出すだけでなく、実際のセクションをスポットライトで
+/// 指し示し、実際にタップ・操作してもらいながら趣味カード→プロフィール充実度→アピール→
+/// 分析→足あと→締め、の順に紹介する。
+enum MyPageTutorialStep: CaseIterable {
     case hobbyCards, completeness, appeal, analytics, footprints, closing
 }
 
-struct MyPageTutorialOverlay: View {
-    @Binding var step: MyPageTutorialStep?
-    var onFinish: () -> Void
+private struct StepContent {
+    let anchorId: String?
+    let message: String
+}
 
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.78).ignoresSafeArea()
-            if let step {
-                Group {
-                    switch step {
-                    case .hobbyCards:
-                        card(
-                            icon: "heart.text.square.fill",
-                            iconColor: Color.brandPink,
-                            title: "趣味カードを登録しよう",
-                            message: "共通の趣味を持つお相手に見つけてもらいやすくなります。マイページ上部の「趣味カードを追加する」からいつでも登録・編集できます。"
-                        )
-                    case .completeness:
-                        card(
-                            icon: "checklist",
-                            iconColor: Color.brandPurple,
-                            title: "プロフィール充実度をチェック",
-                            message: "足りない項目は「やることリスト」でひと目で分かります。埋めるほどお相手に見つけてもらいやすくなります。"
-                        )
-                    case .appeal:
-                        appealCard
-                    case .analytics:
-                        card(
-                            icon: "chart.bar.fill",
-                            iconColor: .indigo,
-                            title: "「分析」で振り返ろう",
-                            message: "プロフィールが何回表示・いいねされたかなどを確認できます。マイページの「分析」からいつでも見られます。"
-                        )
-                    case .footprints:
-                        card(
-                            icon: "shoeprints.fill",
-                            iconColor: Color.brandOrange,
-                            title: "「足あと」を確認しよう",
-                            message: "あなたのプロフィールを見にきたお相手が分かります。気になる人がいたら、そこからいいねを送ってみましょう。"
-                        )
-                    case .closing:
-                        closingCard
-                    }
-                }
-                .transition(.opacity.combined(with: .scale(scale: 0.96)))
-            }
-            skipButton
+struct MyPageTutorialOverlay: View {
+    let step: MyPageTutorialStep
+    let anchors: [String: Anchor<CGRect>]
+    var onNext: () -> Void
+    var onSkipAll: () -> Void
+
+    @State private var pulse = false
+
+    private var content: StepContent {
+        switch step {
+        case .hobbyCards:
+            return StepContent(anchorId: "myPageHobbyCards", message: "「趣味カードを追加する」をタップして、趣味カードを登録してみましょう。共通の趣味があるお相手に見つけてもらいやすくなります")
+        case .completeness:
+            return StepContent(anchorId: "myPageCompleteness", message: "足りない項目は「やることリスト」でひと目で分かります。「編集する」から埋めてみましょう")
+        case .appeal:
+            return StepContent(anchorId: "myPageAppeal", message: "「アピールを使う」をタップすると、いいねを消費して1時間だけ「探す」画面のトップに表示されます")
+        case .analytics:
+            return StepContent(anchorId: "myPageAnalytics", message: "「分析」をタップすると、プロフィールの閲覧数やいいね獲得率を確認できます")
+        case .footprints:
+            return StepContent(anchorId: "myPageFootprints", message: "「足あと」をタップすると、あなたのプロフィールを見に来たお相手が分かります")
+        case .closing:
+            return StepContent(anchorId: nil, message: "")
         }
-        .animation(.easeInOut(duration: 0.25), value: step)
     }
 
-    private var skipButton: some View {
+    var body: some View {
+        GeometryReader { proxy in
+            if step == .closing {
+                closingCard
+            } else {
+                spotlightContent(proxy: proxy)
+            }
+        }
+        .ignoresSafeArea()
+        .transition(.opacity)
+    }
+
+    @ViewBuilder
+    private func spotlightContent(proxy: GeometryProxy) -> some View {
+        let rect = content.anchorId.flatMap { anchors[$0] }.map { proxy[$0] } ?? .zero
+        ZStack {
+            SpotlightScrimShape(holeRect: rect)
+                .fill(Color.black.opacity(0.68), style: FillStyle(eoFill: true))
+                .onTapGesture { onNext() }
+
+            if rect != .zero {
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(Color.brandPurple, lineWidth: 3)
+                    .frame(width: rect.width + 16, height: rect.height + 16)
+                    .position(x: rect.midX, y: rect.midY)
+                    .allowsHitTesting(false)
+                    .shadow(color: Color.brandPurple.opacity(0.6), radius: 10)
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(Color.brandOrange, lineWidth: 3)
+                    .frame(width: rect.width + 16, height: rect.height + 16)
+                    .scaleEffect(pulse ? 1.1 : 1.0)
+                    .opacity(pulse ? 0 : 1)
+                    .position(x: rect.midX, y: rect.midY)
+                    .allowsHitTesting(false)
+            }
+
+            tooltip(rect: rect, proxy: proxy)
+            topBar
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
+    }
+
+    private func tooltip(rect: CGRect, proxy: GeometryProxy) -> some View {
+        let placeBelow = rect == .zero || rect.midY < proxy.size.height / 2
+        return VStack(spacing: 12) {
+            Text(content.message)
+                .font(.subheadline.bold())
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                onNext()
+            } label: {
+                Text("次へ")
+                    .font(.caption.bold())
+                    .foregroundStyle(Color.brandPurple)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(.white, in: Capsule())
+            }
+        }
+        .padding(16)
+        .background(Color.brandPurple, in: RoundedRectangle(cornerRadius: 18))
+        .padding(.horizontal, 32)
+        .frame(maxWidth: .infinity)
+        .position(
+            x: proxy.size.width / 2,
+            y: placeBelow
+                ? min(rect.maxY + 90, proxy.size.height - 90)
+                : max(rect.minY - 90, 100)
+        )
+    }
+
+    private var topBar: some View {
         VStack {
             HStack {
                 Spacer()
-                Button("スキップ") { finish() }
+                Button("スキップ") { onSkipAll() }
                     .font(.footnote.bold())
                     .foregroundStyle(.white.opacity(0.85))
                     .padding(.horizontal, 14)
@@ -80,126 +138,51 @@ struct MyPageTutorialOverlay: View {
         }
     }
 
-    private func card(icon: String, iconColor: Color, title: String, message: String) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 46))
-                .foregroundStyle(iconColor)
-            Text(title)
-                .font(.title3.bold())
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.85))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            nextButton
-        }
-    }
-
-    /// アピール機能は文章だけだと伝わりにくいため、実際に「アピール中」表示になった時の
-    /// プレビューを見せながら説明する。
-    private var appealCard: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 46))
-                .foregroundStyle(Color.brandOrange)
-            Text("「アピール」で目立とう")
-                .font(.title3.bold())
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            Text("いいねを10消費すると、1時間だけ「探す」画面のトップに表示されて見てもらいやすくなります")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.85))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            HStack {
-                Image(systemName: "bolt.fill")
-                    .foregroundStyle(Color.brandOrange)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("アピール中")
-                        .font(.subheadline.bold())
-                    Text("59分後に終了")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-            .padding()
-            .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(Color.brandOrange, lineWidth: 1.5)
-            }
-            .padding(.horizontal, 40)
-            Text("↑ アピール中はこんな表示になります(プレビューです)")
-                .font(.caption2)
-                .foregroundStyle(.white.opacity(0.7))
-
-            nextButton
-        }
-    }
-
     private var closingCard: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "heart.fill")
-                .font(.system(size: 46))
-                .foregroundStyle(Color.brandPink)
-            Text("マイページの紹介はこれで終わりです")
-                .font(.title3.bold())
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            Text("たくさんの出会いがあることを祈っています!")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.85))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            Button {
-                finish()
-            } label: {
-                Text("はじめる")
-                    .bold()
-                    .frame(width: 200, height: 50)
-                    .background(Color.brandGradient)
+        ZStack {
+            Color.black.opacity(0.78).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 46))
+                    .foregroundStyle(Color.brandPink)
+                Text("マイページの紹介はこれで終わりです")
+                    .font(.title3.bold())
                     .foregroundStyle(.white)
-                    .clipShape(Capsule())
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                Text("たくさんの出会いがあることを祈っています!")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                Button {
+                    onNext()
+                } label: {
+                    Text("はじめる")
+                        .bold()
+                        .frame(width: 200, height: 50)
+                        .background(Color.brandGradient)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
         }
     }
+}
 
-    private var nextButton: some View {
-        Button {
-            advance()
-        } label: {
-            Text("次へ")
-                .bold()
-                .frame(width: 200, height: 50)
-                .background(Color.brandGradient)
-                .foregroundStyle(.white)
-                .clipShape(Capsule())
-        }
-        .padding(.top, 8)
-    }
+/// 背景を暗転させつつ、対象の四角形だけくり抜いて実際のUIをそのまま操作できるようにするScrim。
+/// (DiscoverTutorialOverlay.swiftの同名シェイプと同じ考え方だが、マイページのスクロール位置に
+/// 応じてアンカーの矩形が変わるためこちらでも独立して持っている)
+private struct SpotlightScrimShape: Shape {
+    let holeRect: CGRect
+    var cornerRadius: CGFloat = 18
 
-    private func advance() {
-        guard let current = step, let currentIndex = MyPageTutorialStep.allCases.firstIndex(of: current) else { return }
-        let nextIndex = MyPageTutorialStep.allCases.index(after: currentIndex)
-        if nextIndex < MyPageTutorialStep.allCases.endIndex {
-            step = MyPageTutorialStep.allCases[nextIndex]
-        } else {
-            finish()
-        }
-    }
-
-    private func finish() {
-        step = nil
-        onFinish()
+    func path(in rect: CGRect) -> Path {
+        var path = Path(rect)
+        guard holeRect != .zero else { return path }
+        let inset = holeRect.insetBy(dx: -8, dy: -8)
+        path.addPath(Path(roundedRect: inset, cornerRadius: cornerRadius))
+        return path
     }
 }

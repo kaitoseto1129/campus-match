@@ -23,8 +23,33 @@ struct MyPageHomeView: View {
     @State private var showingPurchaseSheet = false
     @State private var showingHobbyCardPicker = false
     /// マイページを初めて開いた時だけ、主要機能を簡単に紹介するガイドを一度出す。
+    /// 画面中央に説明カードを出すだけでなく、実際のセクションをスポットライトで指し示し、
+    /// 実際にタップ・操作してもらいながら紹介する(探す画面のチュートリアルと同じ考え方)。
     @AppStorage("hasSeenMyPageTutorial") private var hasSeenMyPageTutorial = false
     @State private var myPageTutorialStep: MyPageTutorialStep? = nil
+    @State private var myPageTutorialAnchors: [String: Anchor<CGRect>] = [:]
+
+    /// プロフィールが既に100%完成している場合は「充実度」ステップを飛ばす。
+    private var myPageTutorialSteps: [MyPageTutorialStep] {
+        var steps = MyPageTutorialStep.allCases
+        let isComplete = profileManager.profile.map { $0.completeness(photoCount: profileManager.photos.count).percent >= 100 } ?? false
+        if isComplete {
+            steps.removeAll { $0 == .completeness }
+        }
+        return steps
+    }
+
+    private func advanceMyPageTutorial(from step: MyPageTutorialStep) {
+        let steps = myPageTutorialSteps
+        guard let index = steps.firstIndex(of: step) else { return }
+        let nextIndex = steps.index(after: index)
+        withAnimation {
+            myPageTutorialStep = nextIndex < steps.endIndex ? steps[nextIndex] : nil
+        }
+        if nextIndex >= steps.endIndex {
+            hasSeenMyPageTutorial = true
+        }
+    }
 
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -43,6 +68,9 @@ struct MyPageHomeView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         header
+                        if (profileManager.profile?.membership ?? .free) == .free {
+                            membershipUpsellBanner
+                        }
                         hobbyCardsCard
                         profileCompletenessCard
                         boostButton
@@ -50,11 +78,15 @@ struct MyPageHomeView: View {
                         purchaseLikesButton
                         shareAppButton
                         VStack(spacing: 0) {
-                            menuRow(icon: "chart.bar.fill", iconColor: .indigo, title: "分析") {
+                            menuRow(icon: "chart.bar.fill", iconColor: .indigo, title: "分析", anchorId: "myPageAnalytics", onTap: {
+                                if myPageTutorialStep == .analytics { advanceMyPageTutorial(from: .analytics) }
+                            }) {
                                 ProfileAnalyticsView()
                             }
                             Divider().padding(.leading, 66)
-                            menuRow(icon: "shoeprints.fill", iconColor: Color.brandOrange, title: "足あと", badgeCount: notificationManager.footprintsCount) {
+                            menuRow(icon: "shoeprints.fill", iconColor: Color.brandOrange, title: "足あと", badgeCount: notificationManager.footprintsCount, anchorId: "myPageFootprints", onTap: {
+                                if myPageTutorialStep == .footprints { advanceMyPageTutorial(from: .footprints) }
+                            }) {
                                 FootprintsView()
                             }
                             Divider().padding(.leading, 66)
@@ -91,24 +123,43 @@ struct MyPageHomeView: View {
                     .padding(.bottom, 100)
                 }
 
-                if myPageTutorialStep != nil {
-                    MyPageTutorialOverlay(step: $myPageTutorialStep) {
-                        hasSeenMyPageTutorial = true
-                    }
+                if let myPageTutorialStep {
+                    MyPageTutorialOverlay(
+                        step: myPageTutorialStep,
+                        anchors: myPageTutorialAnchors,
+                        onNext: { advanceMyPageTutorial(from: myPageTutorialStep) },
+                        onSkipAll: {
+                            self.myPageTutorialStep = nil
+                            hasSeenMyPageTutorial = true
+                        }
+                    )
                     .zIndex(1)
                 }
             }
+            .onPreferenceChange(TutorialAnchorKey.self) { myPageTutorialAnchors = $0 }
             .navigationTitle("マイページ")
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await profileManager.load()
                 if !hasSeenMyPageTutorial {
                     try? await Task.sleep(nanoseconds: 400_000_000)
-                    withAnimation { myPageTutorialStep = .hobbyCards }
+                    withAnimation { myPageTutorialStep = myPageTutorialSteps.first }
                 }
             }
             .onChange(of: tabRouter.popToRootTokens[.myPage]) { _, _ in
                 navPath = NavigationPath()
+            }
+            // 趣味カードのシートを実際に開いて閉じたら、チュートリアルを自動で次のステップへ進める。
+            .onChange(of: showingHobbyCardPicker) { wasShowing, isShowing in
+                if !isShowing, myPageTutorialStep == .hobbyCards {
+                    advanceMyPageTutorial(from: .hobbyCards)
+                }
+            }
+            // アピールの確認ダイアログを実際に開いて閉じたら(利用してもキャンセルしても)次へ進める。
+            .onChange(of: showingBoostConfirm) { wasShowing, isShowing in
+                if !isShowing, myPageTutorialStep == .appeal {
+                    advanceMyPageTutorial(from: .appeal)
+                }
             }
             .confirmationDialog(
                 "本当に退会しますか?",
@@ -191,6 +242,43 @@ struct MyPageHomeView: View {
         }
     }
 
+    /// 無料会員だけに表示する、有料会員の存在を知らせる目立つ案内。
+    /// 以前はヘッダーの「会員ステータス」ボタンをタップして初めて有料プランの存在に
+    /// 気づく形だったため、押さなくても目に入る位置・デザインで案内するようにした。
+    private var membershipUpsellBanner: some View {
+        NavigationLink {
+            MembershipStatusView(profileManager: profileManager)
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.2))
+                        .frame(width: 46, height: 46)
+                    Image(systemName: "crown.fill")
+                        .font(.title3)
+                        .foregroundStyle(.white)
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("有料会員でもっと出会いを広げよう")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.white)
+                    Text("メッセージし放題・いいね数表示・プライベートモードなど")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+            .padding()
+            .background(Color.brandGradient, in: RoundedRectangle(cornerRadius: 18))
+            .shadow(color: Color.brandPurple.opacity(0.25), radius: 10, y: 4)
+            .padding(.horizontal)
+        }
+        .buttonStyle(.plain)
+    }
+
     /// 登録済みの趣味カードの一覧と、追加・編集の導線。
     private var hobbyCardsCard: some View {
         let cards = HobbyCard.cards(for: profileManager.profile?.hobbyCards ?? [])
@@ -240,6 +328,7 @@ struct MyPageHomeView: View {
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal)
+        .tutorialAnchor("myPageHobbyCards")
         .sheet(isPresented: $showingHobbyCardPicker) {
             HobbyCardPickerView(profileManager: profileManager)
         }
@@ -299,6 +388,7 @@ struct MyPageHomeView: View {
                     .background(Color(.systemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
+                    .tutorialAnchor("myPageCompleteness")
                 }
             }
         }
@@ -356,6 +446,7 @@ struct MyPageHomeView: View {
                 .padding(.horizontal)
             }
         }
+        .tutorialAnchor("myPageAppeal")
         .confirmationDialog(
             "アピールしますか?",
             isPresented: $showingBoostConfirm,
@@ -579,6 +670,8 @@ struct MyPageHomeView: View {
         iconColor: Color,
         title: String,
         badgeCount: Int = 0,
+        anchorId: String? = nil,
+        onTap: (() -> Void)? = nil,
         @ViewBuilder destination: @escaping () -> Destination
     ) -> some View {
         NavigationLink {
@@ -611,6 +704,20 @@ struct MyPageHomeView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .modifier(OptionalTutorialAnchor(id: anchorId))
+        .simultaneousGesture(TapGesture().onEnded { onTap?() })
+    }
+}
+
+/// anchorIdがnilの場合は何もしない(tutorialAnchorはIDが必須のため、条件分岐をViewModifierにまとめている)。
+private struct OptionalTutorialAnchor: ViewModifier {
+    let id: String?
+    func body(content: Content) -> some View {
+        if let id {
+            content.tutorialAnchor(id)
+        } else {
+            content
+        }
     }
 }
 

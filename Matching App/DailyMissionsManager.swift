@@ -132,4 +132,13 @@ final class DailyMissionsManager: ObservableObject {
             print("claim mission error: \(error)")
         }
     }
+
+    /// 達成済みでまだ受け取っていないミッションをまとめて受け取る。
+    /// 1件ずつ順番にclaim()を呼ぶだけなので、途中で失敗しても受け取れた分はそのまま残る。
+    func claimAll() async {
+        let claimable = missions.filter { $0.isComplete && !claimedKeys.contains($0.key) }
+        for mission in claimable {
+            await claim(mission)
+        }
+    }
 }

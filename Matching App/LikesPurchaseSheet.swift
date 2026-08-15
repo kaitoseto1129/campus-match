@@ -24,6 +24,8 @@ struct LikesPurchaseSheet: View {
                 VStack(spacing: 20) {
                     balanceHeader
 
+                    promoBanner
+
                     VStack(alignment: .leading, spacing: 4) {
                         Text("いいねを購入")
                             .font(.title3.bold())
@@ -38,10 +40,18 @@ struct LikesPurchaseSheet: View {
                         ProgressView()
                             .padding(.vertical, 40)
                     } else if store.products.isEmpty {
-                        Text("現在購入できる商品がありません")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.vertical, 40)
+                        VStack(spacing: 10) {
+                            Image(systemName: "cart.badge.questionmark")
+                                .font(.system(size: 32))
+                                .foregroundStyle(.secondary)
+                            Text("現在購入できる商品がありません")
+                                .font(.subheadline.bold())
+                            Text("しばらくしてから、もう一度お試しください")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
                     } else {
                         VStack(spacing: 16) {
                             ForEach(Self.likeAmounts, id: \.self) { amount in
@@ -57,7 +67,19 @@ struct LikesPurchaseSheet: View {
                 }
                 .padding(.bottom, 20)
             }
-            .background(Color.appListBackground.ignoresSafeArea())
+            .background(
+                ZStack {
+                    Color.appListBackground
+                    LinearGradient(
+                        colors: [Color.brandPurple.opacity(0.08), Color.brandOrange.opacity(0.05), .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 280)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                }
+                .ignoresSafeArea()
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -77,23 +99,47 @@ struct LikesPurchaseSheet: View {
     }
 
     private var balanceHeader: some View {
-        HStack(spacing: 0) {
-            VStack(spacing: 4) {
-                HStack(spacing: 4) {
-                    Image(systemName: "hand.thumbsup.fill")
-                        .foregroundStyle(Color.brandPurple)
-                    Text("いいね!残数")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-                }
-                Text("\(profileManager.profile?.remainingLikes ?? 0)")
-                    .font(.system(size: 34, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Color.brandPurple)
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.2))
+                    .frame(width: 52, height: 52)
+                Image(systemName: "hand.thumbsup.fill")
+                    .font(.title2)
+                    .foregroundStyle(.white)
             }
-            .frame(maxWidth: .infinity)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("現在の残いいね!")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white.opacity(0.85))
+                Text("\(profileManager.profile?.remainingLikes ?? 0)")
+                    .font(.system(size: 32, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+            Spacer()
         }
-        .padding(.vertical, 16)
-        .background(Color(.systemBackground))
+        .padding()
+        .background(
+            LinearGradient(colors: [Color.brandPurple, Color.brandTeal], startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 20)
+        )
+        .shadow(color: Color.brandPurple.opacity(0.25), radius: 12, y: 6)
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+
+    /// いいねの使い道を強くイメージさせるための短い訴求バナー。
+    private var promoBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "sparkles")
+                .foregroundStyle(Color.brandOrange)
+            Text("いいねが多いほど、素敵な出会いのチャンスが広がります")
+                .font(.caption.bold())
+                .foregroundStyle(.primary)
+            Spacer()
+        }
+        .padding(12)
+        .background(Color.brandOrange.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal)
     }
 
@@ -141,6 +187,9 @@ struct LikesPurchaseSheet: View {
                     VStack(alignment: .trailing, spacing: 6) {
                         Text(product.displayPrice)
                             .font(.title3.bold())
+                        Text("1いいね \(NSDecimalNumber(decimal: unitPrice).intValue.formatted())円")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                         if discountPercent > 0 {
                             Text(savedYen > 0
                                  ? "\(NSDecimalNumber(decimal: savedYen).intValue.formatted())円お得! (\(discountPercent)%OFF)"

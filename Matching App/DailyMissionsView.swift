@@ -12,28 +12,42 @@ struct DailyMissionsView: View {
     /// 光らせて案内し、受け取り後は「右上の閉じるボタンを押して次へ」の案内を出す。
     var showsTutorialHint: Bool = false
     @State private var showingClaimedToast = false
+    @State private var claimedToastMessage = "いいねを受け取りました!"
+    @State private var isClaimingAll = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    header
-                    if showsTutorialHint && !manager.claimedKeys.contains("login") {
-                        tutorialTapHint
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        header
+                        if showsTutorialHint && !manager.claimedKeys.contains("login") {
+                            tutorialTapHint
+                        }
+                        if showsTutorialHint && manager.claimedKeys.contains("login") {
+                            tutorialCloseHint
+                        }
+                        ForEach(manager.missions) { mission in
+                            MissionCardView(
+                                manager: manager,
+                                mission: mission,
+                                highlightClaim: showsTutorialHint && mission.key == "login",
+                                onClaimed: { showClaimedToast(message: "いいねを受け取りました!") }
+                            )
+                        }
+                        if manager.hasClaimableMission {
+                            // 下の浮きボタンと重ならないよう、リストの最後に余白を足しておく。
+                            Color.clear.frame(height: 60)
+                        }
                     }
-                    if showsTutorialHint && manager.claimedKeys.contains("login") {
-                        tutorialCloseHint
-                    }
-                    ForEach(manager.missions) { mission in
-                        MissionCardView(
-                            manager: manager,
-                            mission: mission,
-                            highlightClaim: showsTutorialHint && mission.key == "login",
-                            onClaimed: { showingClaimedToast = true }
-                        )
-                    }
+                    .padding()
                 }
-                .padding()
+
+                if manager.hasClaimableMission {
+                    claimAllButton
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 20)
+                }
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("デイリーミッション")
@@ -49,7 +63,50 @@ struct DailyMissionsView: View {
             .refreshable {
                 await manager.load()
             }
-            .sentConfirmationCover(isPresented: $showingClaimedToast, message: "いいねを受け取りました!", icon: "gift.fill")
+            .sentConfirmationCover(isPresented: $showingClaimedToast, message: claimedToastMessage, icon: "gift.fill")
+        }
+    }
+
+    private var claimAllButton: some View {
+        Button {
+            guard !isClaimingAll else { return }
+            isClaimingAll = true
+            Task {
+                let claimableCount = manager.missions.filter { $0.isComplete && !manager.claimedKeys.contains($0.key) }.count
+                await manager.claimAll()
+                isClaimingAll = false
+                if claimableCount > 0 {
+                    showClaimedToast(message: "\(claimableCount)件のミッション報酬を受け取りました!")
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                if isClaimingAll {
+                    ProgressView().tint(.white)
+                } else {
+                    Image(systemName: "gift.fill")
+                }
+                Text("全て受け取る")
+                    .bold()
+            }
+            .font(.subheadline)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(Color.brandGradient, in: Capsule())
+            .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
+        }
+        .disabled(isClaimingAll)
+    }
+
+    /// 以前は受取確認トーストをtrueにするだけでfalseに戻す処理がなく、透明とはいえ
+    /// fullScreenCoverが画面を覆ったままになり、右上の「閉じる」が反応しなくなっていた。
+    private func showClaimedToast(message: String) {
+        claimedToastMessage = message
+        showingClaimedToast = true
+        Task {
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            showingClaimedToast = false
         }
     }
 

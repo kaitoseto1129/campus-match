@@ -8,6 +8,8 @@ import Charts
 
 struct ProfileAnalyticsView: View {
     @StateObject private var manager = ProfileAnalyticsManager()
+    /// 初めてこの画面を開いた時だけ、数字の読み方を短く教える。
+    @AppStorage("hasSeenAnalyticsTip") private var hasSeenAnalyticsTip = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -22,6 +24,9 @@ struct ProfileAnalyticsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     header
+                    if !hasSeenAnalyticsTip {
+                        readingTipBanner
+                    }
                     summaryCards
                     insightsCard
                     photoStatsCard
@@ -54,12 +59,37 @@ struct ProfileAnalyticsView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("プロフィールの反応をチェック")
                     .font(.headline)
-                Text("閲覧数やいいねの傾向から、改善のヒントを確認できます")
+                Text("見られ方をひと目で確認できます")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .padding(.top, 4)
+    }
+
+    /// 数字の意味を一度だけ短く教える(初見のユーザーには専門用語なしで分かるようにする)。
+    private var readingTipBanner: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "info.circle.fill")
+                .foregroundStyle(Color.brandTeal)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("見方のヒント")
+                    .font(.caption.bold())
+                Text("閲覧数が多いほど注目されている証拠。いいね獲得率が高いほど魅力が伝わっています")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button {
+                withAnimation { hasSeenAnalyticsTip = true }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption2.bold())
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .background(Color.brandTeal.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
     }
 
     /// 閲覧数のうち何%がいいねにつながったか。母数(閲覧数)が0の間は算出しない。
@@ -160,15 +190,21 @@ struct ProfileAnalyticsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(Array(manager.insights.enumerated()), id: \.offset) { _, text in
-                    HStack(alignment: .top, spacing: 8) {
-                        Circle()
-                            .fill(Color.brandOrange)
-                            .frame(width: 6, height: 6)
-                            .padding(.top, 6)
-                        Text(text)
-                            .font(.subheadline)
-                            .fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 8) {
+                    ForEach(Array(manager.insights.enumerated()), id: \.offset) { _, text in
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "lightbulb.fill")
+                                .font(.caption)
+                                .foregroundStyle(Color.brandOrange)
+                                .padding(.top, 2)
+                            Text(text)
+                                .font(.caption)
+                                .foregroundStyle(.primary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.brandOrange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
                     }
                 }
             }
@@ -211,8 +247,8 @@ struct ProfileAnalyticsView: View {
     private var sectionFunnelCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             cardHeader(icon: "arrow.down.right.and.arrow.up.left", color: Color.brandPurple, title: "どこまで読まれているか")
-            Text("到達した割合が低いほど、その手前で離脱している人が多いことを示します")
-                .font(.caption)
+            Text("数字が低いところで離脱が多いサインです")
+                .font(.caption2)
                 .foregroundStyle(.secondary)
 
             if manager.sectionStats.isEmpty {
