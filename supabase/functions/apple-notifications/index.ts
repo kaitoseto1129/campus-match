@@ -36,8 +36,8 @@ at+qIxUCMG1mihDK1A3UT82NQz60imOlM27jbdoXt2QfyFMm+YhidDkLF1vLUagM
 6BgD56KyKA==
 -----END CERTIFICATE-----`;
 
-const BUNDLE_ID = "com.campusmatch.app";
-const MEMBERSHIP_PRODUCT_ID = "com.campusmatch.app.membership.monthly";
+const BUNDLE_ID = "com.cammatch.app";
+const MEMBERSHIP_PRODUCT_ID = "com.cammatch.app.membership.monthly";
 
 /// 有料会員を維持する通知。更新成功・再加入・返金の取り消しなど。
 const GRANT_NOTIFICATIONS = new Set([

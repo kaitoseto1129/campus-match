@@ -36,13 +36,13 @@ at+qIxUCMG1mihDK1A3UT82NQz60imOlM27jbdoXt2QfyFMm+YhidDkLF1vLUagM
 -----END CERTIFICATE-----`;
 
 // StoreKitのTransaction.jwsRepresentationを渡す前提のbundle idと商品ID。
-const BUNDLE_ID = "com.campusmatch.app";
+const BUNDLE_ID = "com.cammatch.app";
 const LIKE_PRODUCT_AMOUNTS: Record<string, number> = {
-  "com.campusmatch.app.likes10": 10,
-  "com.campusmatch.app.likes50": 50,
-  "com.campusmatch.app.likes100": 100,
+  "com.cammatch.app.likes10": 10,
+  "com.cammatch.app.likes50": 50,
+  "com.cammatch.app.likes100": 100,
 };
-const MEMBERSHIP_PRODUCT_ID = "com.campusmatch.app.membership.monthly";
+const MEMBERSHIP_PRODUCT_ID = "com.cammatch.app.membership.monthly";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {

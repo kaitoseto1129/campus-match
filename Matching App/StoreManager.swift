@@ -11,10 +11,10 @@ import Combine
 /// App Store In-App Purchaseの商品ID。実際にApp Store Connect側で同じIDの商品を
 /// 作成しないと本番では購入できない(Xcodeでのローカルテストは Products.storekit で可能)。
 enum StoreProductID {
-    static let likes10 = "com.campusmatch.app.likes10"
-    static let likes50 = "com.campusmatch.app.likes50"
-    static let likes100 = "com.campusmatch.app.likes100"
-    static let membershipMonthly = "com.campusmatch.app.membership.monthly"
+    static let likes10 = "com.cammatch.app.likes10"
+    static let likes50 = "com.cammatch.app.likes50"
+    static let likes100 = "com.cammatch.app.likes100"
+    static let membershipMonthly = "com.cammatch.app.membership.monthly"
 
     static var likeProductIDs: [String] { [likes10, likes50, likes100] }
     static var allProductIDs: [String] { likeProductIDs + [membershipMonthly] }
