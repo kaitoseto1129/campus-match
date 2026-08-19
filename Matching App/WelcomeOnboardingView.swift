@@ -12,7 +12,7 @@ struct WelcomeOnboardingView: View {
     @State private var page = 0
     /// アメリカの大学生など、日本語以外での利用者がマイページに辿り着く前(登録前)から
     /// 言語を選べるようにするための切り替え。マイページの「言語」と同じ設定を共有する。
-    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.japanese.rawValue
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
 
     var body: some View {
         ZStack {

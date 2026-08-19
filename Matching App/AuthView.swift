@@ -24,7 +24,7 @@ struct AuthView: View {
     @State private var showingTerms = false
     @State private var showingPrivacy = false
     /// マイページに辿り着く前(未登録・未ログイン状態)でも言語を選べるようにするための設定。
-    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.japanese.rawValue
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
 
     /// 大学ドメイン一覧の読み込みに失敗した場合は、誤ってサインアップをブロックしないよう検証をスキップする。
     var isEmailDomainValid: Bool {

@@ -13,7 +13,7 @@ struct MyPageHomeView: View {
     @State private var navPath = NavigationPath()
     @State private var showingWithdrawConfirm = false
     @State private var showingLogoutConfirm = false
-    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.japanese.rawValue
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
     @State private var showingWithdrawFailedAlert = false
     @State private var isWithdrawing = false
     @State private var showingShareBonusToast = false

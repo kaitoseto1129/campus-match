@@ -7,10 +7,13 @@
 
 import SwiftUI
 
-/// 端末の言語設定に関わらず、アプリ内から表示言語を固定できるようにするための設定。
+/// アプリ内から表示言語を選べるようにするための設定。
 /// マイページ、およびウェルカム画面・ログイン画面からもいつでも切り替えられる。
-/// 端末の言語設定(シミュレーターが英語になっているなど)に引きずられて意図せず英語表記に
-/// ならないよう、初期状態は「日本語」固定にしている(「システムに従う」は選べば使える)。
+/// 初期状態は「システムに従う」。これはプロジェクトの開発言語(developmentRegion)を
+/// 日本語に設定してあるため、日本語の端末では確実に日本語が表示され、英語の端末では
+/// 英語(未翻訳の文言は日本語にフォールバック)になる、という国際化として自然な挙動になる。
+/// 以前は「システムに従う」がデフォルトだと英語の端末で意図せず英語表記になる不具合があったが、
+/// それはdevelopmentRegionの設定ミスが原因だったため、そちらを直した上でこの既定値に戻している。
 enum AppLanguage: String, CaseIterable, Identifiable {
     case system
     case japanese = "ja"
@@ -42,7 +45,7 @@ struct Matching_AppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     /// 初回起動時だけウェルカム画面を出すためのフラグ(端末に永続化される)。
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
-    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.japanese.rawValue
+    @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
 
     init() {
         // AsyncImageで読み込むプロフィール写真・アイコン等がディスクにキャッシュされるようにする(デフォルトは小さめ)。
