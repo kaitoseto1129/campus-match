@@ -20,6 +20,8 @@ struct MyPageHomeView: View {
     @State private var isBoosting = false
     @State private var showingBoostFailedAlert = false
     @State private var showingBoostConfirm = false
+    @State private var isCancelingBoost = false
+    @State private var showingCancelBoostConfirm = false
     @State private var showingPurchaseSheet = false
     @State private var showingHobbyCardPicker = false
     @State private var showingShareSheet = false
@@ -422,6 +424,21 @@ struct MyPageHomeView: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
+                    Button {
+                        showingCancelBoostConfirm = true
+                    } label: {
+                        if isCancelingBoost {
+                            ProgressView()
+                        } else {
+                            Text("終了する")
+                                .font(.caption.bold())
+                                .foregroundStyle(Color.brandOrange)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.brandOrange.opacity(0.15), in: Capsule())
+                        }
+                    }
+                    .disabled(isCancelingBoost)
                 }
                 .padding()
                 .background(Color.brandOrange.opacity(0.12))
@@ -431,6 +448,23 @@ struct MyPageHomeView: View {
                         .stroke(Color.brandOrange, lineWidth: 1.5)
                 }
                 .padding(.horizontal)
+                .confirmationDialog(
+                    "アピールを終了しますか?",
+                    isPresented: $showingCancelBoostConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("終了する", role: .destructive) {
+                        guard !isCancelingBoost else { return }
+                        isCancelingBoost = true
+                        Task {
+                            await profileManager.cancelBoost()
+                            isCancelingBoost = false
+                        }
+                    }
+                    Button("キャンセル", role: .cancel) {}
+                } message: {
+                    Text("消費したいいねは戻ってきません。それでも終了しますか?")
+                }
             } else {
                 Button {
                     showingBoostConfirm = true

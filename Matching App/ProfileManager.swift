@@ -185,6 +185,26 @@ class ProfileManager: ObservableObject {
             return false
         }
     }
+
+    /// アピールを時間経過を待たずに終了する。消費したいいねは返却されない
+    /// (時間より前に自分の意志で切り上げるだけの操作なので)。
+    @discardableResult
+    func cancelBoost() async -> Bool {
+        guard let uid = supabase().auth.currentUser?.id else { return false }
+        do {
+            try await supabase()
+                .from("profiles")
+                .update(["boost_expires_at": ISO8601DateFormatter.matchingApp.string(from: Date())])
+                .eq("id", value: uid)
+                .execute()
+            await load()
+            return true
+        } catch {
+            errorMessage = "アピールの終了に失敗しました"
+            print("cancel boost error: \(error)")
+            return false
+        }
+    }
     func loadPhotos() async {
         do {
             guard let uid = supabase().auth.currentUser?.id else {return}
