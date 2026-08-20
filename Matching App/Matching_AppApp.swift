@@ -41,6 +41,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
 @main
 struct Matching_AppApp: App {
+    // APNsのデバイストークン受信コールバックはSwiftUIのApp protocol単体では受け取れないため、
+    // UIApplicationDelegateAdaptor経由でAppDelegateを差し込んでいる。
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var auth = AuthManager()
     @Environment(\.scenePhase) private var scenePhase
     /// 初回起動時だけウェルカム画面を出すためのフラグ(端末に永続化される)。
@@ -82,6 +85,13 @@ struct Matching_AppApp: App {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && auth.isAuthenticated {
                 Task { await auth.touchLastActive() }
+            }
+        }
+        .onChange(of: auth.isAuthenticated) { _, isAuthenticated in
+            // 通知許可のタイミングでまだログインしていなかった場合に備え、
+            // ログイン(またはセッション復元)が確定した時点で改めてトークンを紐付け直す。
+            if isAuthenticated {
+                Task { await PushTokenManager.registerPendingTokenIfNeeded() }
             }
         }
     }

@@ -266,7 +266,10 @@ struct ChatView: View {
         .sheet(isPresented: $showingMessageComposer) {
             FirstMessageComposerSheet(otherName: otherProfile.name, sharedHobbyCards: sharedHobbyCards) { text in
                 showingMessageComposer = false
-                Task { await messageManager.send(text: text) }
+                Task {
+                    await messageManager.send(text: text)
+                    await notifyOtherOfNewMessage()
+                }
             } onCustomize: { text in
                 showingMessageComposer = false
                 draftText = text
@@ -381,6 +384,7 @@ struct ChatView: View {
                         return
                     }
                     await messageManager.sendImage(image)
+                    await notifyOtherOfNewMessage()
                 } catch {
                     showingImagePickFailedAlert = true
                     print("chat image load error: \(error)")
@@ -456,6 +460,14 @@ struct ChatView: View {
         } catch {
             print("load my profile for nudge error: \(error)")
         }
+    }
+
+    /// メッセージを送った直後、相手にプッシュ通知で気付いてもらう。
+    /// 送信自体が失敗していても通知だけ送ってしまう可能性はあるが、失敗はまれで実害も小さいため、
+    /// ここでは送信結果を厳密に判定せず割り切っている。
+    private func notifyOtherOfNewMessage() async {
+        let title = myProfile.map { "\($0.name)さんからメッセージが届きました" } ?? "メッセージが届きました"
+        await PushNotifier.notify(userId: otherProfile.id, title: title, body: "トークを確認してみましょう")
     }
 
     /// 既読表示はVIPオプション限定の機能。通常会員のトークでは既読は分からない。
@@ -576,7 +588,10 @@ struct ChatView: View {
                 let text = draftText
                 draftText = ""
                 draftFieldResetToken = UUID()
-                Task { await messageManager.send(text: text) }
+                Task {
+                    await messageManager.send(text: text)
+                    await notifyOtherOfNewMessage()
+                }
             } label: {
                 Image(systemName: "paperplane.fill")
                     .font(.title2)

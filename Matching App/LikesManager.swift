@@ -131,6 +131,7 @@ final class LikesManager: ObservableObject {
                 .execute()
                 .value
             received.removeAll { $0.like.id == like.id }
+            await PushNotifier.notify(userId: like.fromUserId, title: "マッチしました!", body: "新しいお相手とマッチしました。トークを始めてみましょう")
             return match
         } catch {
             errorMessage = "マッチ処理に失敗しました"

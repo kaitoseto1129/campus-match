@@ -115,6 +115,7 @@ struct QuickLikeButton: View {
             try await supabase()
                 .rpc("send_like_atomic", params: SendLikeParams(pToUserId: profile.id, pIsSpecial: isSpecial))
                 .execute()
+            await PushNotifier.notify(userId: profile.id, title: "いいねが届きました!", body: "誰かがあなたのプロフィールにいいねしました")
             return true
         } catch {
             print("quick like send error: \(error)")

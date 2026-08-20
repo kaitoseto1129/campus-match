@@ -5,6 +5,7 @@
 
 import SwiftUI
 import UserNotifications
+import UIKit
 
 /// プロフィール完成後、初回だけ表示するプッシュ通知の許可案内画面。
 /// 「有効にする」を押すとOS標準の許可ダイアログが出る。
@@ -39,8 +40,13 @@ struct NotificationPermissionView: View {
                 Button {
                     Task {
                         isRequesting = true
-                        _ = try? await UNUserNotificationCenter.current()
-                            .requestAuthorization(options: [.alert, .badge, .sound])
+                        let granted = (try? await UNUserNotificationCenter.current()
+                            .requestAuthorization(options: [.alert, .badge, .sound])) ?? false
+                        if granted {
+                            // 許可されたら、APNsのデバイストークンをもらうために登録する。
+                            // トークンはAppDelegate.didRegisterForRemoteNotificationsWithDeviceTokenで受け取る。
+                            await MainActor.run { UIApplication.shared.registerForRemoteNotifications() }
+                        }
                         isRequesting = false
                         onFinish()
                     }
