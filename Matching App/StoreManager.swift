@@ -178,8 +178,15 @@ final class StoreManager: ObservableObject {
             @unknown default:
                 return false
             }
+        } catch StoreError.failedVerification, StoreError.serverGrantFailed {
+            // ローカルのStoreKit Configurationでのテスト購入は、Appleの本物の署名ではないため
+            // クライアント側またはサーバー側の検証で弾かれる(正しい挙動)。TestFlight実機での
+            // Sandbox購入であれば本物の署名になるため、ここには来ない。
+            errorMessage = "この購入を確認できませんでした。時間をおいて再度お試しください。"
+            print("purchase error: verification/server grant failed")
+            return false
         } catch {
-            errorMessage = "購入に失敗しました"
+            errorMessage = "通信環境をご確認のうえ、もう一度お試しください。"
             print("purchase error: \(error)")
             return false
         }
