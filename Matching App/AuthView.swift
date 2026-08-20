@@ -126,7 +126,7 @@ struct AuthView: View {
                 .frame(width: 84, height: 84)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.brandPurple.opacity(0.35), radius: 12, y: 6)
-            Text("キャンパスマッチ")
+            Text("キャンマッチ")
                 .font(.title2.bold())
             Text("大学メールアドレスで登録")
                 .font(.subheadline)

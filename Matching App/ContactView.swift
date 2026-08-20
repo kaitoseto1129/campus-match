@@ -142,7 +142,7 @@ struct ContactView: View {
     }
 
     private func openMailApp() {
-        let subject = "キャンパスマッチ お問い合わせ"
+        let subject = "キャンマッチ お問い合わせ"
         var components = URLComponents(string: "mailto:\(address)")
         components?.queryItems = [URLQueryItem(name: "subject", value: subject)]
         guard let url = components?.url, UIApplication.shared.canOpenURL(url) else {

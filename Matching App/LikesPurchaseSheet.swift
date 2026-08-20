@@ -187,12 +187,14 @@ struct LikesPurchaseSheet: View {
                     VStack(alignment: .trailing, spacing: 6) {
                         Text(product.displayPrice)
                             .font(.title3.bold())
-                        Text("1いいね \(NSDecimalNumber(decimal: unitPrice).intValue.formatted())円")
+                        // ストアフロントによって通貨が変わる(円とは限らない)ため、
+                        // 「円」を決め打ちせず商品自体の通貨で整形する。
+                        Text("1いいね \(unitPrice.formatted(product.priceFormatStyle))")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         if discountPercent > 0 {
                             Text(savedYen > 0
-                                 ? "\(NSDecimalNumber(decimal: savedYen).intValue.formatted())円お得! (\(discountPercent)%OFF)"
+                                 ? "\(savedYen.formatted(product.priceFormatStyle))お得! (\(discountPercent)%OFF)"
                                  : "\(discountPercent)%OFF")
                                 .font(.caption2.bold())
                                 .foregroundStyle(.white)

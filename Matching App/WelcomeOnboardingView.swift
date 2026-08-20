@@ -29,8 +29,8 @@ struct WelcomeOnboardingView: View {
                 TabView(selection: $page) {
                     welcomePage(
                         showsAppIcon: true,
-                        title: "キャンパスマッチへようこそ",
-                        message: "キャンパスマッチは大学生専用の\nマッチングアプリです"
+                        title: "キャンマッチへようこそ",
+                        message: "キャンマッチは大学生専用の\nマッチングアプリです"
                     )
                     .tag(0)
 

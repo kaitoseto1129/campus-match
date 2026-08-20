@@ -609,7 +609,7 @@ struct MyPageHomeView: View {
         .sentConfirmationCover(isPresented: $showingShareBonusToast, message: "50いいねを獲得しました!", icon: "gift.fill")
     }
 
-    private static let shareMessage = "キャンパスマッチ、使ってみて!学生限定のマッチングアプリです。"
+    private static let shareMessage = "キャンマッチ、使ってみて!学生限定のマッチングアプリです。"
 
     /// お問い合わせ・利用規約・プライバシーポリシーへの導線。App Storeの審査要件として、
     /// ユーザーが運営への連絡手段や規約を確認できるようにしている。
