@@ -78,7 +78,6 @@ struct MyPageHomeView: View {
                         }
                         profileCompletenessCard
                         boostButton
-                        purchaseLikesButton
                         shareAppButton
                         // 趣味カードは「後からゆっくり整える」項目なので、下のほうに置く。
                         hobbyCardsCard
@@ -520,44 +519,50 @@ struct MyPageHomeView: View {
     }
 
     private var remainingLikesCard: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: "hand.thumbsup.fill")
-                    .font(.caption)
-                Text("残いいね!")
-                    .font(.caption.bold())
-            }
-            .foregroundStyle(.white.opacity(0.9))
+        VStack(spacing: 14) {
+            VStack(spacing: 6) {
+                HStack(spacing: 6) {
+                    Image(systemName: "hand.thumbsup.fill")
+                        .font(.caption)
+                    Text("残いいね!")
+                        .font(.caption.bold())
+                }
+                .foregroundStyle(.white.opacity(0.9))
 
-            Text("\(profileManager.profile?.remainingLikes ?? 0)")
-                .font(.system(size: 52, weight: .bold, design: .rounded))
+                Text("\(profileManager.profile?.remainingLikes ?? 0)")
+                    .font(.system(size: 52, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .contentTransition(.numericText())
+                    .animation(.snappy, value: profileManager.profile?.remainingLikes)
+            }
+
+            // 残いいねを見てすぐ購入導線に進めるよう、同じカード内にボタンを置いている
+            // (以前は数枚下にしかなく、購入ボタンが見当たらないという声があった)。
+            Button {
+                showingPurchaseSheet = true
+            } label: {
+                HStack {
+                    Image(systemName: "cart.fill")
+                    Text("いいねを購入する")
+                        .font(.subheadline.bold())
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(.white.opacity(0.2))
                 .foregroundStyle(.white)
-                .contentTransition(.numericText())
-                .animation(.snappy, value: profileManager.profile?.remainingLikes)
+                .clipShape(RoundedRectangle(cornerRadius: 22))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22)
+                        .stroke(.white.opacity(0.5), lineWidth: 1)
+                }
+            }
+            .padding(.horizontal, 20)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
         .background(Color.brandGradient)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: Color.brandPurple.opacity(0.3), radius: 10, y: 5)
-        .padding(.horizontal)
-    }
-
-    private var purchaseLikesButton: some View {
-        Button {
-            showingPurchaseSheet = true
-        } label: {
-            HStack {
-                Image(systemName: "cart.fill")
-                Text("いいねを購入する")
-                    .font(.subheadline.bold())
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 46)
-            .background(Color.brandPurple)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 23))
-        }
         .padding(.horizontal)
         .sheet(isPresented: $showingPurchaseSheet) {
             LikesPurchaseSheet(profileManager: profileManager)
