@@ -114,7 +114,10 @@ struct DiscoverView: View {
             .task {
                 await discoverManager.load()
                 await missionsManager.load()
-                if !hasSeenDiscoverTutorial {
+                // 「サインアップ直後」の対象者だけに絞る(既存ユーザーがログインし直した時や、
+                // 再インストール後にセッションが復元された時には出さないようにするため)。
+                let isEligible = UserDefaults.standard.bool(forKey: AuthManager.eligibleForOnboardingTutorialKey)
+                if isEligible && !hasSeenDiscoverTutorial {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     withAnimation { tutorialStep = .missions }
                 }

@@ -11,6 +11,13 @@ import Combine
 
 @MainActor
 final class AuthManager : ObservableObject {
+    /// このUserDefaultsキーがtrueの間だけ、探す画面・マイページの初回チュートリアルを
+    /// 出してよい対象とみなす。以前は「hasSeenXTutorial」フラグだけで制御していたが、
+    /// これは端末側のフラグのため、アプリを削除して再インストールすると(Keychainに残っている
+    /// セッションでログイン状態は復元されるのに)フラグだけリセットされてしまい、既存ユーザーの
+    /// はずなのにチュートリアルが再度出てしまう不具合があった。signUp()完了時にだけこのキーを
+    /// 立てることで、「本当に今サインアップした人」だけに対象を絞る。
+    static let eligibleForOnboardingTutorialKey = "eligibleForOnboardingTutorial"
     @Published var isAuthenticated: Bool = false
     @Published var currentUserId: UUID?
     @Published var errorMessage: String?
@@ -71,6 +78,7 @@ final class AuthManager : ObservableObject {
                 pendingVerificationEmail = email
             } else {
                 await checkSession()
+                UserDefaults.standard.set(true, forKey: Self.eligibleForOnboardingTutorialKey)
             }
         } catch let error {
             errorMessage = Self.describe(error)
@@ -96,6 +104,7 @@ final class AuthManager : ObservableObject {
             await checkSession()
             if isAuthenticated {
                 pendingVerificationEmail = nil
+                UserDefaults.standard.set(true, forKey: Self.eligibleForOnboardingTutorialKey)
                 return true
             }
             errorMessage = "確認に失敗しました。もう一度お試しください"

@@ -145,7 +145,10 @@ struct MyPageHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await profileManager.load()
-                if !hasSeenMyPageTutorial {
+                // 「サインアップ直後」の対象者だけに絞る(既存ユーザーがログインし直した時や、
+                // 再インストール後にセッションが復元された時には出さないようにするため)。
+                let isEligible = UserDefaults.standard.bool(forKey: AuthManager.eligibleForOnboardingTutorialKey)
+                if isEligible && !hasSeenMyPageTutorial {
                     try? await Task.sleep(nanoseconds: 400_000_000)
                     withAnimation { myPageTutorialStep = myPageTutorialSteps.first }
                 }
