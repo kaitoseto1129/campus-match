@@ -139,7 +139,18 @@ struct MyPageHomeView: View {
                     )
                     .zIndex(1)
                 }
+
+                // confirmationDialog自体の暗転だけでは背景が透けて読みづらいという声があったため、
+                // ダイアログ表示中は下地をしっかり暗くする(探す画面のアピール確認と同じ対応)。
+                if showingBoostConfirm || showingCancelBoostConfirm {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
             }
+            .animation(.easeInOut(duration: 0.2), value: showingBoostConfirm)
+            .animation(.easeInOut(duration: 0.2), value: showingCancelBoostConfirm)
             .onPreferenceChange(TutorialAnchorKey.self) { myPageTutorialAnchors = $0 }
             .navigationTitle("マイページ")
             .navigationBarTitleDisplayMode(.inline)

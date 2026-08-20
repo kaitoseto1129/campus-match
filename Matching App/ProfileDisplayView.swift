@@ -282,9 +282,11 @@ struct ProfileDisplayView<ActionContent: View>: View {
             }
 
             if let zoomedPhotoURL {
-                // 背景はそのまま(暗転させない)、写真だけがその場でぶわんと拡大される。
-                Color.black.opacity(0.001)
+                // 以前は背景を暗転させていなかったため、下のプロフィール内容が透けて見えて
+                // 拡大写真自体が見づらいという声があった。写真がくっきり見えるよう暗転させる。
+                Color.black.opacity(0.88)
                     .ignoresSafeArea()
+                    .transition(.opacity)
                     .onTapGesture {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { self.zoomedPhotoURL = nil }
                     }

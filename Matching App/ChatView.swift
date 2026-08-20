@@ -31,8 +31,19 @@ struct ChatView: View {
     @State private var canMessageToday = true
     @State private var showingMembership = false
     @State private var showingImagePickFailedAlert = false
+    /// 最初のメッセージ促進バナー・自動生成に使う自分のプロフィール(趣味カードの共通点抽出のため)。
+    @State private var myProfile: Profile? = nil
+    @State private var myPhotoURL: URL? = nil
+    @State private var showingMessageComposer = false
 
     private var myId: UUID? { supabase().auth.currentUser?.id }
+
+    /// お互いが選んでいる共通の趣味カード。話題のきっかけとして提示する。
+    private var sharedHobbyCards: [HobbyCard] {
+        guard let myProfile else { return [] }
+        let shared = Set(myProfile.hobbyCards).intersection(otherProfile.hobbyCards)
+        return HobbyCard.cards(for: Array(shared))
+    }
 
     init(matchId: UUID, otherProfile: Profile, otherPhotoURL: URL? = nil) {
         self.otherProfile = otherProfile
@@ -59,6 +70,9 @@ struct ChatView: View {
                         }
                         .disabled(messageManager.isLoadingOlder)
                         .padding(.vertical, 8)
+                    }
+                    if messageManager.messages.isEmpty {
+                        firstMessageNudge
                     }
                     ForEach(messageManager.messages) { message in
                         MessageBubbleView(
@@ -192,6 +206,74 @@ struct ChatView: View {
             }
     }
 
+    /// マッチ直後、まだ誰もメッセージを送っていない時に表示する促進バナー。
+    /// 以前はメッセージが0件だと画面が真っ白で何をすればいいか分からなかったため、
+    /// お互いの写真・共通の趣味・最初のメッセージ自動生成への導線をまとめて出す。
+    /// 最初のメッセージが送られると(messageManager.messages.isEmpty が false になると)自動的に消える。
+    private var firstMessageNudge: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: -14) {
+                IconImage(url: myPhotoURL, size: 56)
+                    .overlay(Circle().stroke(.white, lineWidth: 3))
+                IconImage(url: otherPhotoURL, size: 56)
+                    .overlay(Circle().stroke(.white, lineWidth: 3))
+            }
+
+            Text("マッチしました!最初のメッセージを送ってみましょう")
+                .font(.subheadline.bold())
+                .multilineTextAlignment(.center)
+
+            if !sharedHobbyCards.isEmpty {
+                VStack(spacing: 8) {
+                    Text("話題になりそうな共通点")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                    FlowLayoutView(options: sharedHobbyCards.map { "\($0.emoji) \($0.title)" }) { label in
+                        Text(label)
+                            .font(.caption.bold())
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.brandPurple.opacity(0.1), in: Capsule())
+                            .foregroundStyle(Color.brandPurple)
+                    }
+                }
+            }
+
+            Button {
+                showingMessageComposer = true
+            } label: {
+                HStack {
+                    Image(systemName: "sparkles")
+                    Text("最初のメッセージを自動生成")
+                        .bold()
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(Color.brandGradient)
+                .foregroundStyle(.white)
+                .clipShape(Capsule())
+            }
+
+            Text("※ 安全のため、1通目でのご連絡先の交換はお控えください。直接会ってから交換することをおすすめします")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
+        .padding(.bottom, 8)
+        .sheet(isPresented: $showingMessageComposer) {
+            FirstMessageComposerSheet(otherName: otherProfile.name, sharedHobbyCards: sharedHobbyCards) { text in
+                showingMessageComposer = false
+                Task { await messageManager.send(text: text) }
+            } onCustomize: { text in
+                showingMessageComposer = false
+                draftText = text
+            }
+        }
+    }
+
     /// 通話リクエストを、システムアラートではなくメッセージ風のバブルとしてトーク欄に表示する。
     /// 相手からのリクエストはこのバブルをタップして応答する。
     @ViewBuilder
@@ -275,6 +357,7 @@ struct ChatView: View {
                 isBlocked = await UserModeration.isBlocked(between: myId, and: otherProfile.id)
                 myMembership = await MembershipLookup.myTier()
                 await refreshDailyMessageLimit(myId: myId)
+                await loadMyProfileForNudge(myId: myId)
             }
         }
         .onAppear {
@@ -349,6 +432,29 @@ struct ChatView: View {
                 .execute()
         } catch {
             print("hide chat error: \(error)")
+        }
+    }
+
+    /// 最初のメッセージ促進バナー用に、共通の趣味カード抽出に必要な自分のプロフィールと写真を読み込む。
+    private func loadMyProfileForNudge(myId: UUID) async {
+        do {
+            myProfile = try await supabase()
+                .from("profiles")
+                .select("*")
+                .eq("id", value: myId)
+                .single()
+                .execute()
+                .value
+            let photos: [ProfilePhoto] = try await supabase()
+                .from("profile_photos")
+                .select("*")
+                .eq("user_id", value: myId)
+                .eq("order_number", value: 0)
+                .execute()
+                .value
+            myPhotoURL = photos.first?.url
+        } catch {
+            print("load my profile for nudge error: \(error)")
         }
     }
 
@@ -625,6 +731,141 @@ private struct MessageBubbleView: View {
             Button("キャンセル", role: .cancel) {}
         } message: {
             Text("相手の画面からもメッセージが消えます")
+        }
+    }
+}
+
+/// 最初のメッセージの候補をいくつか提示し、選んで送るか、下書き欄に入れてカスタマイズできる画面。
+/// 実際のAIではなく、お相手の名前・共通の趣味カードから文面をテンプレートで組み立てている
+/// (AIBioComposerViewの自己紹介自動生成と同じ考え方)。
+private struct FirstMessageComposerSheet: View {
+    let otherName: String
+    let sharedHobbyCards: [HobbyCard]
+    var onSend: (String) -> Void
+    var onCustomize: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var isGenerating = true
+    @State private var options: [MessageOption] = []
+    @State private var selectedId: UUID?
+
+    private struct MessageOption: Identifiable {
+        let id = UUID()
+        let category: String
+        let text: String
+    }
+
+    private static func generate(otherName: String, sharedHobbyCards: [HobbyCard]) -> [MessageOption] {
+        var options: [MessageOption] = []
+        if let hobby = sharedHobbyCards.first {
+            let suffix = sharedHobbyCards.count > 1 ? "など" : ""
+            options.append(MessageOption(
+                category: "共通の趣味(おすすめ)",
+                text: "\(hobby.emoji)「\(hobby.title)」\(suffix)、私も好きです!共通点があって嬉しいです😊 よろしくお願いします!"
+            ))
+        }
+        options.append(MessageOption(category: "会話のお誘い", text: "すごく気になったのでお話しできたら嬉しいです!よろしくです!"))
+        options.append(MessageOption(category: "マッチングの喜び", text: "マッチ嬉しいです!ぜひ仲良くしてください!よろしくお願いします😄"))
+        options.append(MessageOption(category: "挨拶(シンプル)", text: "はじめまして\(otherName)さん!よろしくお願いします!"))
+        return options
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isGenerating {
+                    VStack(spacing: 16) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 44))
+                            .foregroundStyle(Color.brandPurple)
+                        Text("お相手に合わせたメッセージを作成中...")
+                            .font(.subheadline.bold())
+                        ProgressView()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 14) {
+                            if !sharedHobbyCards.isEmpty {
+                                Text("お二人の共通点から、話題になりそうなメッセージを選びました")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.secondary)
+                            }
+                            ForEach(options) { option in
+                                Button {
+                                    selectedId = option.id
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text(option.category)
+                                            .font(.caption2.bold())
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 4)
+                                            .background(Color.brandPurple.opacity(0.12), in: Capsule())
+                                            .foregroundStyle(Color.brandPurple)
+                                        Text(option.text)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.primary)
+                                            .multilineTextAlignment(.leading)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding()
+                                    .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(selectedId == option.id ? Color.brandPurple : Color(.systemGray5), lineWidth: selectedId == option.id ? 2 : 1)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding()
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        VStack(spacing: 10) {
+                            Button {
+                                if let text = options.first(where: { $0.id == selectedId })?.text ?? options.first?.text {
+                                    onSend(text)
+                                }
+                            } label: {
+                                Text("このまま送信する")
+                                    .bold()
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(Color.brandGradient)
+                                    .foregroundStyle(.white)
+                                    .clipShape(Capsule())
+                            }
+                            Button("カスタマイズする") {
+                                if let text = options.first(where: { $0.id == selectedId })?.text ?? options.first?.text {
+                                    onCustomize(text)
+                                }
+                            }
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                        }
+                        .padding()
+                        .background(.bar)
+                    }
+                }
+            }
+            .navigationTitle("メッセージを選択してください")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                }
+            }
+            .task {
+                // 実際に考えているような体感にするため、ごく短い生成中表示を挟む。
+                try? await Task.sleep(nanoseconds: 900_000_000)
+                options = Self.generate(otherName: otherName, sharedHobbyCards: sharedHobbyCards)
+                selectedId = options.first?.id
+                withAnimation { isGenerating = false }
+            }
         }
     }
 }

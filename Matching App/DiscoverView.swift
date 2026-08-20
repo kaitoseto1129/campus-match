@@ -106,7 +106,17 @@ struct DiscoverView: View {
                     }
                     .zIndex(1)
                 }
+
+                // confirmationDialog自体の暗転だけでは、カラフルな候補カードが透けて
+                // 読みづらいという声があったため、ダイアログ表示中は下地をしっかり暗くする。
+                if showingBoostConfirm {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
             }
+            .animation(.easeInOut(duration: 0.2), value: showingBoostConfirm)
             .onPreferenceChange(TutorialAnchorKey.self) { tutorialAnchors = $0 }
             .navigationTitle("探す")
             // ミッションへの導線は画面上部のバナー(missionsBanner)にまとめている。
@@ -382,6 +392,7 @@ private struct DiscoverLikeButton: View {
     var onHidden: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var isSending = false
+    @State private var isHiding = false
     @State private var showingPopularSheet = false
     @State private var showingSentConfirmation = false
     @State private var confirmationMessage = "いいねを送りました"
@@ -393,8 +404,13 @@ private struct DiscoverLikeButton: View {
     var body: some View {
         HStack(spacing: 12) {
             Button {
+                // いいねボタンと違ってガードが無く、非表示の通信中に連打すると
+                // advanceOrDismiss()が2回呼ばれてお相手が1人分余計に飛ばされる不具合があったため追加。
+                guard !isHiding else { return }
+                isHiding = true
                 Task {
                     await discoverManager.hideCandidate(candidate.id)
+                    isHiding = false
                     advanceOrDismiss()
                 }
             } label: {
@@ -409,6 +425,7 @@ private struct DiscoverLikeButton: View {
                 .foregroundStyle(.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .disabled(isHiding)
 
             Button {
                 guard !isSending, !alreadyLiked else { return }
