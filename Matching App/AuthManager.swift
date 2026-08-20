@@ -45,6 +45,11 @@ final class AuthManager : ObservableObject {
         do {
             try await supabase().auth.signIn(email: email, password: password)
             await checkSession()
+            // ログインフォームからのサインインは「既存アカウントである」ことが確定しているため、
+            // 初回チュートリアル(探す画面・マイページ)は出さない。セッション自動復元(checkSession単体)は
+            // ここを通らないため、進行中のチュートリアルを次回起動時に再開したい挙動には影響しない。
+            UserDefaults.standard.set(true, forKey: "hasSeenDiscoverTutorial")
+            UserDefaults.standard.set(true, forKey: "hasSeenMyPageTutorial")
         } catch let error {
             errorMessage = "メールアドレスまたはパスワードが間違っています"
             print("sign in error: \(error)")

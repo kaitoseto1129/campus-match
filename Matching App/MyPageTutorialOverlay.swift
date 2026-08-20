@@ -60,9 +60,13 @@ struct MyPageTutorialOverlay: View {
     private func spotlightContent(proxy: GeometryProxy) -> some View {
         let rect = content.anchorId.flatMap { anchors[$0] }.map { proxy[$0] } ?? .zero
         ZStack {
+            // 以前は背景タップでも次へ進めるようonTapGestureを付けていたが、
+            // 画面全体を覆うShapeのタップ判定が右上の「スキップ」ボタンのタップと競合し、
+            // ボタンが反応しないことがあるバグの原因になっていたため削除した
+            // (暗くなっている部分自体は、探す画面のチュートリアルと同じく、そのままタップを
+            // 吸収して奥の実UIへ誤って伝わらないようにする役割だけを持たせる)。
             SpotlightScrimShape(holeRect: rect)
                 .fill(Color.black.opacity(0.68), style: FillStyle(eoFill: true))
-                .onTapGesture { onNext() }
 
             if rect != .zero {
                 RoundedRectangle(cornerRadius: 22)
@@ -131,11 +135,14 @@ struct MyPageTutorialOverlay: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
                     .background(.black.opacity(0.35), in: Capsule())
+                    .contentShape(Rectangle())
                     .padding(.top, 60)
                     .padding(.trailing, 20)
             }
             Spacer()
         }
+        .allowsHitTesting(true)
+        .zIndex(10)
     }
 
     private var closingCard: some View {

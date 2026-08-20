@@ -174,11 +174,14 @@ struct DiscoverTutorialOverlay: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .background(.black.opacity(0.35), in: Capsule())
+                .contentShape(Rectangle())
                 .padding(.top, 60)
                 .padding(.trailing, 20)
             }
             Spacer()
         }
+        .allowsHitTesting(true)
+        .zIndex(10)
     }
 
     // MARK: - ダミー候補カードでのいいね体験シミュレーション
