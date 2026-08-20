@@ -578,7 +578,7 @@ struct MyPageHomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: Color.brandPurple.opacity(0.3), radius: 10, y: 5)
         .padding(.horizontal)
-        .sheet(isPresented: $showingPurchaseSheet) {
+        .fullScreenCover(isPresented: $showingPurchaseSheet) {
             LikesPurchaseSheet(profileManager: profileManager)
         }
     }
