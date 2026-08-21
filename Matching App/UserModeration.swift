@@ -82,8 +82,10 @@ enum UserModeration {
     /// 相手を通報する。
     /// 通報した相手がその後も「探す」に出てくると、嫌な相手を見続けることになってしまうため、
     /// 通報と同時に非表示にして自分の画面から消す。
-    static func report(userId: UUID, reason: String) async {
-        guard let myId = supabase().auth.currentUser?.id else { return }
+    @discardableResult
+    static func report(userId: UUID, reason: String) async -> Bool {
+        guard let myId = supabase().auth.currentUser?.id else { return false }
+        var succeeded = true
         do {
             try await supabase()
                 .from("reports")
@@ -91,9 +93,11 @@ enum UserModeration {
                 .execute()
         } catch {
             print("report error: \(error)")
+            succeeded = false
         }
         await hide(userId: userId)
         await notifyOperator(reportedId: userId, reason: reason)
+        return succeeded
     }
 
     /// 通報を運営者のメールへ通知する。
@@ -135,8 +139,9 @@ enum UserModeration {
     }
 
     /// 非表示/ブロックを解除する。
-    static func removeAction(userId: UUID, action: String) async {
-        guard let myId = supabase().auth.currentUser?.id else { return }
+    @discardableResult
+    static func removeAction(userId: UUID, action: String) async -> Bool {
+        guard let myId = supabase().auth.currentUser?.id else { return false }
         do {
             try await supabase()
                 .from("user_actions")
@@ -145,8 +150,10 @@ enum UserModeration {
                 .eq("target_id", value: userId)
                 .eq("action", value: action)
                 .execute()
+            return true
         } catch {
             print("user moderation remove action error: \(error)")
+            return false
         }
     }
 

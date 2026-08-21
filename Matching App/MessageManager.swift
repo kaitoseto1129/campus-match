@@ -11,6 +11,9 @@ import UIKit
 @MainActor
 final class MessageManager: ObservableObject {
     @Published var messages: [Message] = []
+    /// 初回の読み込み中かどうか。これが無いと、履歴が実際にはあるトークでも
+    /// 読み込みが終わるまで「まだメッセージがありません」の空状態が一瞬表示されてしまう。
+    @Published var isLoading = true
     @Published var isSending = false
     @Published var errorMessage: String?
     @Published var isOtherUserTyping = false
@@ -54,6 +57,7 @@ final class MessageManager: ObservableObject {
             errorMessage = "メッセージを読み込めませんでした"
             print("message load error: \(error)")
         }
+        isLoading = false
         await markRead()
     }
 
@@ -231,6 +235,7 @@ final class MessageManager: ObservableObject {
             outgoingCallRequestStatus = nil
             outgoingCallRequestId = nil
         } catch {
+            errorMessage = "通話リクエストの取り消しに失敗しました"
             print("cancel call request error: \(error)")
         }
     }
@@ -249,6 +254,7 @@ final class MessageManager: ObservableObject {
                 .execute()
             incomingCallRequest = nil
         } catch {
+            errorMessage = accept ? "通話リクエストの許可に失敗しました" : "通話リクエストの応答に失敗しました"
             print("respond call request error: \(error)")
         }
     }

@@ -11,6 +11,7 @@ struct ChatListView: View {
     @EnvironmentObject private var tabRouter: TabRouter
     @State private var pendingHideMatch: MatchedChat?
     @State private var pendingBlockMatch: MatchedChat?
+    @State private var toastMessage: String?
     @State private var navPath = NavigationPath()
 
     var body: some View {
@@ -144,8 +145,12 @@ struct ChatListView: View {
                 Button("ブロックする", role: .destructive) {
                     if let match = pendingBlockMatch {
                         Task {
-                            await UserModeration.block(userId: match.profile.id)
-                            await chatManager.load()
+                            let succeeded = await UserModeration.block(userId: match.profile.id)
+                            if succeeded {
+                                await chatManager.load()
+                            } else {
+                                toastMessage = "ブロックできませんでした"
+                            }
                         }
                     }
                     pendingBlockMatch = nil
@@ -155,6 +160,7 @@ struct ChatListView: View {
                 Text("ブロックするとお互いにメッセージが送れなくなります")
             }
         }
+        .actionToast($toastMessage)
     }
 
     private func hideChat(matchId: UUID) async {

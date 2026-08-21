@@ -276,13 +276,15 @@ struct MyPageHomeView: View {
                         .font(.title3)
                         .foregroundStyle(.white)
                 }
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("有料会員でもっと出会いを広げよう")
                         .font(.subheadline.bold())
                         .foregroundStyle(.white)
-                    Text("メッセージし放題・いいね数表示・プライベートモードなど")
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.85))
+                    VStack(alignment: .leading, spacing: 3) {
+                        membershipBenefitRow(icon: "bubble.left.and.bubble.right.fill", text: "メッセージし放題")
+                        membershipBenefitRow(icon: "heart.fill", text: "いいね数表示")
+                        membershipBenefitRow(icon: "eye.slash.fill", text: "プライベートモード")
+                    }
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -295,6 +297,17 @@ struct MyPageHomeView: View {
             .padding(.horizontal)
         }
         .buttonStyle(.plain)
+    }
+
+    private func membershipBenefitRow(icon: String, text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.caption2)
+                .frame(width: 14)
+            Text(LocalizedStringKey(text))
+                .font(.caption2.bold())
+        }
+        .foregroundStyle(.white.opacity(0.9))
     }
 
     /// 登録済みの趣味カードの一覧と、追加・編集の導線。

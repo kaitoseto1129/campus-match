@@ -26,6 +26,7 @@ struct ChatView: View {
     @State private var showingCancelCallRequestConfirm = false
     @State private var isBlocked = false
     @State private var showingBlockFailedAlert = false
+    @State private var toastMessage: String?
     /// 自分の会員ステータス。無料会員は1日にメッセージできる人数に上限があり、既読はVIPのみ見える。
     @State private var myMembership: MembershipTier = .free
     /// 無料会員の場合、今日この相手に新しくメッセージを送れるか(既に今日やり取りした相手か、まだ上限に達していなければtrue)。
@@ -72,7 +73,7 @@ struct ChatView: View {
                         .disabled(messageManager.isLoadingOlder)
                         .padding(.vertical, 8)
                     }
-                    if messageManager.messages.isEmpty {
+                    if messageManager.messages.isEmpty && !messageManager.isLoading {
                         firstMessageNudge
                     }
                     ForEach(messageManager.messages) { message in
@@ -186,6 +187,7 @@ struct ChatView: View {
             } label: {
                 Image(systemName: "ellipsis")
             }
+            .accessibilityLabel("その他の操作")
         }
     }
 
@@ -335,9 +337,13 @@ struct ChatView: View {
         }
         .sheet(isPresented: $showingReportSheet) {
             ReportReasonSheet(targetName: otherProfile.name) { reason in
-                Task { await UserModeration.report(userId: otherProfile.id, reason: reason) }
+                Task {
+                    let succeeded = await UserModeration.report(userId: otherProfile.id, reason: reason)
+                    toastMessage = succeeded ? "報告しました" : "報告できませんでした"
+                }
             }
         }
+        .actionToast($toastMessage)
         .alert("送信できません", isPresented: Binding(
             get: { messageManager.errorMessage != nil },
             set: { if !$0 { messageManager.errorMessage = nil } }
@@ -618,6 +624,7 @@ struct ChatView: View {
                     .foregroundStyle(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.brandPurple)
             }
             .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || messageManager.isSending)
+            .accessibilityLabel("送信")
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -635,10 +642,10 @@ private struct CallRequestBubbleView: View {
 
     private var statusText: String {
         switch status {
-        case .pending: return isMine ? "電話をします" : "\(name)さんから電話のリクエストです"
-        case .accepted: return isMine ? "\(name)さんが通話を許可しました" : "通話を許可しました"
-        case .declined: return isMine ? "今は難しいようです" : "リクエストを見送りました"
-        case .canceled: return "通話リクエストを取り消しました"
+        case .pending: return String(localized: isMine ? "電話をします" : "\(name)さんから電話のリクエストです")
+        case .accepted: return String(localized: isMine ? "\(name)さんが通話を許可しました" : "通話を許可しました")
+        case .declined: return String(localized: isMine ? "今は難しいようです" : "リクエストを見送りました")
+        case .canceled: return String(localized: "通話リクエストを取り消しました")
         }
     }
 

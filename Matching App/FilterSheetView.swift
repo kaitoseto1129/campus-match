@@ -147,8 +147,13 @@ struct FilterSheetView: View {
                     if isCounting && previewCount == nil {
                         ProgressView()
                     } else {
-                        Text("\(previewCount ?? 0)人に絞り込み中")
-                            .font(.subheadline.bold())
+                        (
+                            Text("\(previewCount ?? 0)")
+                                .foregroundStyle(Color.brandPurple)
+                            + Text(LocalizedStringKey("人に絞り込み中"))
+                                .foregroundStyle(.secondary)
+                        )
+                        .font(.subheadline.bold())
                     }
                 }
                 .foregroundStyle(.secondary)
@@ -465,6 +470,7 @@ private struct MultiSelectFilterView: View {
     let title: String
     let options: [String]
     @Binding var selected: Set<String>
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         Form {
@@ -480,6 +486,11 @@ private struct MultiSelectFilterView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("完了") { dismiss() }
+            }
+        }
     }
 }
 

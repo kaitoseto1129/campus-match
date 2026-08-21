@@ -72,10 +72,10 @@ struct QuickLikeButton: View {
             }
         }
         .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "いいねを送りました", icon: "hand.thumbsup.fill")
-        .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
+        .alert("いいねを送れませんでした", isPresented: $showingInsufficientLikesAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("マイページからいいねを増やしてください。")
+            Text("残いいねが足りないか、通信に失敗した可能性があります。マイページからいいねを増やしてから、もう一度お試しください。")
         }
     }
 

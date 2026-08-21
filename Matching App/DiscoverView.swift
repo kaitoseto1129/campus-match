@@ -406,6 +406,7 @@ private struct DiscoverLikeButton: View {
     @State private var confirmationMessage = "いいねを送りました"
     @State private var confirmationIcon = "hand.thumbsup.fill"
     @State private var showingInsufficientLikesAlert = false
+    @State private var toastMessage: String?
 
     private var alreadyLiked: Bool { discoverManager.likedIds.contains(candidate.id) }
 
@@ -417,11 +418,14 @@ private struct DiscoverLikeButton: View {
                 guard !isHiding else { return }
                 isHiding = true
                 Task {
-                    await discoverManager.hideCandidate(candidate.id)
+                    let succeeded = await discoverManager.hideCandidate(candidate.id)
                     isHiding = false
                     // 以前は非表示にすると自動で次のお相手へ切り替わっていたが、
                     // 勝手に画面が進むのが分かりづらいという声があったため、
                     // 次へ進むかどうかは本人がスワイプするまで待つようにした。
+                    // ただし何の反応もないと「ボタンが反応していない」ように見えるため、
+                    // 一瞬だけ完了トーストを出す。
+                    toastMessage = succeeded ? "非表示にしました" : "非表示にできませんでした"
                 }
             } label: {
                 VStack(spacing: 2) {
@@ -472,11 +476,12 @@ private struct DiscoverLikeButton: View {
             }
         }
         .sentConfirmationCover(isPresented: $showingSentConfirmation, message: confirmationMessage, icon: confirmationIcon)
-        .alert("いいねが足りません", isPresented: $showingInsufficientLikesAlert) {
+        .alert("いいねを送れませんでした", isPresented: $showingInsufficientLikesAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("マイページからいいねを増やしてください。")
+            Text("残いいねが足りないか、通信に失敗した可能性があります。マイページからいいねを増やしてから、もう一度お試しください。")
         }
+        .actionToast($toastMessage)
     }
 
     private func sendAndConfirm(isSpecial: Bool) async {

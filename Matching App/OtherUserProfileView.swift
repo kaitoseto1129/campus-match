@@ -44,6 +44,7 @@ struct ProfileModerationMenu: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
+        .accessibilityLabel("その他の操作")
     }
 }
 
@@ -75,6 +76,7 @@ struct OtherUserProfileView<ActionContent: View>: View {
     @State private var showingHideConfirm = false
     @State private var showingBlockConfirm = false
     @State private var showingReportSheet = false
+    @State private var toastMessage: String?
     @State private var visitRecordId: UUID?
     @State private var viewedPhotoIds: Set<UUID> = []
     @State private var furthestSection: ProfileSection?
@@ -122,7 +124,10 @@ struct OtherUserProfileView<ActionContent: View>: View {
         }
         .confirmationDialog("\(profile.name)さんを非表示にしますか?", isPresented: $showingHideConfirm, titleVisibility: .visible) {
             Button("非表示にする", role: .destructive) {
-                Task { await UserModeration.hide(userId: profile.id) }
+                Task {
+                    let succeeded = await UserModeration.hide(userId: profile.id)
+                    toastMessage = succeeded ? "非表示にしました" : "非表示にできませんでした"
+                }
             }
             Button("キャンセル", role: .cancel) {}
         } message: {
@@ -130,7 +135,10 @@ struct OtherUserProfileView<ActionContent: View>: View {
         }
         .confirmationDialog("\(profile.name)さんをブロックしますか?", isPresented: $showingBlockConfirm, titleVisibility: .visible) {
             Button("ブロックする", role: .destructive) {
-                Task { await UserModeration.block(userId: profile.id) }
+                Task {
+                    let succeeded = await UserModeration.block(userId: profile.id)
+                    toastMessage = succeeded ? "ブロックしました" : "ブロックできませんでした"
+                }
             }
             Button("キャンセル", role: .cancel) {}
         } message: {
@@ -138,9 +146,13 @@ struct OtherUserProfileView<ActionContent: View>: View {
         }
         .sheet(isPresented: $showingReportSheet) {
             ReportReasonSheet(targetName: profile.name) { reason in
-                Task { await UserModeration.report(userId: profile.id, reason: reason) }
+                Task {
+                    let succeeded = await UserModeration.report(userId: profile.id, reason: reason)
+                    toastMessage = succeeded ? "報告しました" : "報告できませんでした"
+                }
             }
         }
+        .actionToast($toastMessage)
         .task {
             await load()
         }

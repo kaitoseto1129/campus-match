@@ -76,7 +76,7 @@ struct MembershipStatusView: View {
     /// (期間・料金・自動更新される旨・解約方法)。
     private var subscriptionDisclosureText: String {
         let price = store.membershipProduct?.displayPrice ?? "¥\(MembershipTier.vip.monthlyPriceYen.formatted())"
-        return "月額\(price)の自動更新サブスクリプションです。契約と同時に30いいね!が付与されます。期間終了の24時間前までに解約しない限り自動的に更新され、料金はApple IDのアカウントに請求されます。契約はいつでもこの画面の「サブスクリプションを管理」から解約できます。"
+        return String(localized: "月額\(price)の自動更新サブスクリプションです。契約と同時に30いいね!が付与されます。期間終了の24時間前までに解約しない限り自動的に更新され、料金はApple IDのアカウントに請求されます。契約はいつでもこの画面の「サブスクリプションを管理」から解約できます。")
     }
 
     private func purchase() async {
@@ -128,8 +128,8 @@ struct MembershipStatusView: View {
 
     private var currentTierDescription: String {
         isPaidMember
-            ? "メッセージし放題・いいね数表示など全特典が使えます"
-            : "プロフィール閲覧といいね!が使えます。メッセージは1日\(MembershipTier.freeDailyMessagePartnerLimit)人まで送れます"
+            ? String(localized: "メッセージし放題・いいね数表示など全特典が使えます")
+            : String(localized: "プロフィール閲覧といいね!が使えます。メッセージは1日\(MembershipTier.freeDailyMessagePartnerLimit)人まで送れます")
     }
 
     // MARK: - 無料会員でできること

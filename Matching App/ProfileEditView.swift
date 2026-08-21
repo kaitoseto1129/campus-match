@@ -691,7 +691,7 @@ struct ProfileEditView: View {
         .alert("写真を追加できません", isPresented: $showingFaceCheckAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(faceCheckMessage)
+            Text(LocalizedStringKey(faceCheckMessage))
         }
         .alert("保存に失敗しました", isPresented: $showingSaveFailAlert) {
             Button("ok", role: .cancel) {}

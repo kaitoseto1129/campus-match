@@ -19,8 +19,8 @@ struct MissionProgress: Identifiable {
     /// 未達成のときに出す誘導ボタンの文言。何をすれば達成できるかが分かるようにする。
     var actionLabel: String? {
         switch key {
-        case "footprint": return "お相手を見に行く"
-        case "like5", "like7": return "いいねを送りに行く"
+        case "footprint": return String(localized: "お相手を見に行く")
+        case "like5", "like7": return String(localized: "いいねを送りに行く")
         default: return nil
         }
     }

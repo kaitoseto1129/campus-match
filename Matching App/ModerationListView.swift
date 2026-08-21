@@ -15,6 +15,7 @@ struct ModerationListView: View {
     @State private var profiles: [Profile] = []
     @State private var photoURLs: [UUID: URL] = [:]
     @State private var isLoading = true
+    @State private var toastMessage: String?
 
     var body: some View {
         // 以前はScrollViewに直接.backgroundを付けていたため、読み込み中で中身が空のときに
@@ -27,7 +28,7 @@ struct ModerationListView: View {
                 ProgressView()
                     .tint(Color.brandPurple)
             } else if profiles.isEmpty {
-                Text(emptyMessage)
+                Text(LocalizedStringKey(emptyMessage))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)
                     .multilineTextAlignment(.center)
@@ -65,8 +66,9 @@ struct ModerationListView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle(title)
+        .navigationTitle(LocalizedStringKey(title))
         .navigationBarTitleDisplayMode(.inline)
+        .actionToast($toastMessage)
         .task {
             await load()
         }
@@ -96,7 +98,11 @@ struct ModerationListView: View {
     }
 
     private func remove(_ profile: Profile) async {
-        await UserModeration.removeAction(userId: profile.id, action: action)
+        let succeeded = await UserModeration.removeAction(userId: profile.id, action: action)
+        guard succeeded else {
+            toastMessage = "解除できませんでした"
+            return
+        }
         profiles.removeAll { $0.id == profile.id }
     }
 }

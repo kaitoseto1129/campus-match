@@ -13,6 +13,7 @@ struct SwipeableProfileView<ActionContent: View>: View {
     @State private var showingHideConfirm = false
     @State private var showingBlockConfirm = false
     @State private var showingReportSheet = false
+    @State private var toastMessage: String?
     @ViewBuilder var actionContent: (Profile, @escaping () -> Void) -> ActionContent
 
     init(profiles: [Profile], startIndex: Int, @ViewBuilder actionContent: @escaping (Profile, @escaping () -> Void) -> ActionContent) {
@@ -74,8 +75,9 @@ struct SwipeableProfileView<ActionContent: View>: View {
             Button("非表示にする", role: .destructive) {
                 guard let target = currentProfile else { return }
                 Task {
-                    await UserModeration.hide(userId: target.id)
+                    let succeeded = await UserModeration.hide(userId: target.id)
                     // 下部の非表示ボタンと同じく、自動では次へ進まずスワイプ操作に任せる。
+                    toastMessage = succeeded ? "非表示にしました" : "非表示にできませんでした"
                 }
             }
             Button("キャンセル", role: .cancel) {}
@@ -90,8 +92,12 @@ struct SwipeableProfileView<ActionContent: View>: View {
             Button("ブロックする", role: .destructive) {
                 guard let target = currentProfile else { return }
                 Task {
-                    await UserModeration.block(userId: target.id)
-                    advanceOrDismiss()
+                    let succeeded = await UserModeration.block(userId: target.id)
+                    if succeeded {
+                        advanceOrDismiss()
+                    } else {
+                        toastMessage = "ブロックできませんでした"
+                    }
                 }
             }
             Button("キャンセル", role: .cancel) {}
@@ -99,9 +105,13 @@ struct SwipeableProfileView<ActionContent: View>: View {
         .sheet(isPresented: $showingReportSheet) {
             if let target = currentProfile {
                 ReportReasonSheet(targetName: target.name) { reason in
-                    Task { await UserModeration.report(userId: target.id, reason: reason) }
+                    Task {
+                        let succeeded = await UserModeration.report(userId: target.id, reason: reason)
+                        toastMessage = succeeded ? "報告しました" : "報告できませんでした"
+                    }
                 }
             }
         }
+        .actionToast($toastMessage)
     }
 }

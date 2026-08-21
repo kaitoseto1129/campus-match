@@ -124,7 +124,7 @@ private struct FootprintCardView: View {
         .alert("いいねを送れませんでした", isPresented: $showingInsufficientLikesAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(alertMessage)
+            Text(LocalizedStringKey(alertMessage))
         }
         .sentConfirmationCover(isPresented: $showingSentConfirmation, message: "いいねを送りました", icon: "hand.thumbsup.fill")
     }

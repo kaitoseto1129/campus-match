@@ -237,11 +237,16 @@ final class DiscoverManager: ObservableObject {
     }
 
     /// 非表示にして、その場で一覧からも消す(次回起動時に自動で除外されるのに加え、即時反映する)。
-    func hideCandidate(_ userId: UUID) async {
-        await UserModeration.hide(userId: userId)
+    /// 失敗した場合は一覧から消さない(見た目上は消えたのにサーバー側では非表示になっておらず、
+    /// 次回読み込み時に同じ相手が再び表示されて「非表示にしたはずなのに」となるのを防ぐ)。
+    @discardableResult
+    func hideCandidate(_ userId: UUID) async -> Bool {
+        let succeeded = await UserModeration.hide(userId: userId)
+        guard succeeded else { return false }
         candidates.removeAll { $0.id == userId }
         boostedProfiles.removeAll { $0.id == userId }
         totalCandidateCount = max(0, totalCandidateCount - 1)
+        return true
     }
 
     /// 探す画面のバナーからアピール(ブースト)を発動する。

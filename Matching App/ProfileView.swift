@@ -146,7 +146,7 @@ struct ProfileView: View {
         .alert("写真を変更できません", isPresented: $showingFaceCheckAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(faceCheckMessage)
+            Text(LocalizedStringKey(faceCheckMessage))
         }
     }
 }

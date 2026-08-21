@@ -81,15 +81,17 @@ struct WelcomeOnboardingView: View {
                 }
             }
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Image(systemName: "globe")
                 Text("言語 / Language")
+                Image(systemName: "chevron.down")
+                    .font(.caption2.bold())
             }
-            .font(.caption.bold())
+            .font(.subheadline.bold())
             .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.white.opacity(0.2), in: Capsule())
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(.white.opacity(0.25), in: Capsule())
         }
     }
 
