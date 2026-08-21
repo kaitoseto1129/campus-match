@@ -54,6 +54,12 @@ struct RootGateView: View {
             // サブスクの解約・失効は通常Appleからの通知(apple-notifications)で反映されるが、
             // 通知の遅延・失敗に備えて、起動時にも端末が持つ購入状態と突き合わせておく。
             await store.syncMembershipEntitlement()
+
+            // 既に通知許可が下りている端末(再インストール後の再ログインなど)では、
+            // 案内画面を経由しないためデバイストークンが再取得されない。起動のたびに確認しておく。
+            if hasRequestedNotificationPermission {
+                await PushTokenManager.reregisterIfAlreadyAuthorized()
+            }
         }
     }
 }

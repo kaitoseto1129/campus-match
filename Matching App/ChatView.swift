@@ -130,10 +130,11 @@ struct ChatView: View {
 
     @ToolbarContentBuilder
     private var chatToolbar: some ToolbarContent {
-        // カスタムのsafeAreaInsetヘッダーだと、ナビゲーションバーとの重なり方によっては
-        // 名前・年齢が見えなくなることがあったため、確実に表示されるOS標準のツールバースロットを使う。
-        // .principalだと中央寄せになってしまうため、戻るボタンのすぐ右に来るtopBarLeadingを使う。
-        ToolbarItem(placement: .topBarLeading) {
+        // 以前はtopBarLeadingに置いていたが、戻るボタン・右側のアイコン2つ(通話・メニュー)と
+        // 幅を取り合って、実機では名前・年齢のテキストだけ見えなくなることがあった。
+        // .principal(タイトル中央)は元々このための領域で幅にも余裕があるため、そちらに置く
+        // (LINEやメッセージアプリのトーク画面ヘッダーと同じ配置)。
+        ToolbarItem(placement: .principal) {
             Button {
                 showingProfile = true
             } label: {

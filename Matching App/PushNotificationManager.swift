@@ -4,54 +4,50 @@
 //
 
 import UIKit
+import UserNotifications
 import Supabase
 
-/// SwiftUIのApp protocolだけではAPNsのデバイストークン受信コールバックを受け取れないため、
-/// UIApplicationDelegateAdaptor経由でこのAppDelegateを差し込んでいる。
+/// SwiftUIの `App` プロトコルにはAPNsのデバイストークン受け取りコールバックが無いため、
+/// `@UIApplicationDelegateAdaptor` 経由でこのAppDelegateを差し込んで受け取る。
+/// 許可リクエスト自体は `NotificationPermissionView` が行い、そこから
+/// `UIApplication.shared.registerForRemoteNotifications()` が呼ばれた結果としてここに届く。
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         let token = deviceToken.map { String(format: "%02x", $0) }.joined()
-        Task { await PushTokenManager.upload(token: token) }
+        // 起動直後、セッション復元(ログイン確定)より先にこのコールバックが届くことがあるため、
+        // トークンは一旦端末に保存しておき、実際のアップロードはregisterPendingTokenIfNeeded()に任せる。
+        UserDefaults.standard.set(token, forKey: "pendingPushToken")
+        Task { await PushTokenManager.registerPendingTokenIfNeeded() }
     }
 
     func application(
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
-        print("push registration error: \(error)")
+        print("push notification registration failed: \(error)")
     }
 }
 
-/// 端末のAPNsトークンをSupabaseに登録する。ログインしていない間に取得したトークンも
-/// 使えるよう、ログイン完了後に改めて登録し直せるようにキャッシュしておく。
+private struct PushTokenPayload: Encodable {
+    let userId: UUID
+    let token: String
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case token
+    }
+}
+
 enum PushTokenManager {
-    private static var pendingToken: String?
-
-    static func upload(token: String) async {
-        pendingToken = token
-        guard let userId = supabase().auth.currentUser?.id else { return }
-        await register(token: token, userId: userId)
-    }
-
-    /// ログイン直後、既に取得済みのトークンがあれば今のユーザーに紐付け直す。
+    /// 端末に保存済みのデバイストークンがあり、かつログイン済みであれば、Supabaseに登録する。
+    /// - AppDelegateがトークンを受け取った直後(まだ未ログインの可能性がある)
+    /// - ログイン/セッション復元が確定した直後(トークン受け取りの方が先だった場合に備える)
+    /// の両方から呼ばれ、どちらが先に揃っても最終的に登録されるようにしている。
     static func registerPendingTokenIfNeeded() async {
-        guard let token = pendingToken, let userId = supabase().auth.currentUser?.id else { return }
-        await register(token: token, userId: userId)
-    }
-
-    private struct PushTokenPayload: Encodable {
-        let userId: UUID
-        let token: String
-        enum CodingKeys: String, CodingKey {
-            case userId = "user_id"
-            case token
-        }
-    }
-
-    private static func register(token: String, userId: UUID) async {
+        guard let token = UserDefaults.standard.string(forKey: "pendingPushToken"),
+              let userId = supabase().auth.currentUser?.id else { return }
         do {
             try await supabase()
                 .from("push_tokens")
@@ -61,31 +57,12 @@ enum PushTokenManager {
             print("push token upload error: \(error)")
         }
     }
-}
 
-/// いいね・マッチ・メッセージ受信時に、Supabase Edge Function「send-push」経由で
-/// 対象ユーザーへプッシュ通知を送る。APNsの秘密鍵などはサーバー側にしか置かないため、
-/// クライアントはこの薄いラッパーからEdge Functionを呼ぶだけで良い。
-enum PushNotifier {
-    private struct SendPushParams: Encodable {
-        let userId: UUID
-        let title: String
-        let body: String
-    }
-    private struct SendPushResponse: Decodable {
-        let success: Bool
-    }
-
-    /// 送信は失敗しても呼び出し元の処理(いいね送信・メッセージ送信など)を止めたくないため、
-    /// エラーはログに残すだけで投げ直さない。
-    static func notify(userId: UUID, title: String, body: String) async {
-        do {
-            let _: SendPushResponse = try await supabase().functions.invoke(
-                "send-push",
-                options: FunctionInvokeOptions(body: SendPushParams(userId: userId, title: title, body: body))
-            )
-        } catch {
-            print("send push error: \(error)")
-        }
+    /// ログイン済みの端末で、既に通知許可が下りている場合(例: 再インストール後の再ログイン)、
+    /// 案内画面(NotificationPermissionView)を経由せずデバイストークンの取得だけやり直す。
+    static func reregisterIfAlreadyAuthorized() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard settings.authorizationStatus == .authorized else { return }
+        await MainActor.run { UIApplication.shared.registerForRemoteNotifications() }
     }
 }
