@@ -411,7 +411,9 @@ private struct DiscoverLikeButton: View {
                 Task {
                     await discoverManager.hideCandidate(candidate.id)
                     isHiding = false
-                    advanceOrDismiss()
+                    // 以前は非表示にすると自動で次のお相手へ切り替わっていたが、
+                    // 勝手に画面が進むのが分かりづらいという声があったため、
+                    // 次へ進むかどうかは本人がスワイプするまで待つようにした。
                 }
             } label: {
                 VStack(spacing: 2) {
@@ -482,8 +484,8 @@ private struct DiscoverLikeButton: View {
         showingSentConfirmation = true
         try? await Task.sleep(nanoseconds: 900_000_000)
         showingSentConfirmation = false
-        // 送ったお相手をもう一度見せても操作できることがないため、そのまま次のお相手へ送る。
-        advanceOrDismiss()
+        // 以前はいいね送信後に自動で次のお相手へ切り替えていたが、勝手に画面が進むのが
+        // 分かりづらいという声があったため、次へ進むかどうかは本人がスワイプするまで待つ。
     }
 
     /// 非表示・いいね送信のあと、スワイプで見ている途中なら次のお相手へ自動で送り、

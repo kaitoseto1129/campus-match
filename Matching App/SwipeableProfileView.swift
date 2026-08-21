@@ -75,7 +75,7 @@ struct SwipeableProfileView<ActionContent: View>: View {
                 guard let target = currentProfile else { return }
                 Task {
                     await UserModeration.hide(userId: target.id)
-                    advanceOrDismiss()
+                    // 下部の非表示ボタンと同じく、自動では次へ進まずスワイプ操作に任せる。
                 }
             }
             Button("キャンセル", role: .cancel) {}
