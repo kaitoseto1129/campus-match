@@ -133,6 +133,8 @@ struct OtherUserProfileView<ActionContent: View>: View {
                 Task { await UserModeration.block(userId: profile.id) }
             }
             Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("ブロックするとお互いにメッセージが送れなくなり、トーク一覧からも消えます")
         }
         .sheet(isPresented: $showingReportSheet) {
             ReportReasonSheet(targetName: profile.name) { reason in

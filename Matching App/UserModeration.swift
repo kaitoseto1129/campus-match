@@ -69,11 +69,13 @@ enum UserModeration {
         }
     }
 
-    static func hide(userId: UUID) async {
+    @discardableResult
+    static func hide(userId: UUID) async -> Bool {
         await recordAction(userId: userId, action: "hide")
     }
 
-    static func block(userId: UUID) async {
+    @discardableResult
+    static func block(userId: UUID) async -> Bool {
         await recordAction(userId: userId, action: "block")
     }
 
@@ -148,8 +150,9 @@ enum UserModeration {
         }
     }
 
-    private static func recordAction(userId: UUID, action: String) async {
-        guard let myId = supabase().auth.currentUser?.id else { return }
+    @discardableResult
+    private static func recordAction(userId: UUID, action: String) async -> Bool {
+        guard let myId = supabase().auth.currentUser?.id else { return false }
         do {
             try await supabase()
                 .from("user_actions")
@@ -158,8 +161,10 @@ enum UserModeration {
                     onConflict: "actor_id,target_id,action"
                 )
                 .execute()
+            return true
         } catch {
             print("user action error: \(error)")
+            return false
         }
     }
 }

@@ -19,6 +19,7 @@ struct EmailVerificationView: View {
     @State private var code = ""
     @State private var showingResentToast = false
     @State private var secondsUntilResend = 0
+    @State private var resendCountdownTask: Task<Void, Never>?
     @FocusState private var isCodeFieldFocused: Bool
 
     private let codeLength = 6
@@ -57,6 +58,9 @@ struct EmailVerificationView: View {
         .onAppear {
             isCodeFieldFocused = true
             startResendCountdown()
+        }
+        .onDisappear {
+            resendCountdownTask?.cancel()
         }
         .sentConfirmationCover(isPresented: $showingResentToast, message: "確認コードを再送しました", icon: "envelope.fill")
     }
@@ -183,10 +187,13 @@ struct EmailVerificationView: View {
     }
 
     /// 連打による送信制限を避けるため、再送は一定時間あけてもらう。
+    /// 前のカウントダウンが動いたまま再度呼ばれると、2つのループが同じ
+    /// secondsUntilResendを同時に減らして倍速で進んでしまうため、必ず前のタスクを止めてから始める。
     private func startResendCountdown() {
+        resendCountdownTask?.cancel()
         secondsUntilResend = 60
-        Task {
-            while secondsUntilResend > 0 {
+        resendCountdownTask = Task {
+            while secondsUntilResend > 0 && !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 secondsUntilResend -= 1
             }

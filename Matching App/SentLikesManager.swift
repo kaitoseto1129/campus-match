@@ -43,9 +43,11 @@ final class SentLikesManager: ObservableObject {
                 .execute()
                 .value
             let matchedPartnerIds = Set(matchRows.map { $0.userAId == myId ? $0.userBId : $0.userAId })
+            let blockedIds = await UserModeration.hiddenOrBlockedIds(actorId: myId)
+            let visibleLikeRows = likeRows.filter { !blockedIds.contains($0.toUserId) }
 
-            let likesByReceiver = Dictionary(uniqueKeysWithValues: likeRows.map { ($0.toUserId, $0) })
-            let receiverIds = likeRows.map(\.toUserId)
+            let likesByReceiver = Dictionary(uniqueKeysWithValues: visibleLikeRows.map { ($0.toUserId, $0) })
+            let receiverIds = visibleLikeRows.map(\.toUserId)
             guard !receiverIds.isEmpty else {
                 sent = []
                 isLoading = false

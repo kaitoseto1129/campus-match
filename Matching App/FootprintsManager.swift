@@ -53,9 +53,11 @@ final class FootprintsManager: ObservableObject {
                 .execute()
                 .value
 
+            let blockedIds = await UserModeration.hiddenOrBlockedIds(actorId: myId)
+
             // 同じ相手からの複数回の訪問は最新の1件にまとめる
             var latestByViewer: [UUID: VisitRow] = [:]
-            for row in visitRows where latestByViewer[row.viewerId] == nil {
+            for row in visitRows where latestByViewer[row.viewerId] == nil && !blockedIds.contains(row.viewerId) {
                 latestByViewer[row.viewerId] = row
             }
             let viewerIds = Array(latestByViewer.keys)

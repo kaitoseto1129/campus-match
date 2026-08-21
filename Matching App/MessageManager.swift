@@ -253,13 +253,17 @@ final class MessageManager: ObservableObject {
         }
     }
 
-    func send(text: String) async {
-        guard let myId = supabase().auth.currentUser?.id else { return }
+    /// 送信に成功したかを返す。呼び出し側(ChatView)は、失敗時に入力欄へ
+    /// テキストを戻せるようこの結果を使う(以前は送信前に入力欄を空にしてしまい、
+    /// 通信エラー時に打った文章がそのまま失われていた)。
+    @discardableResult
+    func send(text: String) async -> Bool {
+        guard let myId = supabase().auth.currentUser?.id else { return false }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty else { return false }
         guard !NGWordFilter.containsNGWord(trimmed) else {
             errorMessage = "使用できない表現が含まれているため送信できません"
-            return
+            return false
         }
         isSending = true
         defer { isSending = false }
@@ -269,9 +273,11 @@ final class MessageManager: ObservableObject {
                 .from("messages")
                 .insert(MessageInsertPayload(matchId: matchId, senderId: myId, body: trimmed, imageUrl: nil))
                 .execute()
+            return true
         } catch {
             errorMessage = "メッセージの送信に失敗しました"
             print("send message error: \(error)")
+            return false
         }
     }
 

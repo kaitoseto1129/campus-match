@@ -29,6 +29,14 @@ final class AuthManager : ObservableObject {
     /// Supabaseの「Confirm email」がONの間、サインアップ直後はセッションが発行されず、
     /// 確認コードを検証するまでログインできない。その待機状態をUIに伝えるために使う。
     @Published var pendingVerificationEmail: String?
+    /// サインアップ→メール確認画面まで進んだ後に「戻る」で登録画面(AuthView)へ戻ると、
+    /// AuthViewはビュー階層ごと作り直されて@Stateが初期化されてしまい、
+    /// せっかく入力したメール・パスワード・表示名が全部消えていた。
+    /// AuthViewを跨いで生き続けるこのAuthManager側に一時保持しておき、
+    /// AuthViewの初期表示時に復元する。
+    @Published var cachedSignUpEmail: String = ""
+    @Published var cachedSignUpPassword: String = ""
+    @Published var cachedSignUpDisplayName: String = ""
 
     init() {
         Task {
@@ -66,6 +74,9 @@ final class AuthManager : ObservableObject {
     func signUp(email: String, password: String, displayName: String) async {
         isLoading = true
         errorMessage = nil
+        cachedSignUpEmail = email
+        cachedSignUpPassword = password
+        cachedSignUpDisplayName = displayName
         do {
             let response = try await supabase().auth.signUp(
                 email: email,
@@ -79,6 +90,7 @@ final class AuthManager : ObservableObject {
             } else {
                 await checkSession()
                 UserDefaults.standard.set(true, forKey: Self.eligibleForOnboardingTutorialKey)
+                clearCachedSignUpInput()
             }
         } catch let error {
             errorMessage = Self.describe(error)
@@ -105,6 +117,7 @@ final class AuthManager : ObservableObject {
             if isAuthenticated {
                 pendingVerificationEmail = nil
                 UserDefaults.standard.set(true, forKey: Self.eligibleForOnboardingTutorialKey)
+                clearCachedSignUpInput()
                 return true
             }
             errorMessage = "確認に失敗しました。もう一度お試しください"
@@ -133,10 +146,17 @@ final class AuthManager : ObservableObject {
         }
     }
 
-    /// 本人確認を中断して登録画面に戻る。
+    /// 本人確認を中断して登録画面に戻る。入力し直させないよう、
+    /// キャッシュしておいたサインアップ内容はここでは消さない。
     func cancelEmailVerification() {
         pendingVerificationEmail = nil
         errorMessage = nil
+    }
+
+    private func clearCachedSignUpInput() {
+        cachedSignUpEmail = ""
+        cachedSignUpPassword = ""
+        cachedSignUpDisplayName = ""
     }
 
     private static func describeVerification(_ error: Error) -> String {
@@ -188,6 +208,7 @@ final class AuthManager : ObservableObject {
     }
     func signOut() async {
         isLoading = true
+        await PushTokenManager.unregisterCurrentDevice()
         do {
             try await supabase().auth.signOut()
             isAuthenticated = false
@@ -200,6 +221,7 @@ final class AuthManager : ObservableObject {
     func deleteAccount() async -> Bool {
         isLoading = true
         errorMessage = nil
+        await PushTokenManager.unregisterCurrentDevice()
         do {
             try await supabase().rpc("delete_own_account").execute()
             try? await supabase().auth.signOut()

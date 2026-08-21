@@ -26,10 +26,15 @@ struct AuthView: View {
     /// マイページに辿り着く前(未登録・未ログイン状態)でも言語を選べるようにするための設定。
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
 
+    /// クリップボードからの貼り付けなどで前後に空白が混ざっていても弾かないようにする。
+    var trimmedEmail: String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// 大学ドメイン一覧の読み込みに失敗した場合は、誤ってサインアップをブロックしないよう検証をスキップする。
     var isEmailDomainValid: Bool {
         guard isSignUp, !validDomains.isEmpty else { return true }
-        let lowered = email.lowercased()
+        let lowered = trimmedEmail.lowercased()
         // 早稲田大学のように「@ruri.waseda.jp」等のサブドメインでメールを発行する大学もあるため、
         // 完全一致だけでなくサブドメイン一致も許可する(サーバー側のcheck_university_emailと同じ判定)。
         return validDomains.contains { domain in
@@ -38,7 +43,7 @@ struct AuthView: View {
         }
     }
     var isFormValid: Bool {
-        guard password.count >= 6 && email.contains("@") && isEmailDomainValid else {
+        guard password.count >= 6 && trimmedEmail.contains("@") && isEmailDomainValid else {
             return false
         }
         if isSignUp {
@@ -92,6 +97,15 @@ struct AuthView: View {
         }
         .task {
             await loadValidDomains()
+        }
+        .onAppear {
+            // メール確認画面から「戻る」で再びこの画面が作られた時、入力し直させないよう
+            // AuthManagerに一時保持しておいたサインアップ内容を復元する。
+            if !auth.cachedSignUpEmail.isEmpty {
+                email = auth.cachedSignUpEmail
+                password = auth.cachedSignUpPassword
+                displayName = auth.cachedSignUpDisplayName
+            }
         }
         .sheet(isPresented: $showingForgotPassword) {
             forgotPasswordSheet
@@ -183,6 +197,7 @@ struct AuthView: View {
                     Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
                         .foregroundStyle(.secondary)
                 }
+                .accessibilityLabel(isPasswordVisible ? "パスワードを隠す" : "パスワードを表示")
             }
             .padding()
             .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
@@ -211,14 +226,19 @@ struct AuthView: View {
             auth.isLoading = true
             Task {
                 if isSignUp {
-                    await auth.signUp(email: email, password: password, displayName: displayName)
+                    await auth.signUp(email: trimmedEmail, password: password, displayName: displayName)
                 } else {
-                    await auth.signIn(email: email, password: password)
+                    await auth.signIn(email: trimmedEmail, password: password)
                 }
             }
         } label: {
-            Text(isSignUp ? "登録する" : "ログイン")
-                .bold()
+            HStack(spacing: 8) {
+                if auth.isLoading {
+                    ProgressView().tint(.white)
+                }
+                Text(isSignUp ? "登録する" : "ログイン")
+                    .bold()
+            }
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(isFormValid ? AnyShapeStyle(Color.brandGradient) : AnyShapeStyle(Color(.systemGray4)))

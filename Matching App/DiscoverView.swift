@@ -60,7 +60,10 @@ struct DiscoverView: View {
                 .padding(.top, 8)
                 .tutorialAnchor("filter")
 
-                if discoverManager.candidates.isEmpty && !discoverManager.isLoading {
+                if discoverManager.candidates.isEmpty && discoverManager.isLoading {
+                    ProgressView()
+                        .padding(.top, 60)
+                } else if discoverManager.candidates.isEmpty && !discoverManager.isLoading {
                     Text("表示できるユーザーがいません")
                         .foregroundStyle(.secondary)
                         .padding(.top, 60)
@@ -70,16 +73,16 @@ struct DiscoverView: View {
                     let restBatch = Array(discoverManager.candidates.dropFirst(4))
 
                     LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(Array(firstBatch.enumerated()), id: \.element.id) { index, candidate in
-                            candidateCard(candidate: candidate, index: index)
+                        ForEach(firstBatch, id: \.id) { candidate in
+                            candidateCard(candidate: candidate)
                         }
                     }
                     .padding()
 
                     if !restBatch.isEmpty {
                         LazyVGrid(columns: columns, spacing: 12) {
-                            ForEach(Array(restBatch.enumerated()), id: \.element.id) { offset, candidate in
-                                candidateCard(candidate: candidate, index: offset + firstBatch.count)
+                            ForEach(restBatch, id: \.id) { candidate in
+                                candidateCard(candidate: candidate)
                             }
                         }
                         .padding()
@@ -288,8 +291,7 @@ struct DiscoverView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(discoverManager.boostedProfiles) { profile in
-                                let index = discoverManager.candidates.firstIndex(where: { $0.id == profile.id }) ?? 0
-                                candidateCard(candidate: profile, index: index, width: 130, height: 160)
+                                candidateCard(candidate: profile, width: 130, height: 160)
                             }
                         }
                         .padding(.horizontal)
@@ -307,9 +309,15 @@ struct DiscoverView: View {
         }
     }
 
-    private func candidateCard(candidate: Profile, index: Int, width: CGFloat? = nil, height: CGFloat = 180) -> some View {
-        NavigationLink {
-            SwipeableProfileView(profiles: discoverManager.candidates, startIndex: index) { profile, advance in
+    private func candidateCard(candidate: Profile, width: CGFloat? = nil, height: CGFloat = 180) -> some View {
+        // アピール中カードは、まだ「探す」グリッド側のページングに読み込まれていない
+        // ユーザーのこともある。その場合candidates内を検索してもヒットせず、以前は
+        // 見つからない時のフォールバックとして先頭(index 0)の全く別人を開いてしまっていた。
+        // タップした本人が必ず開かれるよう、見つからない場合はこの1人だけのリストにする。
+        let index = discoverManager.candidates.firstIndex(where: { $0.id == candidate.id })
+        let profiles = index != nil ? discoverManager.candidates : [candidate]
+        return NavigationLink {
+            SwipeableProfileView(profiles: profiles, startIndex: index ?? 0) { profile, advance in
                 DiscoverLikeButton(discoverManager: discoverManager, candidate: profile, onHidden: advance)
             }
         } label: {

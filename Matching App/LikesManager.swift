@@ -43,8 +43,9 @@ final class LikesManager: ObservableObject {
                 .execute()
                 .value
             let matchedPartnerIds = Set(matchRows.map { $0.userAId == myId ? $0.userBId : $0.userAId })
+            let blockedIds = await UserModeration.hiddenOrBlockedIds(actorId: myId)
 
-            let pendingLikes = likeRows.filter { !matchedPartnerIds.contains($0.fromUserId) }
+            let pendingLikes = likeRows.filter { !matchedPartnerIds.contains($0.fromUserId) && !blockedIds.contains($0.fromUserId) }
             let likesBySender = Dictionary(uniqueKeysWithValues: pendingLikes.map { ($0.fromUserId, $0) })
             let senderIds = pendingLikes.map(\.fromUserId)
             guard !senderIds.isEmpty else {

@@ -62,7 +62,7 @@ class ProfileManager: ObservableObject {
                 await loadUniversity(id: universityId)
             }
         } catch {
-            errorMessage = "プロフィールを読み込ませんでした"
+            errorMessage = "プロフィールを読み込めませんでした"
             print("profile load error: \(error)")
         }
     }

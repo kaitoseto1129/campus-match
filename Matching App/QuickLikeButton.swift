@@ -16,6 +16,11 @@ struct QuickLikeButton: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isSending = false
     @State private var alreadyLiked = false
+    /// 既にいいね済みかの確認(loadStatus)が終わるまでは送信させない。
+    /// ここを待たずに連打できると、実際は送信済みなのに`alreadyLiked`がまだfalseのまま
+    /// 二重送信してしまい、DBのunique制約違反が原因不明の「いいねが足りません」表示に
+    /// 化けてしまっていた。
+    @State private var hasLoadedStatus = false
     @State private var showingPopularSheet = false
     @State private var showingSentConfirmation = false
     @State private var showingInsufficientLikesAlert = false
@@ -28,7 +33,7 @@ struct QuickLikeButton: View {
 
     var body: some View {
         Button {
-            guard !isSending, !alreadyLiked else { return }
+            guard hasLoadedStatus, !isSending, !alreadyLiked else { return }
             isSending = true
             Task {
                 let count = (try? await supabase()
@@ -56,7 +61,7 @@ struct QuickLikeButton: View {
         }
         .padding(.horizontal)
         .padding(.bottom, 8)
-        .disabled(isSending || alreadyLiked)
+        .disabled(!hasLoadedStatus || isSending || alreadyLiked)
         .task {
             await loadStatus()
         }
@@ -88,6 +93,7 @@ struct QuickLikeButton: View {
         } catch {
             print("quick like status error: \(error)")
         }
+        hasLoadedStatus = true
     }
 
     private func sendAndConfirm(isSpecial: Bool) async {

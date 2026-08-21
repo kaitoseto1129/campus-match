@@ -25,6 +25,7 @@ struct ChatView: View {
     @State private var showingCallRequestConfirm = false
     @State private var showingCancelCallRequestConfirm = false
     @State private var isBlocked = false
+    @State private var showingBlockFailedAlert = false
     /// 自分の会員ステータス。無料会員は1日にメッセージできる人数に上限があり、既読はVIPのみ見える。
     @State private var myMembership: MembershipTier = .free
     /// 無料会員の場合、今日この相手に新しくメッセージを送れるか(既に今日やり取りした相手か、まだ上限に達していなければtrue)。
@@ -311,14 +312,26 @@ struct ChatView: View {
         .confirmationDialog("\(otherProfile.name)さんをブロックしますか?", isPresented: $showingBlockConfirm, titleVisibility: .visible) {
             Button("ブロックする", role: .destructive) {
                 Task {
-                    await UserModeration.block(userId: otherProfile.id)
-                    // ブロックしたトークは一覧にも表示され続けるべきではないため、その場で閉じる。
-                    dismiss()
+                    let succeeded = await UserModeration.block(userId: otherProfile.id)
+                    if succeeded {
+                        // ブロックしたトークは一覧にも表示され続けるべきではないため、その場で閉じる。
+                        dismiss()
+                    } else {
+                        // 失敗したのに閉じてしまうと、実際は相手をブロックできていないのに
+                        // 「ブロックできた」と誤解したままトークだけ消える(相手からは
+                        // 引き続き連絡できてしまう)ため、成功した場合のみ閉じる。
+                        showingBlockFailedAlert = true
+                    }
                 }
             }
             Button("キャンセル", role: .cancel) {}
         } message: {
             Text("ブロックするとお互いにメッセージが送れなくなり、このトークは一覧から消えます")
+        }
+        .alert("ブロックできませんでした", isPresented: $showingBlockFailedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("通信環境をご確認のうえ、もう一度お試しください。")
         }
         .sheet(isPresented: $showingReportSheet) {
             ReportReasonSheet(targetName: otherProfile.name) { reason in
@@ -590,8 +603,14 @@ struct ChatView: View {
                 draftText = ""
                 draftFieldResetToken = UUID()
                 Task {
-                    await messageManager.send(text: text)
-                    await notifyOtherOfNewMessage()
+                    let succeeded = await messageManager.send(text: text)
+                    if succeeded {
+                        await notifyOtherOfNewMessage()
+                    } else if draftText.isEmpty {
+                        // 送信に失敗した場合、打った文章を消さずに入力欄へ戻す
+                        // (その間に別の文章を打ち始めていた場合は上書きしない)。
+                        draftText = text
+                    }
                 }
             } label: {
                 Image(systemName: "paperplane.fill")

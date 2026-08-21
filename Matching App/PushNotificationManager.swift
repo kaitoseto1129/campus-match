@@ -65,4 +65,24 @@ enum PushTokenManager {
         guard settings.authorizationStatus == .authorized else { return }
         await MainActor.run { UIApplication.shared.registerForRemoteNotifications() }
     }
+
+    /// この端末のプッシュトークン登録を解除する。ログアウト・退会の直前に呼ぶこと
+    /// (呼び出し時点でまだ現在のユーザーとしてサインインしている必要がある)。
+    /// 同じ端末で別アカウントにログインし直した際、前のユーザー宛の通知(いいね・
+    /// メッセージ内容など)がその端末に届き続けてしまう(user_id,tokenの組で
+    /// upsertするだけでは古いuser_id分の行が残るため)のを防ぐ。
+    static func unregisterCurrentDevice() async {
+        guard let token = UserDefaults.standard.string(forKey: "pendingPushToken"),
+              let userId = supabase().auth.currentUser?.id else { return }
+        do {
+            try await supabase()
+                .from("push_tokens")
+                .delete()
+                .eq("user_id", value: userId)
+                .eq("token", value: token)
+                .execute()
+        } catch {
+            print("push token unregister error: \(error)")
+        }
+    }
 }

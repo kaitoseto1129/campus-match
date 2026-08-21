@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import Supabase
 
 /// ログイン後、プロフィールの必須項目(性別・生年月日・自己紹介・写真)が
 /// 揃っているかを確認し、揃っていなければ先にプロフィール編集を完了してもらう。
@@ -12,7 +13,15 @@ struct RootGateView: View {
     @StateObject private var store = StoreManager()
     @State private var hasLoaded = false
     /// プロフィール完成後、初回だけプッシュ通知の許可案内を挟むためのフラグ。
-    @AppStorage("hasRequestedNotificationPermission") private var hasRequestedNotificationPermission = false
+    /// 端末単位ではなくユーザーIDごとに持たせる(キーに埋め込む)。以前は端末単位の
+    /// キー1本だけだったため、同じ端末で別アカウントにログインし直すと、既に他の
+    /// アカウントが一度答えていたというだけの理由で、この案内が二度と出なくなっていた。
+    @AppStorage private var hasRequestedNotificationPermission: Bool
+
+    init() {
+        let uid = supabase().auth.currentUser?.id.uuidString ?? "anonymous"
+        _hasRequestedNotificationPermission = AppStorage(wrappedValue: false, "hasRequestedNotificationPermission_\(uid)")
+    }
     /// 起動時に一度だけ判定し、以後はProfileEditViewの「保存」成功コールバックでしか変えない。
     /// (写真を1枚追加するたびにphotos.countが変わって再評価されると、保存ボタンを押す前に
     /// 勝手に次の画面へ進んでしまうことがあったため、途中経過のreactiveな再評価に頼らないようにした)

@@ -201,12 +201,22 @@ final class StoreManager: ObservableObject {
         }
     }
 
-    /// サブスクリプションの自動更新など、アプリ外で発生した取引を検知して完了させる。
+    /// サブスクリプションの自動更新、ファミリー共有の承認待ち購入の確定、
+    /// そして`purchase()`内でのサーバー付与が(通信エラー等で)失敗して
+    /// finishされなかった取引の再試行など、アプリ外/後追いで発生する取引を処理する。
+    /// サーバー側への特典付与に成功するまではfinishしない(=finishしなければ
+    /// StoreKitが次回もこのTransaction.updatesで再配信してくれるため、
+    /// 「Appleには課金されたのに特典が付与されない」という取りこぼしを防げる)。
     private func listenForTransactionUpdates() -> Task<Void, Never> {
-        Task.detached {
+        Task.detached { [weak self] in
             for await result in Transaction.updates {
                 guard case .verified(let transaction) = result else { continue }
-                await transaction.finish()
+                do {
+                    try await self?.requestServerGrant(jws: result.jwsRepresentation)
+                    await transaction.finish()
+                } catch {
+                    print("transaction update grant error (will retry on next launch): \(error)")
+                }
             }
         }
     }
