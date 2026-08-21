@@ -33,7 +33,7 @@ struct HobbyCardPickerView: View {
                                     Circle()
                                         .fill(category.color)
                                         .frame(width: 8, height: 8)
-                                    Text(category.rawValue)
+                                    Text(LocalizedStringKey(category.rawValue))
                                         .font(.subheadline.bold())
                                 }
                                 FlowLayout(spacing: 8) {

@@ -230,7 +230,7 @@ struct ChatView: View {
                     Text("話題になりそうな共通点")
                         .font(.caption.bold())
                         .foregroundStyle(.secondary)
-                    FlowLayoutView(options: sharedHobbyCards.map { "\($0.emoji) \($0.title)" }) { label in
+                    FlowLayoutView(options: sharedHobbyCards.map { "\($0.emoji) \(String(localized: String.LocalizationValue($0.title)))" }) { label in
                         Text(label)
                             .font(.caption.bold())
                             .padding(.horizontal, 12)

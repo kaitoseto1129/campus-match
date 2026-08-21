@@ -104,7 +104,7 @@ struct HobbyCardChip: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(card.emoji)
-            Text(card.title)
+            Text(LocalizedStringKey(card.title))
                 .font(.caption.bold())
                 .lineLimit(1)
         }
