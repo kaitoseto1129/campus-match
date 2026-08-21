@@ -69,23 +69,36 @@ struct LikesView: View {
         }
     }
 
+    /// 通信エラーで読み込めなかった場合と、本当に0件だった場合を見分けられるようにする。
+    /// 以前はどちらも同じ「新着いいねはありません」表示になり、エラーで空に見えているだけなのに
+    /// 「本当に誰からもいいねが来ていない」と誤解させてしまっていた。
     private var emptyState: some View {
         VStack(spacing: 20) {
-            Image(systemName: "hand.thumbsup")
+            Image(systemName: likesManager.errorMessage != nil ? "wifi.slash" : "hand.thumbsup")
                 .font(.system(size: 56))
                 .foregroundStyle(Color(.systemGray3))
 
-            Text("新着いいねはありません")
+            Text(LocalizedStringKey(likesManager.errorMessage ?? "新着いいねはありません"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
-
-            Text("プロフィールを充実させると\nいいねが届きやすくなります")
-                .font(.caption)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
                 .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 14))
+
+            if likesManager.errorMessage != nil {
+                Button("再読み込み") { Task { await likesManager.load() } }
+                    .font(.subheadline.bold())
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 20)
+                    .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 14))
+            } else {
+                Text("プロフィールを充実させると\nいいねが届きやすくなります")
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 14))
+            }
 
             NavigationLink {
                 ProfileEditView(profileManager: profileManager)

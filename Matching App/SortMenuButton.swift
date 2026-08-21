@@ -11,8 +11,8 @@ struct SortMenuButton: View {
 
     private var label: String {
         switch sortOrder {
-        case .lastActive: return "ログイン順"
-        case .recommended: return "おすすめ順"
+        case .lastActive: return String(localized: "ログイン順")
+        case .recommended: return String(localized: "おすすめ順")
         }
     }
 

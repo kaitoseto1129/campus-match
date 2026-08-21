@@ -20,7 +20,7 @@ struct Profile: Codable, Identifiable {
     }
     var ageLabel: String {
         guard let age else { return "-" }
-        return "\(age)歳"
+        return String(localized: "\(age)歳")
     }
     /// gender・birthday・description・写真などプロフィールの必須項目が揃っているか。
     /// これが揃うまではオンボーディング(プロフィール編集の強制)を表示する。
@@ -44,7 +44,7 @@ struct Profile: Codable, Identifiable {
     let height: Int?
     var heightLabel: String {
         guard let height else { return "-" }
-        return "\(height)cm"
+        return String(localized: "\(height)cm")
     }
     let major: String?
     /// 旧・単一選択の国籍。表示のフォールバック用に残しているが、編集・絞り込みはnationalitiesを使う。
@@ -81,8 +81,8 @@ struct Profile: Codable, Identifiable {
         guard let createdAtString,
               let createdAt = ISO8601DateFormatter.matchingApp.date(from: createdAtString) else { return nil }
         let days = Calendar.current.dateComponents([.day], from: createdAt, to: Date()).day ?? Int.max
-        if days <= 7 { return "今週入会" }
-        if days <= 30 { return "今月入会" }
+        if days <= 7 { return String(localized: "今週入会") }
+        if days <= 30 { return String(localized: "今月入会") }
         return nil
     }
 

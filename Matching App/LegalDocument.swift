@@ -23,7 +23,7 @@ struct LegalDocument {
 
     static let contactEmail = "kaitoseto1129@gmail.com"
 
-    static let terms = LegalDocument(
+    static let termsJA = LegalDocument(
         title: "利用規約",
         updatedAt: "2026年8月15日",
         sections: [
@@ -96,7 +96,7 @@ struct LegalDocument {
         ]
     )
 
-    static let privacy = LegalDocument(
+    static let privacyJA = LegalDocument(
         title: "プライバシーポリシー",
         updatedAt: "2026年8月15日",
         sections: [
@@ -173,13 +173,184 @@ struct LegalDocument {
 """)
         ]
     )
+
+    static let termsEN = LegalDocument(
+        title: "Terms of Service",
+        updatedAt: "August 15, 2026",
+        sections: [
+            Section(heading: "Introduction", body: """
+These Terms of Service ("Terms") govern the use of CamMatch (the "App"), a matching app exclusively for university students. By registering for the App, you are deemed to have agreed to these Terms.
+Contact: \(contactEmail)
+"""),
+            Section(heading: "Article 1 (Eligibility)", body: """
+1. The App is available only to users who are 18 years of age or older and currently enrolled at a university or other institution of higher education.
+2. Registration requires an email address issued by your university. We will send a verification code to that address at sign-up to confirm your identity.
+3. Each person may hold only one account, which may not be transferred or lent to another person.
+4. Users previously suspended for violating these Terms may not re-register.
+"""),
+            Section(heading: "Article 2 (Account Management)", body: """
+1. You are responsible for managing your own email address and password.
+2. You must register accurate and up-to-date information and must not register false information.
+3. If you notice any unauthorized use of your account, please contact the operator immediately.
+"""),
+            Section(heading: "Article 3 (Prohibited Conduct)", body: """
+When using the App, you must not engage in any of the following:
+
+・Acts that violate any law or public order and morals
+・Impersonating another person, or registering photos of someone other than yourself
+・Misrepresenting your age, enrollment status, or other registration information
+・Slander, threats, discriminatory remarks, or harassment directed at other users
+・Posting or sending obscene, violent, or otherwise offensive content
+・Soliciting prostitution, compensated dating, or any relationship for monetary gain
+・Soliciting for religious activities, political activities, network marketing, investment schemes, or other business purposes
+・Disclosing another user's personal information to a third party without their consent
+・Interfering with the operation of the App, unauthorized access, or reverse engineering
+・Creating multiple accounts, or using automated tools to operate the App
+・Any other conduct the operator deems inappropriate
+"""),
+            Section(heading: "Article 4 (Reports and Handling of Violations)", body: """
+1. The App provides features to report, block, and hide other users. Please use these if you encounter an inappropriate user.
+2. A user you report will no longer appear on your screen going forward.
+3. If a violation of these Terms is suspected, the operator may, without prior notice, remove content, restrict features, or suspend or delete an account.
+4. The operator may review usage, including chat content, to the extent necessary to investigate a suspected violation.
+"""),
+            Section(heading: "Article 5 (Paid Services)", body: """
+1. The App offers a consumable item ("Likes") and an auto-renewing subscription ("Premium Membership") for purchase through the App Store.
+2. The Premium Membership (monthly) is an auto-renewing subscription. Unless canceled at least 24 hours before the end of the current period, it renews automatically and payment will be charged to the payment method on your Apple ID.
+3. You may cancel at any time from iOS Settings → Apple ID → Subscriptions. Deleting the app alone does not cancel your subscription.
+4. Purchased items and amounts paid are non-refundable except as required by law. Refund eligibility and procedures are governed by Apple's policies.
+5. Purchased items may not be exchanged for cash or any other property.
+6. If you delete your account, any unused items and remaining Premium Membership period will be forfeited.
+"""),
+            Section(heading: "Article 6 (Intellectual Property)", body: """
+1. Copyright and other intellectual property rights relating to the App belong to the operator or the rightful holder.
+2. Rights to text, photos, and other content posted by users belong to the user. However, the operator may use such content to the extent necessary to provide the App.
+3. Users may only post content they have the right to use or are otherwise legally permitted to use.
+"""),
+            Section(heading: "Article 7 (Disputes Between Users)", body: """
+The App merely provides an opportunity for users to meet. The operator is not responsible for any disputes that arise between users. When meeting in person, please take care for your own safety, such as choosing a public place.
+"""),
+            Section(heading: "Article 8 (Disclaimer)", body: """
+1. The operator does not guarantee the accuracy, usefulness, or fitness for any particular purpose of the App's content.
+2. The operator may suspend, change, or terminate the service without prior notice due to system maintenance, failures, communication issues, or similar causes.
+3. Except in cases of the operator's willful misconduct or gross negligence, the operator is not liable for any damages arising from a user's use of the App.
+"""),
+            Section(heading: "Article 9 (Account Deletion)", body: """
+You may delete your account at any time from "My Page" → "Delete Account" within the App. Once deleted, your profile, photos, likes, matches, chat history, and other data will be permanently removed and cannot be restored.
+"""),
+            Section(heading: "Article 10 (Changes to These Terms)", body: """
+The operator may revise these Terms when deemed necessary. Users will be notified within the App of any material changes.
+"""),
+            Section(heading: "Article 11 (Governing Law and Jurisdiction)", body: """
+These Terms are governed by the laws of Japan. Any dispute arising in connection with the App shall be subject to the exclusive jurisdiction of the court having jurisdiction over the operator's location as the court of first instance.
+""")
+        ]
+    )
+
+    static let privacyEN = LegalDocument(
+        title: "Privacy Policy",
+        updatedAt: "August 15, 2026",
+        sections: [
+            Section(heading: "Introduction", body: """
+This Privacy Policy explains how user information is handled in CamMatch (the "App"), a matching app exclusively for university students.
+Contact: \(contactEmail)
+"""),
+            Section(heading: "1. Information We Collect", body: """
+【Information you provide】
+・Account information: your university-issued email address and password (stored hashed)
+・Profile information: nickname, date of birth, gender, area of residence, university, major, height, nationality, languages spoken, body type, drinking/smoking habits, bio, tagline, and hobby cards
+・Photos: profile photos and images sent in chat
+・Chat content: message text exchanged with matched users, and call requests
+
+【Information collected automatically】
+・Activity history: likes sent/received, matches, footprints (profile view history), last active time, and mission progress
+・Safety information: hide/block settings and report content
+・Purchase information: App Store purchase history (transaction ID, product ID), remaining Likes balance, and membership status
+
+The App does not collect advertising or tracking identifiers (IDFA) and does not sell information to third parties. We also do not collect location data — for area of residence, we only use the region you select yourself.
+"""),
+            Section(heading: "2. Purposes of Use", body: """
+1. To provide, maintain, and improve the App
+2. To verify university enrollment and confirm identity via your university email address
+3. To search for, display, and match you with other users
+4. To grant purchased "Likes" and Premium Membership benefits
+5. To detect, investigate, and respond to violations of the Terms, impersonation, or other misconduct
+6. To respond to inquiries
+7. To comply with legal obligations
+"""),
+            Section(heading: "3. Disclosure to Third Parties and Outsourcing", body: """
+The operator will not disclose your personal information to third parties except in the following cases:
+・With your consent
+・When required by law, or necessary to protect a person's life, body, or property
+・When a lawful disclosure request is received from a court, police, or other public authority
+
+The App also uses the following external services to operate:
+・Supabase, Inc. (authentication, database, and image storage)
+・Apple Inc. (App Store / in-app purchases)
+
+Servers for these services may be located outside Japan.
+"""),
+            Section(heading: "4. Information Shown to Other Users", body: """
+Given the nature of the App, the following information is shown to other users. Please do not register information you do not wish to be shown.
+
+・Nickname, age, gender, area of residence, university, major, height, nationality, languages spoken, body type, drinking/smoking habits
+・Bio, tagline, and hobby cards
+・Profile photos
+・Online status (can be turned off in settings)
+・Number of likes received (can be turned off in settings)
+
+Your email address, exact date of birth (only your age is shown), and password are never shown to other users.
+"""),
+            Section(heading: "5. Your Settings and Rights", body: """
+・Editing your profile: You can make changes at any time from "My Page."
+・Hiding your footprints: Turning on Private Mode (a Premium Membership benefit) removes you from other users' "Discover" screens — except users you've liked — and stops footprints from being left.
+・Adjusting visibility: You can individually turn off the display of your like count and online status.
+・Deleting your account: You can delete your account at any time from "My Page" → "Delete Account."
+・Requests to disclose, correct, or suspend use of your data: Please contact us. After verifying your identity, we will respond in accordance with applicable law.
+"""),
+            Section(heading: "6. Retention Period", body: """
+User information is retained while your account exists. It is promptly deleted after account deletion, except that information we are required to retain by law, and the minimum records necessary to respond to violations or prevent re-registration, may be retained for the period and to the extent necessary.
+"""),
+            Section(heading: "7. Security Measures", body: """
+・All communications are encrypted using TLS.
+・Passwords are stored hashed; the operator cannot view them in plain text.
+・Row-level access control (RLS) is applied to the database so that other users' chat content and similar data cannot be accessed without authorization.
+"""),
+            Section(heading: "8. Use by Minors", body: """
+The App is available only to users who are 18 years of age or older and currently enrolled at a university or similar institution. Registration and use by anyone under 18 is strictly prohibited.
+"""),
+            Section(heading: "9. Changes to This Policy", body: """
+This Policy may be revised in response to changes in law or the addition of new features. Users will be notified within the App of any material changes.
+""")
+        ]
+    )
+
+    enum Kind {
+        case terms
+        case privacy
+    }
+
+    static func resolved(_ kind: Kind, locale: Locale) -> LegalDocument {
+        let isJapanese = locale.language.languageCode?.identifier == "ja"
+        switch kind {
+        case .terms: return isJapanese ? .termsJA : .termsEN
+        case .privacy: return isJapanese ? .privacyJA : .privacyEN
+        }
+    }
 }
 
 /// 規約・ポリシーを表示する共通画面。
+/// アプリの表示言語設定(日本語/英語)に応じて、本文を自動的に切り替える。
 struct LegalDocumentView: View {
-    let document: LegalDocument
+    let document: LegalDocument.Kind
+    @Environment(\.locale) private var locale
+
+    private var resolvedDocument: LegalDocument {
+        LegalDocument.resolved(document, locale: locale)
+    }
 
     var body: some View {
+        let document = resolvedDocument
         ZStack {
             Color.appListBackground.ignoresSafeArea()
             ScrollView {

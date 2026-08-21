@@ -13,9 +13,17 @@ struct FootprintsView: View {
     var body: some View {
         ScrollView {
             if footprintsManager.footprints.isEmpty && !footprintsManager.isLoading {
-                Text("まだ足あとはありません")
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 60)
+                VStack(spacing: 12) {
+                    Text(LocalizedStringKey(footprintsManager.errorMessage ?? "まだ足あとはありません"))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                    if footprintsManager.errorMessage != nil {
+                        Button("再読み込み") { Task { await footprintsManager.load() } }
+                            .font(.subheadline.bold())
+                    }
+                }
+                .padding(.top, 60)
             } else {
                 let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 2)
                 LazyVGrid(columns: columns, spacing: 12) {

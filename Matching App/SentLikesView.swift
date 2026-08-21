@@ -31,7 +31,9 @@ struct SentLikesView: View {
                 switch selectedTab {
                 case .received:
                     if likesManager.received.isEmpty && !likesManager.isLoading {
-                        emptyState(message: "まだ届いたいいねはありません")
+                        emptyState(message: "まだ届いたいいねはありません", error: likesManager.errorMessage) {
+                            Task { await likesManager.load() }
+                        }
                     } else {
                         LazyVStack(spacing: 12) {
                             ForEach(Array(likesManager.received.enumerated()), id: \.element.id) { index, received in
@@ -42,7 +44,9 @@ struct SentLikesView: View {
                     }
                 case .sent:
                     if sentLikesManager.sent.isEmpty && !sentLikesManager.isLoading {
-                        emptyState(message: "まだ誰にもいいねしていません")
+                        emptyState(message: "まだ誰にもいいねしていません", error: sentLikesManager.errorMessage) {
+                            Task { await sentLikesManager.load() }
+                        }
                     } else {
                         LazyVStack(spacing: 12) {
                             ForEach(Array(sentLikesManager.sent.enumerated()), id: \.element.id) { index, sentLike in
@@ -77,10 +81,19 @@ struct SentLikesView: View {
         .padding()
     }
 
-    private func emptyState(message: String) -> some View {
-        Text(LocalizedStringKey(message))
-            .foregroundStyle(.secondary)
-            .padding(.top, 60)
+    /// errorがある場合は「0件」ではなく読み込みエラーだと分かるようにし、再読み込みできるようにする。
+    private func emptyState(message: String, error: String? = nil, retry: (() -> Void)? = nil) -> some View {
+        VStack(spacing: 12) {
+            Text(LocalizedStringKey(error ?? message))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+            if error != nil, let retry {
+                Button("再読み込み") { retry() }
+                    .font(.subheadline.bold())
+            }
+        }
+        .padding(.top, 60)
     }
 
     @ViewBuilder
@@ -111,7 +124,7 @@ struct SentLikesView: View {
             photoCount: sentLike.photoCount,
             isOnline: sentLike.isOnline,
             commonPoints: sentLike.commonPoints,
-            ribbonLabel: sentLike.isMatched ? "マッチ済み" : sentLike.profile.joinBadgeLabel,
+            ribbonLabel: sentLike.isMatched ? String(localized: "マッチ済み") : sentLike.profile.joinBadgeLabel,
             ribbonColor: sentLike.isMatched ? Color.brandPurple : Color.brandOrange,
             destination: AnyView(
                 SwipeableProfileView(profiles: sentLikesManager.sent.map(\.profile), startIndex: index) { _ in EmptyView() }

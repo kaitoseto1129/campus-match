@@ -247,7 +247,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
             Text(LocalizedStringKey(label))
                 .foregroundStyle(.secondary)
             Spacer()
-            Text(value)
+            Text(LocalizedStringKey(value))
                 .foregroundStyle(Color.brandPurple)
         }
         .padding(.vertical, 14)

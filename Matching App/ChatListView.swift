@@ -21,11 +21,19 @@ struct ChatListView: View {
                 if chatManager.matches.isEmpty && !chatManager.isLoading {
                     ScrollView {
                         VStack(spacing: 12) {
-                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                            Image(systemName: chatManager.errorMessage != nil ? "wifi.slash" : "bubble.left.and.bubble.right.fill")
                                 .font(.system(size: 40))
                                 .foregroundStyle(Color.brandPurple.opacity(0.4))
-                            Text("まだマッチしたお相手がいません")
+                            // errorMessageがある場合は「マッチが0件」ではなく読み込みエラーだと分かるようにする
+                            // (以前はどちらも同じ文言で、通信エラーなのに「マッチが本当に無い」と誤解させていた)。
+                            Text(LocalizedStringKey(chatManager.errorMessage ?? "まだマッチしたお相手がいません"))
                                 .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 20)
+                            if chatManager.errorMessage != nil {
+                                Button("再読み込み") { Task { await chatManager.load() } }
+                                    .font(.subheadline.bold())
+                            }
                         }
                         .padding(.top, 80)
                         .frame(maxWidth: .infinity)

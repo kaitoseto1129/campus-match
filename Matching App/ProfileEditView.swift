@@ -20,6 +20,10 @@ struct ProfileEditView: View {
     @Environment(\.dismiss) var dismiss
     @State var name: String = ""
     @State var description: String = ""
+    /// 「キャンセル」タップ時に未保存の変更があるか判定するための、読み込み直後の値。
+    @State private var originalName: String = ""
+    @State private var originalDescription: String = ""
+    @State private var showingDiscardConfirm = false
     @State var gender: Gender? = nil
     @State var birthday: Date = Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date()
     /// 誕生日は日付型の性質上「未入力」を表現できないため、実際に選んだかどうかを別に持つ。
@@ -112,6 +116,35 @@ struct ProfileEditView: View {
     /// メインが空でもサブだけ先に登録されている状態を正しく表示できる。
     private func photo(forSlot slot: Int) -> ProfilePhoto? {
         profileManager.photos.first { $0.orderNumber == slot }
+    }
+
+    /// サブ写真を「メインにする」際に、新規アップロード時(顔検出必須)と同じ基準を通す。
+    /// 以前はここを素通りしていたため、顔が写っていない写真でも
+    /// (先にサブ写真として登録さえしてしまえば)メイン写真に設定できてしまっていた。
+    private func makeMainWithFaceCheck(_ target: ProfilePhoto) async {
+        guard let url = target.url else {
+            await profileManager.makeMain(photo: target)
+            return
+        }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            guard let image = UIImage(data: data) else {
+                faceCheckMessage = "この写真を読み込めませんでした。別の写真でお試しください。"
+                showingFaceCheckAlert = true
+                return
+            }
+            let result = await FaceDetector().checkFace(image: image)
+            guard case .ok = result else {
+                faceCheckMessage = result.message ?? "顔が写っている写真を選んでください"
+                showingFaceCheckAlert = true
+                return
+            }
+        } catch {
+            faceCheckMessage = "写真の確認に失敗しました。もう一度お試しください。"
+            showingFaceCheckAlert = true
+            return
+        }
+        await profileManager.makeMain(photo: target)
     }
 
     var photosSection: some View {
@@ -256,7 +289,7 @@ struct ProfileEditView: View {
                     .foregroundStyle(.primary)
                 Spacer()
                 if isFilled {
-                    Text(value ?? "")
+                    Text(LocalizedStringKey(value ?? ""))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 } else {
@@ -326,13 +359,13 @@ struct ProfileEditView: View {
     var lifestyleSection: some View {
         Section("ライフスタイル(任意)") {
             Picker("お酒", selection: $drinking) {
-                ForEach(drinkingOptions, id: \.self) { Text($0).tag($0) }
+                ForEach(drinkingOptions, id: \.self) { Text(LocalizedStringKey($0)).tag($0) }
             }
             Picker("タバコ", selection: $smoking) {
-                ForEach(smokingOptions, id: \.self) { Text($0).tag($0) }
+                ForEach(smokingOptions, id: \.self) { Text(LocalizedStringKey($0)).tag($0) }
             }
             Picker("体型", selection: $bodyType) {
-                ForEach(bodyTypeOptions, id: \.self) { Text($0).tag($0) }
+                ForEach(bodyTypeOptions, id: \.self) { Text(LocalizedStringKey($0)).tag($0) }
             }
             formRow(title: "話せる言語", value: languages.isEmpty ? "-" : languages.sorted().joined(separator: "・")) {
                 showingLanguagePicker = true
@@ -397,6 +430,9 @@ struct ProfileEditView: View {
     }
 
     var body: some View {
+        // 巨大な修飾子チェーンをそのまま1つの式にすると型チェックがタイムアウトするため、
+        // AnyViewで一度型を確定させて式を分割している。
+        let content = AnyView(
         NavigationStack {
             ZStack {
                 Color.appListBackground.ignoresSafeArea()
@@ -431,7 +467,13 @@ struct ProfileEditView: View {
             .toolbar {
                 if !isOnboarding {
                     ToolbarItem(placement: .cancellationAction){
-                        Button("キャンセル"){dismiss()}
+                        Button("キャンセル") {
+                            if name != originalName || description != originalDescription {
+                                showingDiscardConfirm = true
+                            } else {
+                                dismiss()
+                            }
+                        }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -449,6 +491,10 @@ struct ProfileEditView: View {
                 }
             }
         }
+        .confirmationDialog("編集内容を破棄しますか?", isPresented: $showingDiscardConfirm, titleVisibility: .visible) {
+            Button("破棄する", role: .destructive) { dismiss() }
+            Button("編集を続ける", role: .cancel) {}
+        }
         // 大学はサインアップ時に、登録した大学メールのドメインからサーバー側で自動設定される。
         // ただしプロフィール本体より後に大学名の取得が完了することがあり、その場合
         // onAppearの時点では名前が空で「選択してください」と表示され、
@@ -463,6 +509,8 @@ struct ProfileEditView: View {
             if let profile = profileManager.profile {
                 self.name = profile.name
                 self.description = profile.description ?? ""
+                self.originalName = profile.name
+                self.originalDescription = profile.description ?? ""
                 self.gender = profile.gender
                 self.hasChosenBirthday = profile.birthday != nil
                 self.birthday = profile.birthday ?? (Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date())
@@ -546,6 +594,8 @@ struct ProfileEditView: View {
                 }
             }
         }
+        )
+        return content
         .fullScreenCover(item: $cropperImage) { wrapper in
             PhotoCropperView(image: wrapper.image) { result in
                 cropperContinuation?.resume(returning: result)
@@ -566,8 +616,8 @@ struct ProfileEditView: View {
             ResidencePickerView(area: $area, city: $city)
         }
         .confirmationDialog("性別", isPresented: $showingGenderPicker, titleVisibility: .visible) {
-            Button(Gender.male.label) { gender = .male }
-            Button(Gender.female.label) { gender = .female }
+            Button(LocalizedStringKey(Gender.male.label)) { gender = .male }
+            Button(LocalizedStringKey(Gender.female.label)) { gender = .female }
             Button("キャンセル", role: .cancel) {}
         }
         .sheet(isPresented: $showingHeightPicker) {
@@ -589,7 +639,7 @@ struct ProfileEditView: View {
             }
             if let slot = photoActionSlot, slot != 0, let target = photo(forSlot: slot) {
                 Button("メインにする") {
-                    Task { await profileManager.makeMain(photo: target) }
+                    Task { await makeMainWithFaceCheck(target) }
                 }
             }
             if let slot = photoActionSlot, let target = photo(forSlot: slot) {
