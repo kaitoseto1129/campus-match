@@ -130,7 +130,7 @@ struct ContactView: View {
             Image(systemName: icon)
                 .foregroundStyle(color)
                 .frame(width: 24)
-            Text(text)
+            Text(LocalizedStringKey(text))
                 .font(.footnote)
             Spacer()
         }
@@ -142,7 +142,7 @@ struct ContactView: View {
     }
 
     private func openMailApp() {
-        let subject = "キャンマッチ お問い合わせ"
+        let subject = String.appLocalized("キャンマッチ お問い合わせ")
         var components = URLComponents(string: "mailto:\(address)")
         components?.queryItems = [URLQueryItem(name: "subject", value: subject)]
         guard let url = components?.url, UIApplication.shared.canOpenURL(url) else {

@@ -28,9 +28,9 @@ struct SafetyGuideView: View {
                     .foregroundStyle(Color.brandPurple)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.title)
+                    Text(LocalizedStringKey(item.title))
                         .font(.headline)
-                    Text(item.body)
+                    Text(LocalizedStringKey(item.body))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

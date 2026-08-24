@@ -97,7 +97,7 @@ struct MyPageTutorialOverlay: View {
     private func tooltip(rect: CGRect, proxy: GeometryProxy) -> some View {
         let placeBelow = rect == .zero || rect.midY < proxy.size.height / 2
         return VStack(spacing: 12) {
-            Text(content.message)
+            Text(LocalizedStringKey(content.message))
                 .font(.subheadline.bold())
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.leading)

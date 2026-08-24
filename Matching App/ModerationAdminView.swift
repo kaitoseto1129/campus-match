@@ -75,7 +75,7 @@ private struct ReportRow: View {
             }
 
             if let reason = item.report.reason, !reason.isEmpty {
-                Text(reason)
+                Text(LocalizedStringKey(reason))
                     .font(.subheadline)
                     .foregroundStyle(.primary)
                     .padding(10)
