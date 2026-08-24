@@ -39,6 +39,31 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     }
 }
 
+extension String {
+    /// `String(localized:)`は`@Environment(\.locale)`(アプリ内の「Language」設定)を見ず、
+    /// 端末本体のシステム言語だけを見て解決してしまう。そのため、Viewの外(モデルや
+    /// ヘルパー関数)で文言を組み立てる際にそのまま使うと、マイページの「Language」で
+    /// Englishに切り替えても端末が日本語のままだと日本語で表示され続けてしまっていた
+    /// (`String(localized:locale:)`にlocaleを明示しても解決されなかったため、
+    /// より枯れた`Bundle.localizedString(forKey:value:table:)`に切り替えている)。
+    ///
+    /// keyはLocalizable.xcstringsの原文(日本語)キーそのもの。%@ / %lld 等の書式指定を
+    /// 含む場合はargsに実引数を渡す(String(format:)と同じ規約)。
+    static func appLocalized(_ key: String, _ args: CVarArg...) -> String {
+        let raw = UserDefaults.standard.string(forKey: "appLanguage") ?? AppLanguage.system.rawValue
+        let bundle: Bundle
+        if let identifier = AppLanguage(rawValue: raw)?.locale?.identifier,
+           let path = Bundle.main.path(forResource: identifier, ofType: "lproj"),
+           let localeBundle = Bundle(path: path) {
+            bundle = localeBundle
+        } else {
+            bundle = .main
+        }
+        let format = bundle.localizedString(forKey: key, value: key, table: "Localizable")
+        return args.isEmpty ? format : String(format: format, arguments: args)
+    }
+}
+
 @main
 struct Matching_AppApp: App {
     // APNsのデバイストークン受信コールバックはSwiftUIのApp protocol単体では受け取れないため、

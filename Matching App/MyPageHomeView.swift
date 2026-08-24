@@ -392,16 +392,16 @@ struct MyPageHomeView: View {
                                 .font(.caption.bold())
                                 .foregroundStyle(.secondary)
                                 .padding(.bottom, 6)
-                            ForEach(completeness.missingLabels, id: \.self) { label in
+                            ForEach(completeness.missingItems) { item in
                                 HStack {
                                     Image(systemName: "circle")
                                         .foregroundStyle(.secondary)
                                         .font(.caption)
-                                    Text(LocalizedStringKey(label))
+                                    Text(item.display)
                                         .font(.subheadline)
                                     Spacer()
                                     // 趣味カードだけはプロフィール編集画面ではなく専用の選択画面で設定する。
-                                    if label.contains("趣味カード") {
+                                    if item.key.contains("趣味カード") {
                                         Button {
                                             showingHobbyCardPicker = true
                                         } label: {
@@ -411,7 +411,7 @@ struct MyPageHomeView: View {
                                         }
                                     } else {
                                         NavigationLink {
-                                            ProfileEditView(profileManager: profileManager, initialFocusSectionId: ProfileEditView.sectionId(for: label))
+                                            ProfileEditView(profileManager: profileManager, initialFocusSectionId: ProfileEditView.sectionId(for: item.key))
                                         } label: {
                                             Text("編集する")
                                                 .font(.caption.bold())
@@ -420,7 +420,7 @@ struct MyPageHomeView: View {
                                     }
                                 }
                                 .padding(.vertical, 6)
-                                if label != completeness.missingLabels.last {
+                                if item != completeness.missingItems.last {
                                     Divider()
                                 }
                             }

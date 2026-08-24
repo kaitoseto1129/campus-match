@@ -20,7 +20,7 @@ struct Profile: Codable, Identifiable {
     }
     var ageLabel: String {
         guard let age else { return "-" }
-        return String(localized: "\(age)歳")
+        return String.appLocalized("%lld歳", age)
     }
     /// gender・birthday・description・写真などプロフィールの必須項目が揃っているか。
     /// これが揃うまではオンボーディング(プロフィール編集の強制)を表示する。
@@ -44,7 +44,7 @@ struct Profile: Codable, Identifiable {
     let height: Int?
     var heightLabel: String {
         guard let height else { return "-" }
-        return String(localized: "\(height)cm")
+        return String.appLocalized("%lldcm", height)
     }
     let major: String?
     /// 旧・単一選択の国籍。表示のフォールバック用に残しているが、編集・絞り込みはnationalitiesを使う。
@@ -81,8 +81,8 @@ struct Profile: Codable, Identifiable {
         guard let createdAtString,
               let createdAt = ISO8601DateFormatter.matchingApp.date(from: createdAtString) else { return nil }
         let days = Calendar.current.dateComponents([.day], from: createdAt, to: Date()).day ?? Int.max
-        if days <= 7 { return String(localized: "今週入会") }
-        if days <= 30 { return String(localized: "今月入会") }
+        if days <= 7 { return String.appLocalized("今週入会") }
+        if days <= 30 { return String.appLocalized("今月入会") }
         return nil
     }
 
@@ -114,9 +114,9 @@ enum MembershipTier: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .free: return "無料会員"
+        case .free: return String.appLocalized("無料会員")
         // premium/vipはUI上は「有料会員」1プランに統合しているため、同じラベルを返す。
-        case .premium, .vip: return "有料会員"
+        case .premium, .vip: return String.appLocalized("有料会員")
         }
     }
 
@@ -152,7 +152,15 @@ enum MembershipTier: String, Codable, CaseIterable {
 
 struct ProfileCompleteness {
     let percent: Int
-    let missingLabels: [String]
+    let missingItems: [MissingItem]
+
+    /// keyは項目を一意に識別する原文(日本語)。セクション遷移先の判定など、表示以外の
+    /// ロジックはこちらを見る。displayは実際に画面へ出す(言語設定に応じて解決済みの)文言。
+    struct MissingItem: Identifiable, Equatable {
+        let key: String
+        let display: String
+        var id: String { key }
+    }
 }
 
 extension Profile {
@@ -160,15 +168,19 @@ extension Profile {
     func completeness(photoCount: Int) -> ProfileCompleteness {
         var total = 0
         var done = 0
-        var missing: [String] = []
-        func check(_ label: String, _ isDone: Bool) {
+        var missing: [ProfileCompleteness.MissingItem] = []
+        func check(_ key: String, _ isDone: Bool, display: String? = nil) {
             total += 1
-            if isDone { done += 1 } else { missing.append(label) }
+            if isDone { done += 1 } else { missing.append(.init(key: key, display: display ?? String.appLocalized(key))) }
         }
         check("自己紹介", !(description ?? "").isEmpty)
         // メイン写真は必須で常に1枚あるため、充実度チェックでは任意のサブ写真も含めた枚数を目安にする。
         let recommendedPhotoCount = 1 + ProfileEditView.minSubPhotoCount
-        check("写真\(recommendedPhotoCount)枚以上", photoCount >= recommendedPhotoCount)
+        check(
+            "写真\(recommendedPhotoCount)枚以上",
+            photoCount >= recommendedPhotoCount,
+            display: String.appLocalized("写真%lld枚以上", recommendedPhotoCount)
+        )
         check("一言コメント", !(tagline ?? "").isEmpty)
         check("専攻", !(major ?? "").isEmpty)
         check("自己紹介200文字以上", (description ?? "").count >= 200)
@@ -178,7 +190,7 @@ extension Profile {
         check("趣味カード", !hobbyCards.isEmpty)
         check("話せる言語", !languages.isEmpty)
         let percent = total == 0 ? 0 : Int((Double(done) / Double(total) * 100).rounded())
-        return ProfileCompleteness(percent: percent, missingLabels: missing)
+        return ProfileCompleteness(percent: percent, missingItems: missing)
     }
 
     /// 相手との共通点の数を簡易的に算出する(居住地・国籍・お酒・タバコ・体型・話せる言語)。

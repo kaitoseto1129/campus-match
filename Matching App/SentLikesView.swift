@@ -124,7 +124,7 @@ struct SentLikesView: View {
             photoCount: sentLike.photoCount,
             isOnline: sentLike.isOnline,
             commonPoints: sentLike.commonPoints,
-            ribbonLabel: sentLike.isMatched ? String(localized: "マッチ済み") : sentLike.profile.joinBadgeLabel,
+            ribbonLabel: sentLike.isMatched ? String.appLocalized("マッチ済み") : sentLike.profile.joinBadgeLabel,
             ribbonColor: sentLike.isMatched ? Color.brandPurple : Color.brandOrange,
             destination: AnyView(
                 SwipeableProfileView(profiles: sentLikesManager.sent.map(\.profile), startIndex: index) { _ in EmptyView() }

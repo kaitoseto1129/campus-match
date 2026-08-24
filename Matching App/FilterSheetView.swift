@@ -56,7 +56,7 @@ struct FilterSheetView: View {
                                     max: $draft.ageMax
                                 )
                             } label: {
-                                filterRow(title: "年齢", value: String(localized: "\(draft.ageMin)歳 〜 \(draft.ageMax)歳"))
+                                filterRow(title: "年齢", value: String.appLocalized("%lld歳 〜 %lld歳", draft.ageMin, draft.ageMax))
                             }
                             Divider().padding(.leading, 16)
 
@@ -69,7 +69,7 @@ struct FilterSheetView: View {
                                     max: $draft.heightMax
                                 )
                             } label: {
-                                filterRow(title: "身長", value: String(localized: "\(draft.heightMin)cm 〜 \(draft.heightMax)cm"))
+                                filterRow(title: "身長", value: String.appLocalized("%lldcm 〜 %lldcm", draft.heightMin, draft.heightMax))
                             }
                             Divider().padding(.leading, 16)
 

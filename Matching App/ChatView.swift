@@ -232,7 +232,7 @@ struct ChatView: View {
                     Text("話題になりそうな共通点")
                         .font(.caption.bold())
                         .foregroundStyle(.secondary)
-                    FlowLayoutView(options: sharedHobbyCards.map { "\($0.emoji) \(String(localized: String.LocalizationValue($0.title)))" }) { label in
+                    FlowLayoutView(options: sharedHobbyCards.map { "\($0.emoji) \(String.appLocalized($0.title))" }) { label in
                         Text(label)
                             .font(.caption.bold())
                             .padding(.horizontal, 12)
@@ -642,10 +642,10 @@ private struct CallRequestBubbleView: View {
 
     private var statusText: String {
         switch status {
-        case .pending: return String(localized: isMine ? "電話をします" : "\(name)さんから電話のリクエストです")
-        case .accepted: return String(localized: isMine ? "\(name)さんが通話を許可しました" : "通話を許可しました")
-        case .declined: return String(localized: isMine ? "今は難しいようです" : "リクエストを見送りました")
-        case .canceled: return String(localized: "通話リクエストを取り消しました")
+        case .pending: return isMine ? String.appLocalized("電話をします") : String.appLocalized("%@さんから電話のリクエストです", name)
+        case .accepted: return isMine ? String.appLocalized("%@さんが通話を許可しました", name) : String.appLocalized("通話を許可しました")
+        case .declined: return isMine ? String.appLocalized("今は難しいようです") : String.appLocalized("リクエストを見送りました")
+        case .canceled: return String.appLocalized("通話リクエストを取り消しました")
         }
     }
 

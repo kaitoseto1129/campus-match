@@ -60,7 +60,7 @@ struct ChatListView: View {
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
-                                    Text(previewText(for: match))
+                                    Text(LocalizedStringKey(previewText(for: match)))
                                         .font(.caption)
                                         .foregroundStyle(match.unreadCount > 0 ? .primary : .secondary)
                                         .fontWeight(match.unreadCount > 0 ? .semibold : .regular)
