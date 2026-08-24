@@ -22,6 +22,12 @@ begin
   delete from public.hidden_matches where user_id = uid or match_id in (
     select id from public.matches where user_a_id = uid or user_b_id = uid
   );
+  -- call_requests.match_id はON DELETE CASCADEなしでmatchesを参照しているため、
+  -- 通話リクエストを一度でもやり取りしたマッチが残っているとmatches削除時に
+  -- 外部キー制約違反で退会処理全体が失敗してしまう。先に消しておく。
+  delete from public.call_requests where match_id in (
+    select id from public.matches where user_a_id = uid or user_b_id = uid
+  ) or requester_id = uid;
   delete from public.matches where user_a_id = uid or user_b_id = uid;
   delete from public.likes where from_user_id = uid or to_user_id = uid;
   delete from public.profile_visits where viewer_id = uid or visited_id = uid;

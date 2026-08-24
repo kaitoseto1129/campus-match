@@ -61,11 +61,15 @@ final class DailyMissionsManager: ObservableObject {
         missions.contains { $0.isComplete && !claimedKeys.contains($0.key) }
     }
 
+    /// サーバー側のclaim_daily_mission RPCがclaim_dateを日本時間で記録するのに合わせて、
+    /// ここも日本時間で「今日」を判定する。ここがローカル端末TZやUTCのままだと、
+    /// 進捗カウンター(ローカル時刻基準)と受け取り済み判定がズレて、
+    /// 達成しているのに受け取れない時間帯ができてしまう。
     private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .iso8601)
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
@@ -75,7 +79,11 @@ final class DailyMissionsManager: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let calendar = Calendar(identifier: .iso8601)
+            // 端末のローカルタイムゾーンに任せると、TZ設定が日本以外の端末でここだけ
+            // claim_date(日本時間固定)とズレてしまうため、進捗カウンターも明示的に
+            // 日本時間で「今日」を判定する。
+            var calendar = Calendar(identifier: .iso8601)
+            calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
             let startOfDay = calendar.startOfDay(for: Date())
             let startOfDayString = ISO8601DateFormatter.matchingApp.string(from: startOfDay)
             let todayString = Self.dayFormatter.string(from: Date())

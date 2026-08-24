@@ -53,8 +53,8 @@ final class ChatManager: ObservableObject {
                 .execute()
                 .value
             let hiddenMatchIds = Set(hiddenRows.map(\.matchId))
-            // ブロックした相手とのトークも一覧から除外する。
-            let blockedIds = Set(await UserModeration.actedUserIds(actorId: myId, action: "block"))
+            // 自分がブロックした相手・自分をブロックした相手、どちらとのトークも一覧から除外する。
+            let blockedIds = await UserModeration.blockedCounterpartIds(myId: myId)
             let visibleMatchRows = matchRows.filter { match in
                 let otherId = match.userAId == myId ? match.userBId : match.userAId
                 return !hiddenMatchIds.contains(match.id) && !blockedIds.contains(otherId)

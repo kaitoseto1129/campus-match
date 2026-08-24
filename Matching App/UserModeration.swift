@@ -121,6 +121,33 @@ enum UserModeration {
 
     private struct VoidResponse: Decodable {}
 
+    /// 自分がブロックした相手・自分をブロックした相手の両方のID一覧(双方向)。
+    /// トーク一覧では、相手が自分をブロックした場合もこちら側から会話が
+    /// 見えなくなるべきなので、片方向のactedUserIds(自分がブロックした側だけ)では不十分。
+    static func blockedCounterpartIds(myId: UUID) async -> Set<UUID> {
+        struct BlockRow: Decodable {
+            let actorId: UUID
+            let targetId: UUID
+            enum CodingKeys: String, CodingKey {
+                case actorId = "actor_id"
+                case targetId = "target_id"
+            }
+        }
+        do {
+            let rows: [BlockRow] = try await supabase()
+                .from("user_actions")
+                .select("actor_id, target_id")
+                .eq("action", value: "block")
+                .or("actor_id.eq.\(myId),target_id.eq.\(myId)")
+                .execute()
+                .value
+            return Set(rows.map { $0.actorId == myId ? $0.targetId : $0.actorId })
+        } catch {
+            print("user moderation blocked counterpart fetch error: \(error)")
+            return []
+        }
+    }
+
     /// 自分がactionした(非表示/ブロックした)相手の一覧を取得する。
     static func actedUserIds(actorId: UUID, action: String) async -> [UUID] {
         do {

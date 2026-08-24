@@ -48,8 +48,12 @@ begin
     raise exception 'unknown mission key: %', mission;
   end if;
 
+  -- current_date(DBのタイムゾーン=UTC)ではなく、日本時間の日付で記録する。
+  -- クライアント側の進捗カウンター(いいね数・訪問数など)は端末のローカル時刻(JST想定)で
+  -- 「今日」を判定しているため、ここがUTCのままだとJST 0時〜9時の間、進捗は達成しているのに
+  -- 受け取りボタンだけ前日扱いのまま押せない、という食い違いが生まれてしまう。
   insert into public.mission_claims (user_id, mission_key, claim_date)
-  values (auth.uid(), mission, current_date);
+  values (auth.uid(), mission, (now() at time zone 'Asia/Tokyo')::date);
 
   update public.profiles
   set remaining_likes = remaining_likes + actual_reward

@@ -80,9 +80,56 @@ Deno.serve(async (req: Request) => {
     return json({ error: "method not allowed" }, 405);
   }
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return json({ success: false, error: "unauthorized" }, 401);
+
     const { userId, title, body, data } = await req.json();
     if (!userId || !title || !body) {
       return json({ success: false, error: "userId, title, body are required" }, 400);
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: callerData, error: callerError } = await userClient.auth.getUser();
+    if (callerError || !callerData.user) return json({ success: false, error: "unauthorized" }, 401);
+    const callerId = callerData.user.id;
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // verify_jwtは「ログイン済みユーザーであること」しか保証しないため、これがないと
+    // ログイン済みの誰もが任意のuserIdへ任意のtitle/bodyでプッシュ通知をなりすまし送信できてしまう。
+    // 実際にこの関数を呼ぶのは「いいねを送った」「マッチした」「メッセージを送った」時だけなので、
+    // 呼び出し元と対象ユーザーの間にlikesまたはmatchesの実際の関係があることを確認する。
+    if (callerId !== userId) {
+      const { data: relation, error: relationError } = await supabase
+        .from("likes")
+        .select("from_user_id")
+        .eq("from_user_id", callerId)
+        .eq("to_user_id", userId)
+        .limit(1);
+      if (relationError) throw relationError;
+
+      let hasRelation = (relation?.length ?? 0) > 0;
+      if (!hasRelation) {
+        const { data: matchRows, error: matchError } = await supabase
+          .from("matches")
+          .select("id")
+          .or(
+            `and(user_a_id.eq.${callerId},user_b_id.eq.${userId}),and(user_a_id.eq.${userId},user_b_id.eq.${callerId})`,
+          )
+          .limit(1);
+        if (matchError) throw matchError;
+        hasRelation = (matchRows?.length ?? 0) > 0;
+      }
+
+      if (!hasRelation) {
+        return json({ success: false, error: "no relation to target user" }, 403);
+      }
     }
 
     const jwt = await getApnsJWT();
@@ -90,10 +137,6 @@ Deno.serve(async (req: Request) => {
       console.log("send-push: APNs secrets not configured, skipping");
       return json({ success: true, sent: 0, skipped: true });
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
 
     const { data: tokens, error } = await supabase
       .from("push_tokens")
