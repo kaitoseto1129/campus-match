@@ -10,20 +10,27 @@ struct GatheringListView: View {
     @EnvironmentObject private var tabRouter: TabRouter
     @State private var selectedSegment: Segment = .browse
     @State private var showingCreateSheet = false
+    @State private var showingFilterSheet = false
+    @State private var filter = GatheringBrowseFilter()
     @State private var navPath = NavigationPath()
 
     enum Segment: String, CaseIterable {
-        case browse, mine
+        case browse, hosted
         var label: String {
             switch self {
             case .browse: return "みんなの募集"
-            case .mine: return "自分の集まり"
+            case .hosted: return "自分が主催"
             }
         }
     }
 
     private var visibleSummaries: [GatheringSummary] {
-        selectedSegment == .browse ? manager.openSummaries : manager.mySummaries
+        switch selectedSegment {
+        case .browse:
+            return filter.isActive ? manager.openSummaries.filter(filter.matches) : manager.openSummaries
+        case .hosted:
+            return manager.hostedSummaries
+        }
     }
 
     var body: some View {
@@ -38,6 +45,10 @@ struct GatheringListView: View {
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
                     .padding(.top, 8)
+
+                    if selectedSegment == .browse {
+                        filterBar
+                    }
 
                     if manager.isLoading && visibleSummaries.isEmpty {
                         ProgressView().padding(.top, 60)
@@ -81,8 +92,11 @@ struct GatheringListView: View {
             }) {
                 CreateGatheringView(manager: manager)
             }
+            .sheet(isPresented: $showingFilterSheet) {
+                GatheringFilterSheet(filter: $filter)
+            }
             .navigationDestination(for: UUID.self) { gatheringId in
-                if let summary = (manager.openSummaries + manager.mySummaries).first(where: { $0.gathering.id == gatheringId }) {
+                if let summary = (manager.openSummaries + manager.hostedSummaries).first(where: { $0.gathering.id == gatheringId }) {
                     GatheringDetailView(manager: manager, summary: summary)
                 }
             }
@@ -100,12 +114,41 @@ struct GatheringListView: View {
         }
     }
 
+    private var filterBar: some View {
+        HStack {
+            Button {
+                showingFilterSheet = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "line.3.horizontal.decrease.circle" + (filter.isActive ? ".fill" : ""))
+                    Text("絞り込み")
+                }
+                .font(.subheadline.bold())
+                .foregroundStyle(filter.isActive ? .white : Color.brandPurple)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(filter.isActive ? AnyShapeStyle(Color.brandPurple) : AnyShapeStyle(Color.brandPurple.opacity(0.12)), in: Capsule())
+            }
+            if filter.isActive {
+                Button {
+                    filter = GatheringBrowseFilter()
+                } label: {
+                    Text("リセット")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+        }
+        .padding(.horizontal)
+    }
+
     private var emptyState: some View {
         VStack(spacing: 10) {
             Image(systemName: "person.3")
                 .font(.system(size: 44))
                 .foregroundStyle(.secondary)
-            Text(LocalizedStringKey(selectedSegment == .browse ? "募集中の集まりはまだありません" : "参加中・主催中の集まりはありません"))
+            Text(LocalizedStringKey(selectedSegment == .browse ? "募集中の集まりはまだありません" : "まだ主催した集まりはありません"))
                 .font(.subheadline.bold())
                 .foregroundStyle(.secondary)
             if selectedSegment == .browse {
@@ -123,7 +166,6 @@ private struct GatheringCard: View {
     let summary: GatheringSummary
 
     private var statusBadge: (text: String, color: Color)? {
-        if summary.isHost { return ("主催中", Color.brandPurple) }
         switch summary.myApplication?.status {
         case "pending": return ("承認待ち", Color.brandOrange)
         case "accepted": return ("参加確定", Color.brandTeal)
@@ -134,11 +176,35 @@ private struct GatheringCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if let imageURL = summary.gathering.imageURL {
+                AsyncImage(url: imageURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().scaledToFill()
+                    default:
+                        Color(.systemGray6)
+                    }
+                }
+                .frame(height: 120)
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+
             HStack(alignment: .top) {
-                Text(summary.gathering.title)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(summary.gathering.title)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                    if let category = summary.gathering.category {
+                        Text(LocalizedStringKey(category))
+                            .font(.caption2.bold())
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.brandTeal.opacity(0.15), in: Capsule())
+                            .foregroundStyle(Color.brandTeal)
+                    }
+                }
                 Spacer()
                 if let statusBadge {
                     Text(LocalizedStringKey(statusBadge.text))
@@ -180,8 +246,81 @@ private struct GatheringCard: View {
             }
         }
         .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
+    }
+}
+
+private struct GatheringFilterSheet: View {
+    @Binding var filter: GatheringBrowseFilter
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: GatheringBrowseFilter
+
+    init(filter: Binding<GatheringBrowseFilter>) {
+        self._filter = filter
+        self._draft = State(initialValue: filter.wrappedValue)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("日付で絞り込む") {
+                    Toggle("開始日を指定", isOn: Binding(
+                        get: { draft.dateFrom != nil },
+                        set: { draft.dateFrom = $0 ? (draft.dateFrom ?? Date()) : nil }
+                    ))
+                    if let dateFrom = draft.dateFrom {
+                        DatePicker("この日から", selection: Binding(get: { dateFrom }, set: { draft.dateFrom = $0 }), displayedComponents: [.date])
+                    }
+                    Toggle("終了日を指定", isOn: Binding(
+                        get: { draft.dateTo != nil },
+                        set: { draft.dateTo = $0 ? (draft.dateTo ?? Date()) : nil }
+                    ))
+                    if let dateTo = draft.dateTo {
+                        DatePicker("この日まで", selection: Binding(get: { dateTo }, set: { draft.dateTo = $0 }), displayedComponents: [.date])
+                    }
+                }
+                Section("カテゴリで絞り込む") {
+                    ForEach(gatheringCategoryOptions, id: \.self) { category in
+                        Button {
+                            if draft.categories.contains(category) {
+                                draft.categories.remove(category)
+                            } else {
+                                draft.categories.insert(category)
+                            }
+                        } label: {
+                            HStack {
+                                Text(LocalizedStringKey(category)).foregroundStyle(.primary)
+                                Spacer()
+                                if draft.categories.contains(category) {
+                                    Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("絞り込み")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        filter = draft
+                        dismiss()
+                    } label: {
+                        Text("適用する").bold()
+                    }
+                }
+            }
+        }
     }
 }
 

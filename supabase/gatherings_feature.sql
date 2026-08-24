@@ -202,3 +202,55 @@ grant execute on function public.respond_to_gathering_application(uuid, boolean)
 alter publication supabase_realtime add table public.gatherings;
 alter publication supabase_realtime add table public.gathering_applications;
 alter publication supabase_realtime add table public.gathering_messages;
+
+-- 2026-08-24: gatherings_image_category_duration マイグレーションで追加。
+-- 任意の画像・カテゴリ・所要時間の目安を持てるようにする。
+alter table public.gatherings
+  add column image_url text,
+  add column category text,
+  add column duration_hours int;
+
+insert into storage.buckets (id, name, public)
+values ('gathering_photos', 'gathering_photos', true)
+on conflict (id) do nothing;
+
+create policy "Hosts can upload gathering photos"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'gathering_photos'
+  and exists (
+    select 1 from public.gatherings g
+    where g.id = ((storage.foldername(objects.name))[1])::uuid
+      and g.host_id = auth.uid()
+  )
+);
+
+create policy "Hosts can update gathering photos"
+on storage.objects for update to authenticated
+using (
+  bucket_id = 'gathering_photos'
+  and exists (
+    select 1 from public.gatherings g
+    where g.id = ((storage.foldername(objects.name))[1])::uuid
+      and g.host_id = auth.uid()
+  )
+)
+with check (
+  bucket_id = 'gathering_photos'
+  and exists (
+    select 1 from public.gatherings g
+    where g.id = ((storage.foldername(objects.name))[1])::uuid
+      and g.host_id = auth.uid()
+  )
+);
+
+create policy "Hosts can delete gathering photos"
+on storage.objects for delete to authenticated
+using (
+  bucket_id = 'gathering_photos'
+  and exists (
+    select 1 from public.gatherings g
+    where g.id = ((storage.foldername(objects.name))[1])::uuid
+      and g.host_id = auth.uid()
+  )
+);

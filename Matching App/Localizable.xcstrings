@@ -7297,6 +7297,226 @@
           }
         }
       }
+    },
+    "カテゴリ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        }
+      }
+    },
+    "写真(任意)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo (optional)"
+          }
+        }
+      }
+    },
+    "写真を追加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a photo"
+          }
+        }
+      }
+    },
+    "写真を削除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove photo"
+          }
+        }
+      }
+    },
+    "所要時間の目安": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated duration"
+          }
+        }
+      }
+    },
+    "だいたい%lld時間": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %lld hours"
+          }
+        }
+      }
+    },
+    "ご飯": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food"
+          }
+        }
+      }
+    },
+    "カフェ・勉強": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafe & Study"
+          }
+        }
+      }
+    },
+    "スポーツ・アウトドア": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sports & Outdoors"
+          }
+        }
+      }
+    },
+    "遊び・観光": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fun & Sightseeing"
+          }
+        }
+      }
+    },
+    "イベント参加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Events"
+          }
+        }
+      }
+    },
+    "その他": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        }
+      }
+    },
+    "自分が主催": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hosted by me"
+          }
+        }
+      }
+    },
+    "まだ主催した集まりはありません": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You haven't hosted any gatherings yet"
+          }
+        }
+      }
+    },
+    "日付で絞り込む": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by date"
+          }
+        }
+      }
+    },
+    "開始日を指定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a start date"
+          }
+        }
+      }
+    },
+    "この日から": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From this date"
+          }
+        }
+      }
+    },
+    "終了日を指定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set an end date"
+          }
+        }
+      }
+    },
+    "この日まで": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until this date"
+          }
+        }
+      }
+    },
+    "カテゴリで絞り込む": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by category"
+          }
+        }
+      }
+    },
+    "適用する": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        }
+      }
+    },
+    "一緒に参加したい理由や自己紹介など": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why you'd like to join, a quick intro, etc."
+          }
+        }
+      }
     }
   },
   "version": "1.1"

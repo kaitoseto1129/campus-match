@@ -6,13 +6,14 @@
 import Foundation
 import Supabase
 import Combine
+import UIKit
 
 @MainActor
 final class GatheringManager: ObservableObject {
-    /// 同じ大学で募集中の集まり(自分が主催・参加しているものも含む)。
+    /// 同じ大学で募集中の集まり(自分の主催分は除く。自分が応募済みのものはステータス付きで含む)。
     @Published var openSummaries: [GatheringSummary] = []
-    /// 自分が主催している、または応募(承認待ち・参加確定)している集まり。
-    @Published var mySummaries: [GatheringSummary] = []
+    /// 自分が主催している集まり(状態問わず)。
+    @Published var hostedSummaries: [GatheringSummary] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -45,7 +46,7 @@ final class GatheringManager: ObservableObject {
 
             guard !gatherings.isEmpty else {
                 openSummaries = []
-                mySummaries = []
+                hostedSummaries = []
                 isLoading = false
                 return
             }
@@ -87,11 +88,14 @@ final class GatheringManager: ObservableObject {
                 )
             }
 
+            // 自分が主催した集まりは「自分が主催」タブの方に集約し、「みんなの募集」には出さない
+            // (以前は両方に出ていて、自分の投稿に「主催中」バッジをつける必要があり紛らわしかった)。
+            // 自分が応募済みのものは、ステータスを確認できるようここに残す。
             openSummaries = summaries
-                .filter { $0.gathering.isOpen && !$0.gathering.isPast }
+                .filter { !$0.isHost && ($0.myApplication != nil || ($0.gathering.isOpen && !$0.gathering.isPast)) }
                 .sorted { $0.gathering.scheduledAt < $1.gathering.scheduledAt }
-            mySummaries = summaries
-                .filter { $0.isHost || $0.myApplication != nil }
+            hostedSummaries = summaries
+                .filter { $0.isHost }
                 .sorted { $0.gathering.scheduledAt < $1.gathering.scheduledAt }
         } catch {
             errorMessage = "集まりを読み込めませんでした"
@@ -101,10 +105,10 @@ final class GatheringManager: ObservableObject {
     }
 
     @discardableResult
-    func create(title: String, description: String, location: String, scheduledAt: Date, capacity: Int) async -> Bool {
+    func create(title: String, description: String, location: String, scheduledAt: Date, capacity: Int, category: String, durationHours: Int, image: UIImage?) async -> Bool {
         guard let myId, let myUniversityId else { return false }
         do {
-            try await supabase()
+            let inserted: Gathering = try await supabase()
                 .from("gatherings")
                 .insert(GatheringInsertPayload(
                     hostId: myId,
@@ -113,15 +117,42 @@ final class GatheringManager: ObservableObject {
                     description: description.isEmpty ? nil : description,
                     location: location,
                     scheduledAtString: ISO8601DateFormatter.matchingApp.string(from: scheduledAt),
-                    capacity: capacity
+                    capacity: capacity,
+                    category: category,
+                    durationHours: durationHours
                 ))
+                .select()
+                .single()
                 .execute()
+                .value
+            if let image, let imageURLString = await uploadImage(image, gatheringId: inserted.id) {
+                try await supabase()
+                    .from("gatherings")
+                    .update(["image_url": imageURLString])
+                    .eq("id", value: inserted.id)
+                    .execute()
+            }
             await load()
             return true
         } catch {
             errorMessage = "集まりを作成できませんでした"
             print("gathering create error: \(error)")
             return false
+        }
+    }
+
+    /// 集まりの画像は任意。アップロードに失敗しても集まり自体の作成は失敗させたくないため、
+    /// ここでのエラーは投稿全体の失敗にはせずnilを返すだけにする。
+    private func uploadImage(_ image: UIImage, gatheringId: UUID) async -> String? {
+        guard let data = image.resized(maxDimension: 1080).jpegData(compressionQuality: 0.8) else { return nil }
+        do {
+            let filePath = "\(gatheringId.uuidString)/\(UUID().uuidString).jpg"
+            try await supabase().storage.from("gathering_photos").upload(filePath, data: data, options: FileOptions(contentType: "image/jpeg"))
+            let url = try await supabase().storage.from("gathering_photos").getPublicURL(path: filePath)
+            return url.absoluteString
+        } catch {
+            print("gathering image upload error: \(error)")
+            return nil
         }
     }
 
