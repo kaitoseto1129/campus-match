@@ -351,8 +351,8 @@ struct ProfileEditView: View {
 
     private var birthdayLabel: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "yyyy年M月d日"
+        formatter.locale = AppLanguage.currentLocale
+        formatter.dateStyle = .long
         return formatter.string(from: birthday)
     }
 

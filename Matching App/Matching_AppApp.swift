@@ -37,6 +37,14 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .english: return Locale(identifier: "en")
         }
     }
+
+    /// 現在の実効ロケール(「システムに従う」の場合は端末のロケール)。
+    /// DateFormatter・RelativeDateTimeFormatterなど、Viewの外からアプリ内の
+    /// 言語設定を反映させたい場合に使う。
+    static var currentLocale: Locale {
+        let raw = UserDefaults.standard.string(forKey: "appLanguage") ?? AppLanguage.system.rawValue
+        return (AppLanguage(rawValue: raw) ?? .system).locale ?? Locale.autoupdatingCurrent
+    }
 }
 
 extension String {

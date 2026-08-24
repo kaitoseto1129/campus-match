@@ -218,7 +218,7 @@ struct ChatListView: View {
     private func relativeTime(_ date: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
-        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.locale = AppLanguage.currentLocale
         return formatter.localizedString(for: date, relativeTo: Date())
     }
 }
