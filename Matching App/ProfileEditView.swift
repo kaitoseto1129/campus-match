@@ -254,7 +254,7 @@ struct ProfileEditView: View {
                 Text(LocalizedStringKey(title))
                     .foregroundStyle(.primary)
                 Spacer()
-                Text(value)
+                Text(LocalizedStringKey(value))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 Image(systemName: "chevron.right")

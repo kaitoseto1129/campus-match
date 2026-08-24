@@ -143,7 +143,7 @@ struct ChatView: View {
                 HStack(spacing: 8) {
                     IconImage(url: otherPhotoURL, size: 30)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(otherProfile.name)
+                        Text(otherProfile.name.displayNameForCurrentLanguage)
                             .font(.subheadline.bold())
                             .lineLimit(1)
                         Text(otherProfile.ageLabel)
@@ -578,7 +578,7 @@ struct ChatView: View {
     private var typingIndicatorRow: some View {
         HStack(spacing: 6) {
             TypingDotsView()
-            Text("\(otherProfile.name)さんが入力中...")
+            Text(String.appLocalized("%@さんが入力中...", otherProfile.name.displayNameForCurrentLanguage))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()

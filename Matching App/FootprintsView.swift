@@ -85,7 +85,7 @@ private struct FootprintCardView: View {
             }
             .buttonStyle(.plain)
 
-            Text(footprint.profile.name)
+            Text(footprint.profile.name.displayNameForCurrentLanguage)
                 .font(.subheadline.bold())
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)

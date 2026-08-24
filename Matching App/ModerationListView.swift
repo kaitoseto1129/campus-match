@@ -39,7 +39,7 @@ struct ModerationListView: View {
                             HStack(spacing: 12) {
                                 IconImage(url: photoURLs[profile.id], size: 48)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(profile.name)
+                                    Text(profile.name.displayNameForCurrentLanguage)
                                         .font(.subheadline.bold())
                                     Text(profile.ageLabel)
                                         .font(.caption)

@@ -193,7 +193,7 @@ private struct LikeCardView: View {
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(received.profile.name)
+                Text(received.profile.name.displayNameForCurrentLanguage)
                     .font(.subheadline.bold())
                 Text(received.profile.ageLabel)
                     .font(.caption)

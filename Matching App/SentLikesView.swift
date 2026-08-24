@@ -198,7 +198,7 @@ private struct LikeHistoryCardView<Action: View>: View {
                             .foregroundStyle(.white)
                     }
                     HStack(spacing: 6) {
-                        Text(profile.name)
+                        Text(profile.name.displayNameForCurrentLanguage)
                             .font(.subheadline.bold())
                         Text(profile.ageLabel)
                             .font(.caption)

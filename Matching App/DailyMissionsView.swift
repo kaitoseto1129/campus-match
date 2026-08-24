@@ -200,7 +200,7 @@ private struct MissionCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(mission.title)
+                Text(LocalizedStringKey(mission.title))
                     .font(.headline)
                     .foregroundStyle(foreground)
                 Spacer()

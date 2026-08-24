@@ -370,7 +370,7 @@ private struct DiscoverCardView: View {
             }
             .shadow(color: accent.opacity(0.25), radius: 6, y: 3)
 
-            Text(profile.name)
+            Text(profile.name.displayNameForCurrentLanguage)
                 .font(.subheadline.bold())
                 .lineLimit(1)
                 .padding(.horizontal, 2)

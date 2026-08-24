@@ -197,10 +197,10 @@ struct MembershipStatusView: View {
                             .foregroundStyle(Color.brandPurple)
                             .frame(width: 28)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(benefit.caption)
+                            Text(LocalizedStringKey(benefit.caption))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text(benefit.title)
+                            Text(LocalizedStringKey(benefit.title))
                                 .font(.subheadline.bold())
                         }
                         Spacer()

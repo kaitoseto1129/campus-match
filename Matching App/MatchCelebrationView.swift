@@ -50,7 +50,7 @@ struct MatchCelebrationView: View {
 
                     HStack(spacing: 44) {
                         Text(myName)
-                        Text(otherProfile.name)
+                        Text(otherProfile.name.displayNameForCurrentLanguage)
                     }
                     .font(.subheadline.bold())
                     .foregroundStyle(.white)

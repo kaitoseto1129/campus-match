@@ -21,14 +21,14 @@ enum ProfileSection: String, CaseIterable, Codable {
 
     var label: String {
         switch self {
-        case .header: return "メイン写真"
-        case .tagline: return "一言コメント"
-        case .subPhotos: return "サブ写真"
-        case .nameAgeArea: return "年齢・居住地"
-        case .about: return "自己紹介文"
-        case .basicInfo: return "基本情報"
-        case .hobbyCards: return "趣味カード"
-        case .otherProfiles: return "他のユーザーも見てみる(最後まで到達)"
+        case .header: return String.appLocalized("メイン写真")
+        case .tagline: return String.appLocalized("一言コメント")
+        case .subPhotos: return String.appLocalized("サブ写真")
+        case .nameAgeArea: return String.appLocalized("年齢・居住地")
+        case .about: return String.appLocalized("自己紹介文")
+        case .basicInfo: return String.appLocalized("基本情報")
+        case .hobbyCards: return String.appLocalized("趣味カード")
+        case .otherProfiles: return String.appLocalized("他のユーザーも見てみる(最後まで到達)")
         }
     }
 }

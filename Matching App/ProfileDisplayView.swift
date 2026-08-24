@@ -63,7 +63,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
     var taglineSection: some View {
         Group {
             if let tagline = profile?.tagline, !tagline.isEmpty {
-                Text(tagline)
+                TranslatedText(originalText: tagline)
                     .font(.subheadline.bold())
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
@@ -104,7 +104,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
     var nameAgeAreaSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(profile?.name ?? "-")
+                Text(profile?.name.displayNameForCurrentLanguage ?? "-")
                     .font(.title2.bold())
                 Text(profile?.ageLabel ?? "-")
                     .font(.subheadline)
@@ -146,7 +146,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("自己紹介文")
                 .font(Font.title3.bold())
-            Text(profile?.description ?? "")
+            TranslatedText(originalText: profile?.description ?? "")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
@@ -158,7 +158,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
             Text("基本情報")
                 .font(.title3.bold())
                 .padding(.bottom, 8)
-            infoRow(label: "ニックネーム", value: profile?.name ?? "-")
+            infoRow(label: "ニックネーム", value: profile?.name.displayNameForCurrentLanguage ?? "-")
             Divider()
             infoRow(label: "年齢", value: profile?.ageLabel ?? "-")
             Divider()
