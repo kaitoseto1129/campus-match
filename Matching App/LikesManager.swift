@@ -70,6 +70,9 @@ final class LikesManager: ObservableObject {
             if !filter.bodyTypes.isEmpty {
                 query = query.in("body_type", values: Array(filter.bodyTypes))
             }
+            if !filter.majors.isEmpty {
+                query = query.in("major", values: Array(filter.majors))
+            }
             if filter.isAgeFiltered {
                 query = query
                     .gte("birthday", value: filter.minBirthdayString)

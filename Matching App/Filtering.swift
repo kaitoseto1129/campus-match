@@ -28,6 +28,7 @@ struct DiscoverFilter: Equatable {
     var heightMax: Int = DiscoverFilter.heightRange.upperBound
     var nationalities: Set<String> = []
     var bodyTypes: Set<String> = []
+    var majors: Set<String> = []
     var sortOrder: DiscoverSortOrder = .lastActive
 
     var isAgeFiltered: Bool {
@@ -37,7 +38,7 @@ struct DiscoverFilter: Equatable {
         heightMin > Self.heightRange.lowerBound || heightMax < Self.heightRange.upperBound
     }
     var isActive: Bool {
-        isAgeFiltered || isHeightFiltered || !areas.isEmpty || !cities.isEmpty || !nationalities.isEmpty || !bodyTypes.isEmpty
+        isAgeFiltered || isHeightFiltered || !areas.isEmpty || !cities.isEmpty || !nationalities.isEmpty || !bodyTypes.isEmpty || !majors.isEmpty
     }
 
     private static let dayFormatter: DateFormatter = {

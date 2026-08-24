@@ -1535,6 +1535,16 @@
         }
       }
     },
+    "アジア研究": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asian Studies"
+          }
+        }
+      }
+    },
     "アドレスをコピー": {
       "localizations": {
         "en": {
@@ -1551,6 +1561,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "I love anime & manga"
+          }
+        }
+      }
+    },
+    "アニメーション": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animation"
           }
         }
       }
@@ -1647,6 +1667,16 @@
         }
       }
     },
+    "アフリカ系アメリカ研究": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "African American Studies"
+          }
+        }
+      }
+    },
     "アプリの不具合を見つけたとき": {
       "localizations": {
         "en": {
@@ -1681,6 +1711,26 @@
         }
       }
     },
+    "アメリカ研究": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "American Studies"
+          }
+        }
+      }
+    },
+    "インタラクションデザイン": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interaction Design"
+          }
+        }
+      }
+    },
     "エンタメ": {
       "localizations": {
         "en": {
@@ -1699,6 +1749,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Offline"
+          }
+        }
+      }
+    },
+    "オペレーション管理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operations Management"
           }
         }
       }
@@ -1835,6 +1895,16 @@
         }
       }
     },
+    "グラフィックデザイン": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graphic Design"
+          }
+        }
+      }
+    },
     "グラマー": {
       "localizations": {
         "en": {
@@ -1865,6 +1935,46 @@
         }
       }
     },
+    "ゲームデザイン": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game Design"
+          }
+        }
+      }
+    },
+    "コミュニケーション学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Communication"
+          }
+        }
+      }
+    },
+    "コンピューターサイエンス": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer Science"
+          }
+        }
+      }
+    },
+    "コンピューター工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer Engineering"
+          }
+        }
+      }
+    },
     "コードを再送する": {
       "localizations": {
         "en": {
@@ -1881,6 +1991,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Resend Code (in %lld sec)"
+          }
+        }
+      }
+    },
+    "サイバーセキュリティ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cybersecurity"
           }
         }
       }
@@ -1913,6 +2033,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Additional Photos (Optional, up to %lld)"
+          }
+        }
+      }
+    },
+    "サプライチェーン管理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supply Chain Management"
           }
         }
       }
@@ -1967,6 +2097,26 @@
         }
       }
     },
+    "ジェンダー研究": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gender Studies"
+          }
+        }
+      }
+    },
+    "ジャーナリズム": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journalism"
+          }
+        }
+      }
+    },
     "スイーツが好き": {
       "localizations": {
         "en": {
@@ -2017,6 +2167,16 @@
         }
       }
     },
+    "スポーツマネジメント": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sports Management"
+          }
+        }
+      }
+    },
     "スポーツ観戦が好き": {
       "localizations": {
         "en": {
@@ -2033,6 +2193,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Slim"
+          }
+        }
+      }
+    },
+    "ソフトウェア工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Software Engineering"
           }
         }
       }
@@ -2075,6 +2245,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tips will appear here as more data becomes available"
+          }
+        }
+      }
+    },
+    "データサイエンス": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data Science"
           }
         }
       }
@@ -2185,6 +2365,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reset Password"
+          }
+        }
+      }
+    },
+    "ビジネス分析": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Business Analytics"
           }
         }
       }
@@ -2539,6 +2729,16 @@
         }
       }
     },
+    "ホスピタリティ経営": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hospitality Management"
+          }
+        }
+      }
+    },
     "マイページ": {
       "localizations": {
         "en": {
@@ -2639,6 +2839,26 @@
         }
       }
     },
+    "マネジメント": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Management"
+          }
+        }
+      }
+    },
+    "マーケティング": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marketing"
+          }
+        }
+      }
+    },
     "ミッションを読み込めませんでした": {
       "localizations": {
         "en": {
@@ -2707,6 +2927,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Please add a main photo (additional photos are optional)"
+          }
+        }
+      }
+    },
+    "メカトロニクス": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechatronics"
           }
         }
       }
@@ -2798,6 +3028,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Please select a message"
+          }
+        }
+      }
+    },
+    "メディア研究": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media Studies"
           }
         }
       }
@@ -3012,6 +3252,16 @@
         }
       }
     },
+    "ロボティクス": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Robotics"
+          }
+        }
+      }
+    },
     "・": {
       "localizations": {
         "en": {
@@ -3062,6 +3312,16 @@
         }
       }
     },
+    "不動産学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real Estate"
+          }
+        }
+      }
+    },
     "不審なユーザーを報告": {
       "localizations": {
         "en": {
@@ -3092,6 +3352,16 @@
         }
       }
     },
+    "人工知能": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artificial Intelligence"
+          }
+        }
+      }
+    },
     "人数制限なく": {
       "localizations": {
         "en": {
@@ -3108,6 +3378,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "#1 Popular!"
+          }
+        }
+      }
+    },
+    "人的資源管理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Human Resource Management"
+          }
+        }
+      }
+    },
+    "人類学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anthropology"
           }
         }
       }
@@ -3202,6 +3492,16 @@
         }
       }
     },
+    "会計学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accounting"
+          }
+        }
+      }
+    },
     "体型": {
       "comment": "A label for body type.",
       "isCommentAutoGenerated": true,
@@ -3274,6 +3574,16 @@
         }
       }
     },
+    "保険数理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actuarial Science"
+          }
+        }
+      }
+    },
     "個人情報の開示・訂正・削除のご請求": {
       "localizations": {
         "en": {
@@ -3310,6 +3620,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Claim All"
+          }
+        }
+      }
+    },
+    "公共政策": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Policy"
+          }
+        }
+      }
+    },
+    "公衆衛生学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Health"
           }
         }
       }
@@ -3478,12 +3808,32 @@
         }
       }
     },
+    "分子生物学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Molecular Biology"
+          }
+        }
+      }
+    },
     "分析データを読み込めませんでした": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Couldn't load analytics data"
+          }
+        }
+      }
+    },
+    "刑事司法学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Criminal Justice"
           }
         }
       }
@@ -3504,6 +3854,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "We recommend meeting in a public place during the daytime for your first meeting."
+          }
+        }
+      }
+    },
+    "初等教育": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elementary Education"
           }
         }
       }
@@ -3539,6 +3899,16 @@
         }
       }
     },
+    "創作・クリエイティブライティング": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creative Writing"
+          }
+        }
+      }
+    },
     "勉強・資格取得が好き": {
       "localizations": {
         "en": {
@@ -3555,6 +3925,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "I love animals"
+          }
+        }
+      }
+    },
+    "化学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chemistry"
+          }
+        }
+      }
+    },
+    "化学工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chemical Engineering"
           }
         }
       }
@@ -3653,6 +4043,16 @@
         }
       }
     },
+    "哲学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Philosophy"
+          }
+        }
+      }
+    },
     "商品が見つかりませんでした": {
       "localizations": {
         "en": {
@@ -3713,12 +4113,72 @@
         }
       }
     },
+    "国際経営": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "International Business"
+          }
+        }
+      }
+    },
+    "国際関係学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "International Relations"
+          }
+        }
+      }
+    },
+    "土木工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Civil Engineering"
+          }
+        }
+      }
+    },
     "地方から選ぶ": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose by Region"
+          }
+        }
+      }
+    },
+    "地球科学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earth Science"
+          }
+        }
+      }
+    },
+    "地理学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geography"
+          }
+        }
+      }
+    },
+    "地質学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geology"
           }
         }
       }
@@ -3854,6 +4314,16 @@
         }
       }
     },
+    "天文学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Astronomy"
+          }
+        }
+      }
+    },
     "太め": {
       "localizations": {
         "en": {
@@ -3934,6 +4404,16 @@
         }
       }
     },
+    "宗教学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Religious Studies"
+          }
+        }
+      }
+    },
     "実際に非表示にすると、このお相手は次から「探す」画面に表示されなくなります(いつでもマイページの「非表示リスト」から解除できます)": {
       "localizations": {
         "en": {
@@ -3984,6 +4464,16 @@
         }
       }
     },
+    "専攻を検索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search major"
+          }
+        }
+      }
+    },
     "居住地": {
       "localizations": {
         "en": {
@@ -4026,6 +4516,26 @@
         }
       }
     },
+    "工学物理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engineering Physics"
+          }
+        }
+      }
+    },
+    "工業デザイン": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Industrial Design"
+          }
+        }
+      }
+    },
     "市区町村を検索": {
       "localizations": {
         "en": {
@@ -4056,12 +4566,62 @@
         }
       }
     },
+    "広報・PR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Relations"
+          }
+        }
+      }
+    },
+    "建築学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Architecture"
+          }
+        }
+      }
+    },
     "復元に失敗しました": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Failed to restore purchases"
+          }
+        }
+      }
+    },
+    "微生物学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microbiology"
+          }
+        }
+      }
+    },
+    "心理学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psychology"
+          }
+        }
+      }
+    },
+    "応用数学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied Mathematics"
           }
         }
       }
@@ -4082,6 +4642,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Please select your gender"
+          }
+        }
+      }
+    },
+    "情報システム": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Information Systems"
+          }
+        }
+      }
+    },
+    "情報技術": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Information Technology"
           }
         }
       }
@@ -4136,12 +4716,42 @@
         }
       }
     },
+    "政治学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Political Science"
+          }
+        }
+      }
+    },
+    "教育学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Education"
+          }
+        }
+      }
+    },
     "数字が低いところで離脱が多いサインです": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "A low number here is a sign that people are dropping off"
+          }
+        }
+      }
+    },
+    "数学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mathematics"
           }
         }
       }
@@ -4212,6 +4822,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "I love watching movies"
+          }
+        }
+      }
+    },
+    "映画学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film Studies"
           }
         }
       }
@@ -4414,6 +5034,26 @@
         }
       }
     },
+    "材料科学・工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Materials Science and Engineering"
+          }
+        }
+      }
+    },
+    "栄養学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrition"
+          }
+        }
+      }
+    },
     "検索": {
       "localizations": {
         "en": {
@@ -4444,6 +5084,16 @@
         }
       }
     },
+    "機械工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanical Engineering"
+          }
+        }
+      }
+    },
     "次へ": {
       "comment": "A button that navigates to the next onboarding page.",
       "isCommentAutoGenerated": true,
@@ -4452,6 +5102,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Next"
+          }
+        }
+      }
+    },
+    "歴史学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
           }
         }
       }
@@ -4496,6 +5156,16 @@
         }
       }
     },
+    "比較文学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparative Literature"
+          }
+        }
+      }
+    },
     "気になるお相手のプロフィールを見よう": {
       "localizations": {
         "en": {
@@ -4516,12 +5186,32 @@
         }
       }
     },
+    "海洋生物学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marine Biology"
+          }
+        }
+      }
+    },
     "消費したいいねは戻ってきません。それでも終了しますか?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Likes you've used won't be refunded. End anyway?"
+          }
+        }
+      }
+    },
+    "演劇": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theatre"
           }
         }
       }
@@ -4542,6 +5232,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "What Free Members Can Do"
+          }
+        }
+      }
+    },
+    "物理学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Physics"
+          }
+        }
+      }
+    },
+    "特別支援教育": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Special Education"
+          }
+        }
+      }
+    },
+    "犯罪学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Criminology"
           }
         }
       }
@@ -4576,6 +5296,56 @@
         }
       }
     },
+    "環境工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Environmental Engineering"
+          }
+        }
+      }
+    },
+    "環境科学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Environmental Science"
+          }
+        }
+      }
+    },
+    "生体医工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biomedical Engineering"
+          }
+        }
+      }
+    },
+    "生化学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biochemistry"
+          }
+        }
+      }
+    },
+    "生態学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ecology"
+          }
+        }
+      }
+    },
     "生成する": {
       "localizations": {
         "en": {
@@ -4592,6 +5362,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Generated result (feel free to edit)"
+          }
+        }
+      }
+    },
+    "生物学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biology"
           }
         }
       }
@@ -4698,6 +5478,16 @@
         }
       }
     },
+    "看護学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nursing"
+          }
+        }
+      }
+    },
     "破棄する": {
       "localizations": {
         "en": {
@@ -4724,6 +5514,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verification failed. Please try again"
+          }
+        }
+      }
+    },
+    "社会学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sociology"
+          }
+        }
+      }
+    },
+    "神経科学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuroscience"
           }
         }
       }
@@ -4778,6 +5588,36 @@
         }
       }
     },
+    "経営・生産工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Industrial Engineering"
+          }
+        }
+      }
+    },
+    "経営学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Business Administration"
+          }
+        }
+      }
+    },
+    "経済学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Economics"
+          }
+        }
+      }
+    },
     "絞り込み": {
       "comment": "A label for the filter button.",
       "isCommentAutoGenerated": true,
@@ -4798,6 +5638,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Filtering"
+          }
+        }
+      }
+    },
+    "統計学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics"
           }
         }
       }
@@ -4828,6 +5678,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Discard your changes?"
+          }
+        }
+      }
+    },
+    "美術": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine Arts"
           }
         }
       }
@@ -4898,6 +5758,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bio"
+          }
+        }
+      }
+    },
+    "舞踊": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dance"
+          }
+        }
+      }
+    },
+    "航空宇宙工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aerospace Engineering"
+          }
+        }
+      }
+    },
+    "英文学・英語学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "行政学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Administration"
           }
         }
       }
@@ -5005,6 +5905,16 @@
         }
       }
     },
+    "言語学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linguistics"
+          }
+        }
+      }
+    },
     "設定": {
       "localizations": {
         "en": {
@@ -5061,6 +5971,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Things you have in common that might make good conversation"
+          }
+        }
+      }
+    },
+    "認知科学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cognitive Science"
           }
         }
       }
@@ -5131,6 +6051,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Questions about purchases or Premium Membership"
+          }
+        }
+      }
+    },
+    "起業学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrepreneurship"
           }
         }
       }
@@ -5245,6 +6175,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Height"
+          }
+        }
+      }
+    },
+    "農学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agricultural Science"
           }
         }
       }
@@ -5555,6 +6495,16 @@
         }
       }
     },
+    "運動学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kinesiology"
+          }
+        }
+      }
+    },
     "過去のメッセージを読み込む": {
       "localizations": {
         "en": {
@@ -5605,12 +6555,42 @@
         }
       }
     },
+    "遺伝学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genetics"
+          }
+        }
+      }
+    },
+    "都市計画": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urban Planning"
+          }
+        }
+      }
+    },
     "都道府県を検索": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Search prefectures"
+          }
+        }
+      }
+    },
+    "金融学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finance"
           }
         }
       }
@@ -5674,6 +6654,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "See tips for improvement based on your views and likes"
+          }
+        }
+      }
+    },
+    "電気工学": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Electrical Engineering"
           }
         }
       }
@@ -5754,6 +6744,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hidden List"
+          }
+        }
+      }
+    },
+    "音楽": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Music"
           }
         }
       }

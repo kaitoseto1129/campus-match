@@ -33,7 +33,8 @@ struct ProfileEditView: View {
     @State var city: String = ""
     private var areaLabel: String { area.isEmpty ? unselectedOption : (city.isEmpty ? area : "\(area) \(city)") }
     @State var height: Int? = nil
-    @State var major: String = ""
+    @State var major: String = unselectedOption
+    @State var showingMajorPicker: Bool = false
     @State var nationalities: Set<String> = []
     @State var tagline: String = ""
     @State var drinking: String = unselectedOption
@@ -337,7 +338,9 @@ struct ProfileEditView: View {
     /// マイページの「やることリスト」から後で埋めてもらう。
     var optionalDetailsSection: some View {
         Section {
-            labeledTextField(title: "専攻", text: $major, placeholder: "未入力")
+            formRow(title: "専攻", value: major) {
+                showingMajorPicker = true
+            }
             formRow(title: "身長", value: height.map { "\($0)cm" } ?? "未設定") { showingHeightPicker = true }
             formRow(title: "国籍(複数選択可)", value: nationalities.isEmpty ? "未設定" : nationalities.sorted().joined(separator: "・")) {
                 showingNationalityPicker = true
@@ -517,7 +520,7 @@ struct ProfileEditView: View {
                 self.area = profile.area
                 self.city = profile.city ?? ""
                 self.height = profile.height
-                self.major = profile.major ?? ""
+                self.major = profile.major ?? unselectedOption
                 self.nationalities = Set(profile.nationalities)
                 self.tagline = profile.tagline ?? ""
                 self.drinking = profile.drinking ?? unselectedOption
@@ -611,6 +614,9 @@ struct ProfileEditView: View {
         }
         .sheet(isPresented: $showingNationalityPicker) {
             NationalityMultiSelectView(selected: $nationalities)
+        }
+        .sheet(isPresented: $showingMajorPicker) {
+            MajorPickerView(selected: $major)
         }
         .sheet(isPresented: $showingAreaPicker) {
             ResidencePickerView(area: $area, city: $city)
@@ -988,6 +994,58 @@ struct NationalityMultiSelectView: View {
                 }
             }
         }
+    }
+}
+
+/// 専攻の検索・単一選択画面。自由入力だと表記ゆれが生まれて絞り込み機能と噛み合わないため、
+/// 固定の選択肢から検索して選ぶ形式にしている。
+struct MajorPickerView: View {
+    @Binding var selected: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+
+    private var filtered: [String] {
+        let options = majorOptions.filter { $0 != unselectedOption }
+        return searchText.isEmpty ? options : options.filter { $0.localizedStandardContains(searchText) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    TextField("専攻を検索", text: $searchText)
+                }
+                Section {
+                    majorRow(unselectedOption)
+                    ForEach(filtered, id: \.self) { major in
+                        majorRow(major)
+                    }
+                }
+            }
+            .navigationTitle("専攻")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完了") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func majorRow(_ major: String) -> some View {
+        Button {
+            selected = major
+            dismiss()
+        } label: {
+            HStack {
+                Text(LocalizedStringKey(major)).foregroundStyle(.primary)
+                Spacer()
+                if selected == major {
+                    Image(systemName: "checkmark").foregroundStyle(Color.brandPurple)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -85,6 +85,13 @@ struct FilterSheetView: View {
                             } label: {
                                 filterRow(title: "体型", value: bodyTypeSummary)
                             }
+                            Divider().padding(.leading, 16)
+
+                            NavigationLink {
+                                MultiSelectFilterView(title: "専攻", options: majorOptions.filter { $0 != unselectedOption }, selected: $draft.majors)
+                            } label: {
+                                filterRow(title: "専攻", value: majorSummary)
+                            }
                         }
                         .background(Color(.systemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -239,6 +246,12 @@ struct FilterSheetView: View {
         return "\(draft.bodyTypes.count)件選択中"
     }
 
+    private var majorSummary: String {
+        if draft.majors.isEmpty { return "指定なし" }
+        if draft.majors.count == 1 { return draft.majors.first ?? "" }
+        return "\(draft.majors.count)件選択中"
+    }
+
     private func scheduleCountRefresh(for draftFilter: DiscoverFilter) {
         guard let countProvider else { return }
         countTask?.cancel()
@@ -263,6 +276,7 @@ struct FilterSheetView: View {
             print("university list load error: \(error)")
         }
     }
+
 }
 
 private func multiSelectRow(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
