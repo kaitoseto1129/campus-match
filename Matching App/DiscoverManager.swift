@@ -116,9 +116,10 @@ final class DiscoverManager: ObservableObject {
         }
         // 同じ大学の人としかマッチできない仕様のため、常に自分の大学IDで絞り込む
         // (以前はここが任意のフィルターで、インターカレッジ/他大学検索が可能だった)。
-        if let myUniversityId {
-            query = query.eq("university_id", value: myUniversityId)
-        }
+        // まだload()が完了しておらずmyUniversityIdが分からない場合、絞り込み自体を
+        // 省略すると全大学の候補が見えてしまう(genderと同じく、失敗時は「絞り込みなし」
+        // ではなく「該当なし」にfail closedさせる)。
+        query = query.eq("university_id", value: myUniversityId ?? UUID())
         if !excludedIds.isEmpty {
             query = query.notIn("id", values: Array(excludedIds))
         }

@@ -23,15 +23,23 @@ struct ActionToastModifier: ViewModifier {
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                     .padding(.top, 12)
                     .transition(.move(edge: .top).combined(with: .opacity))
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-                            withAnimation { self.message = nil }
-                        }
-                    }
                     .allowsHitTesting(false)
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: message)
+        // .onAppearだと最初のトーストが消える前に別の操作で立て続けに次のメッセージへ
+        // 差し替わった場合、Textが再appearしないため新しいタイマーが仕掛からず、
+        // 古いタイマーが2件目を早期に消してしまっていた。message自体の変化を見て、
+        // 「予約した時点のメッセージのままなら消す」ようにすることで、後発のメッセージが
+        // 意図せず早く消えたり、逆に消えるはずのタイミングで残り続けたりしないようにする。
+        .onChange(of: message) { _, newValue in
+            guard let newValue else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                if message == newValue {
+                    withAnimation { message = nil }
+                }
+            }
+        }
     }
 }
 

@@ -163,6 +163,17 @@ Deno.serve(async (req: Request) => {
       return json({ error: "transaction already redeemed" }, 409);
     }
 
+    // grant_*が失敗した場合にredeemed_transactionsの記録だけ残ってしまうと、
+    // Appleには課金済みなのにunique制約で二度とこのtransactionIdを再送できず、
+    // 付与を受け取れないまま詰んでしまう。grant失敗時はここで記録を取り消し、
+    // クライアントが同じtransactionを安全に再送(リトライ)できるようにする。
+    const rollbackRedemption = async () => {
+      await serviceClient
+        .from("redeemed_transactions")
+        .delete()
+        .eq("transaction_id", transactionId);
+    };
+
     if (productId in LIKE_PRODUCT_AMOUNTS) {
       const amount = LIKE_PRODUCT_AMOUNTS[productId];
       const { error } = await serviceClient.rpc("grant_purchased_likes", {
@@ -171,6 +182,7 @@ Deno.serve(async (req: Request) => {
       });
       if (error) {
         console.error("grant_purchased_likes error", error);
+        await rollbackRedemption();
         return json({ error: "grant failed" }, 500);
       }
       return json({ success: true, granted: "likes", amount });
@@ -183,11 +195,13 @@ Deno.serve(async (req: Request) => {
       });
       if (error) {
         console.error("grant_purchased_membership error", error);
+        await rollbackRedemption();
         return json({ error: "grant failed" }, 500);
       }
       return json({ success: true, granted: "membership" });
     }
 
+    await rollbackRedemption();
     return json({ error: "unknown product" }, 400);
   } catch (error) {
     console.error("verify-purchase error", error);
