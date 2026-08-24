@@ -20,6 +20,8 @@ final class NotificationCenterManager: ObservableObject {
     @Published var footprintsCount: Int = 0
     /// マッチ済みの相手を除いた、届いたいいねの件数。いいねタブのバッジ表示に使う。
     @Published var pendingLikesCount: Int = 0
+    /// 自分が主催している集まりへの、承認待ちの応募件数。集まりタブのバッジ表示に使う。
+    @Published var gatheringsActionCount: Int = 0
     @Published var activeToast: MessageToast?
     /// 足あとの新着、またはプロフィールの「やることリスト」が残っている場合にtrue。
     /// マイページタブの目立たせ表示(丸バッジ)に使う。
@@ -28,6 +30,7 @@ final class NotificationCenterManager: ObservableObject {
     private var channel: RealtimeChannelV2?
     private var listenTask: Task<Void, Never>?
     private var likeListenTask: Task<Void, Never>?
+    private var gatheringApplicationListenTask: Task<Void, Never>?
     private var toastDismissTask: Task<Void, Never>?
 
     func start() async {
@@ -36,6 +39,7 @@ final class NotificationCenterManager: ObservableObject {
         await refreshFootprintsCount()
         await refreshMyPageTodo()
         await refreshPendingLikesCount()
+        await refreshGatheringsActionCount()
 
         let ch = supabase().channel("messages:notifications")
         let insertions = ch.postgresChange(InsertAction.self, table: "messages")
@@ -44,6 +48,7 @@ final class NotificationCenterManager: ObservableObject {
             table: "likes",
             filter: .eq("to_user_id", value: myId.uuidString)
         )
+        let gatheringApplicationInsertions = ch.postgresChange(InsertAction.self, table: "gathering_applications")
         channel = ch
         await ch.subscribe()
 
@@ -62,6 +67,12 @@ final class NotificationCenterManager: ObservableObject {
                 await self?.refreshPendingLikesCount()
             }
         }
+        gatheringApplicationListenTask = Task { [weak self] in
+            for await _ in gatheringApplicationInsertions {
+                // 自分が主催している集まり宛かどうかの判定が必要なため、まとめて数え直す。
+                await self?.refreshGatheringsActionCount()
+            }
+        }
     }
 
     func stop() async {
@@ -69,6 +80,8 @@ final class NotificationCenterManager: ObservableObject {
         listenTask = nil
         likeListenTask?.cancel()
         likeListenTask = nil
+        gatheringApplicationListenTask?.cancel()
+        gatheringApplicationListenTask = nil
         toastDismissTask?.cancel()
         toastDismissTask = nil
         if let channel {
@@ -136,6 +149,33 @@ final class NotificationCenterManager: ObservableObject {
             pendingLikesCount = likeRows.filter { !matchedPartnerIds.contains($0.fromUserId) }.count
         } catch {
             print("pending likes count refresh error: \(error)")
+        }
+    }
+
+    /// 自分が主催している集まりへの、承認待ちの応募件数を数え直す。
+    func refreshGatheringsActionCount() async {
+        guard let myId = supabase().auth.currentUser?.id else { return }
+        struct HostedGatheringRow: Decodable { let id: UUID }
+        do {
+            let hosted: [HostedGatheringRow] = try await supabase()
+                .from("gatherings")
+                .select("id")
+                .eq("host_id", value: myId)
+                .execute()
+                .value
+            guard !hosted.isEmpty else {
+                gatheringsActionCount = 0
+                return
+            }
+            gatheringsActionCount = try await supabase()
+                .from("gathering_applications")
+                .select("*", head: true, count: .exact)
+                .in("gathering_id", values: hosted.map(\.id))
+                .eq("status", value: "pending")
+                .execute()
+                .count ?? 0
+        } catch {
+            print("gatherings action count refresh error: \(error)")
         }
     }
 

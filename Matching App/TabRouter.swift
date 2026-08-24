@@ -7,7 +7,7 @@ import Foundation
 import Combine
 
 enum AppTab {
-    case discover, likes, chat, myPage
+    case discover, gatherings, likes, chat, myPage
 }
 
 @MainActor

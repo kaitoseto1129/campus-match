@@ -29,6 +29,13 @@ begin
     select id from public.matches where user_a_id = uid or user_b_id = uid
   ) or requester_id = uid;
   delete from public.matches where user_a_id = uid or user_b_id = uid;
+  -- 集まり機能: gathering_applications/gathering_messages/gathering_readsは
+  -- auth.usersへON DELETE CASCADEなしで参照しているため、同じ理由で先に消しておく
+  -- (主催しているgatheringsは末尾でhost_id=uid削除時にcascadeで一括処理される)。
+  delete from public.gathering_reads where user_id = uid;
+  delete from public.gathering_messages where sender_id = uid;
+  delete from public.gathering_applications where applicant_id = uid;
+  delete from public.gatherings where host_id = uid;
   delete from public.likes where from_user_id = uid or to_user_id = uid;
   delete from public.profile_visits where viewer_id = uid or visited_id = uid;
   delete from public.user_actions where actor_id = uid or target_id = uid;

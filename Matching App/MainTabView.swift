@@ -16,6 +16,8 @@ struct MainTabView: View {
                 switch tabRouter.selectedTab {
                 case .discover:
                     DiscoverView()
+                case .gatherings:
+                    GatheringListView()
                 case .likes:
                     LikesView()
                 case .chat:
@@ -69,6 +71,7 @@ struct MainTabView: View {
             Divider()
             HStack(spacing: 0) {
                 tabButton(.discover, icon: "magnifyingglass", label: "探す")
+                tabButton(.gatherings, icon: "person.3.fill", label: "集まり", badge: notificationManager.gatheringsActionCount)
                 tabButton(.likes, icon: "hand.thumbsup.fill", label: "いいね", badge: notificationManager.pendingLikesCount)
                 tabButton(.chat, icon: "message.fill", label: "トーク", badge: notificationManager.unreadCount)
                 tabButton(.myPage, icon: "person.fill", label: "マイページ", showDot: notificationManager.hasMyPageTodo, highlightWhenDot: true)

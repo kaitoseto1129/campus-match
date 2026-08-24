@@ -21,6 +21,48 @@ import { importPKCS8, SignJWT } from "npm:jose@5.9.6";
 const APNS_HOST = "https://api.push.apple.com";
 const BUNDLE_ID = "com.cammatch.app";
 
+/// 「集まり」機能での関係(応募した/された、または同じ集まりの主催者・承認済みメンバー同士)を確認する。
+/// likes/matchesの関係が無い場合の追加チェックとしてのみ呼ばれる。
+async function hasGatheringRelation(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  callerId: string,
+  userId: string,
+): Promise<boolean> {
+  const { data: appliedToTheirs } = await supabase
+    .from("gathering_applications")
+    .select("id, gatherings!inner(host_id)")
+    .eq("applicant_id", callerId)
+    .eq("gatherings.host_id", userId)
+    .limit(1);
+  if ((appliedToTheirs?.length ?? 0) > 0) return true;
+
+  const { data: theirsAppliedToMine } = await supabase
+    .from("gathering_applications")
+    .select("id, gatherings!inner(host_id)")
+    .eq("applicant_id", userId)
+    .eq("gatherings.host_id", callerId)
+    .limit(1);
+  if ((theirsAppliedToMine?.length ?? 0) > 0) return true;
+
+  // グループトーク: 双方が同じ集まりの主催者または承認済みメンバーであれば関係ありとする。
+  const [callerAccepted, callerHosted] = await Promise.all([
+    supabase.from("gathering_applications").select("gathering_id").eq("applicant_id", callerId).eq("status", "accepted"),
+    supabase.from("gatherings").select("id").eq("host_id", callerId),
+  ]);
+  const callerGatheringIds = Array.from(new Set([
+    ...(callerAccepted.data ?? []).map((r: { gathering_id: string }) => r.gathering_id),
+    ...(callerHosted.data ?? []).map((r: { id: string }) => r.id),
+  ]));
+  if (callerGatheringIds.length === 0) return false;
+
+  const [targetAccepted, targetHosted] = await Promise.all([
+    supabase.from("gathering_applications").select("gathering_id").eq("applicant_id", userId).eq("status", "accepted").in("gathering_id", callerGatheringIds),
+    supabase.from("gatherings").select("id").eq("host_id", userId).in("id", callerGatheringIds),
+  ]);
+  return (targetAccepted.data?.length ?? 0) > 0 || (targetHosted.data?.length ?? 0) > 0;
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -125,6 +167,9 @@ Deno.serve(async (req: Request) => {
           .limit(1);
         if (matchError) throw matchError;
         hasRelation = (matchRows?.length ?? 0) > 0;
+      }
+      if (!hasRelation) {
+        hasRelation = await hasGatheringRelation(supabase, callerId, userId);
       }
 
       if (!hasRelation) {
