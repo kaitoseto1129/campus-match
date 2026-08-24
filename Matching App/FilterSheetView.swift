@@ -85,13 +85,6 @@ struct FilterSheetView: View {
                             } label: {
                                 filterRow(title: "体型", value: bodyTypeSummary)
                             }
-                            Divider().padding(.leading, 16)
-
-                            NavigationLink {
-                                UniversityFilterView(draft: $draft, universities: universities, universityCountries: universityCountries)
-                            } label: {
-                                filterRow(title: "大学", value: universitySummary)
-                            }
                         }
                         .background(Color(.systemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -216,7 +209,7 @@ struct FilterSheetView: View {
             Text(LocalizedStringKey(title))
                 .foregroundStyle(.primary)
             Spacer()
-            Text(value)
+            Text(LocalizedStringKey(value))
                 .foregroundStyle(Color.brandPurple)
                 .lineLimit(1)
             Image(systemName: "chevron.right")
@@ -244,17 +237,6 @@ struct FilterSheetView: View {
         if draft.bodyTypes.isEmpty { return "指定なし" }
         if draft.bodyTypes.count == 1 { return draft.bodyTypes.first ?? "" }
         return "\(draft.bodyTypes.count)件選択中"
-    }
-
-    private var universityCountries: [String] {
-        Array(Set(universities.map(\.country))).sorted()
-    }
-
-    private var universitySummary: String {
-        if let selected = universities.first(where: { $0.id == draft.universityId }) {
-            return selected.name
-        }
-        return draft.showAllUniversities ? "すべての大学" : "自分の大学のみ"
     }
 
     private func scheduleCountRefresh(for draftFilter: DiscoverFilter) {
@@ -494,100 +476,6 @@ private struct MultiSelectFilterView: View {
     }
 }
 
-private struct UniversityFilterView: View {
-    @Binding var draft: DiscoverFilter
-    let universities: [University]
-    let universityCountries: [String]
-    @State private var universitySearchText = ""
-
-    /// 居住地で都道府県/州まで選ばれていれば、その地域にある大学だけに絞り込む。
-    /// 該当大学が無ければ国単位に、国単位でも該当が無ければ全件にフォールバックする。
-    private var prefectureFilteredUniversities: [University]? {
-        guard let selectedArea = draft.areas.first, selectedArea != draft.areaCountry else { return nil }
-        let matches = universities.filter { $0.prefecture == selectedArea }
-        return matches.isEmpty ? nil : matches
-    }
-    private var isFilteredByArea: Bool {
-        !draft.areas.isEmpty && universityCountries.contains(draft.areaCountry)
-    }
-    private var relevantUniversities: [University] {
-        prefectureFilteredUniversities ?? (isFilteredByArea ? universities.filter { $0.country == draft.areaCountry } : universities)
-    }
-    private var relevantCountries: [String] {
-        Array(Set(relevantUniversities.map(\.country))).sorted()
-    }
-    private var areaFilterCaption: String? {
-        if let selectedArea = draft.areas.first, prefectureFilteredUniversities != nil {
-            return "居住地の絞り込み(\(selectedArea))に合わせて大学を絞り込んでいます"
-        }
-        if isFilteredByArea {
-            return "居住地の絞り込み(\(draft.areaCountry))に合わせて大学を絞り込んでいます"
-        }
-        return nil
-    }
-
-    var body: some View {
-        Form {
-            Section {
-                multiSelectRow(title: "自分の大学のみ", isSelected: !draft.showAllUniversities && draft.universityId == nil) {
-                    draft.showAllUniversities = false
-                    draft.universityId = nil
-                }
-                multiSelectRow(title: "すべての大学", isSelected: draft.showAllUniversities) {
-                    draft.showAllUniversities = true
-                    draft.universityId = nil
-                }
-            }
-            Section {
-                TextField("大学名で検索", text: $universitySearchText)
-            }
-            if universitySearchText.isEmpty {
-                if let caption = areaFilterCaption {
-                    Section {
-                        Text(caption)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Section {
-                    ForEach(relevantCountries, id: \.self) { country in
-                        NavigationLink {
-                            UniversityMultiSelectView(
-                                universities: relevantUniversities.filter { $0.country == country },
-                                title: country,
-                                selectedId: $draft.universityId,
-                                showAllUniversities: $draft.showAllUniversities
-                            )
-                        } label: {
-                            HStack {
-                                Text(country)
-                                Spacer()
-                                if let selected = universities.first(where: { $0.id == draft.universityId }), selected.country == country {
-                                    Text(selected.name)
-                                        .font(.caption)
-                                        .foregroundStyle(Color.brandPurple)
-                                        .lineLimit(1)
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                Section {
-                    ForEach(universities.filter { $0.name.contains(universitySearchText) }) { university in
-                        multiSelectRow(title: "\(university.name)(\(university.country))", isSelected: draft.universityId == university.id) {
-                            draft.universityId = university.id
-                            draft.showAllUniversities = false
-                        }
-                    }
-                }
-            }
-        }
-        .navigationTitle("大学")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 /// 居住地(都道府県/州)の単一選択画面。
 private struct PrefectureSingleSelectView: View {
     let options: [String]
@@ -672,36 +560,6 @@ private struct MunicipalitySingleSelectView: View {
             }
         }
         .navigationTitle(prefecture)
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-private struct UniversityMultiSelectView: View {
-    let universities: [University]
-    let title: String
-    @Binding var selectedId: UUID?
-    @Binding var showAllUniversities: Bool
-    @State private var searchText = ""
-
-    private var filtered: [University] {
-        searchText.isEmpty ? universities : universities.filter { $0.name.contains(searchText) }
-    }
-
-    var body: some View {
-        Form {
-            Section {
-                TextField("大学名で検索", text: $searchText)
-            }
-            Section {
-                ForEach(filtered) { university in
-                    multiSelectRow(title: university.name, isSelected: selectedId == university.id) {
-                        selectedId = university.id
-                        showAllUniversities = false
-                    }
-                }
-            }
-        }
-        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -114,9 +114,9 @@ final class DiscoverManager: ObservableObject {
         if let myId {
             query = query.neq("id", value: myId)
         }
-        if let universityId = filter.universityId {
-            query = query.eq("university_id", value: universityId)
-        } else if !filter.showAllUniversities, let myUniversityId {
+        // 同じ大学の人としかマッチできない仕様のため、常に自分の大学IDで絞り込む
+        // (以前はここが任意のフィルターで、インターカレッジ/他大学検索が可能だった)。
+        if let myUniversityId {
             query = query.eq("university_id", value: myUniversityId)
         }
         if !excludedIds.isEmpty {
