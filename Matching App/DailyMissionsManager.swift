@@ -58,7 +58,13 @@ final class DailyMissionsManager: ObservableObject {
 
     /// 受け取り可能なミッションが1つでもあるか。探す画面のミッションボタンにバッジを出すために使う。
     var hasClaimableMission: Bool {
-        missions.contains { $0.isComplete && !claimedKeys.contains($0.key) }
+        claimableMissionCount > 0
+    }
+
+    /// 受け取り可能(達成済み・未受け取り)なミッションの件数。
+    /// 以前は小さいドットだけで「何かある」ことしか示せず気づきにくかったため、件数を出せるようにする。
+    var claimableMissionCount: Int {
+        missions.filter { $0.isComplete && !claimedKeys.contains($0.key) }.count
     }
 
     /// サーバー側のclaim_daily_mission RPCがclaim_dateを日本時間で記録するのに合わせて、

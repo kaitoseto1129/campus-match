@@ -9,10 +9,14 @@ struct GatheringListView: View {
     @StateObject private var manager = GatheringManager()
     @EnvironmentObject private var tabRouter: TabRouter
     @State private var selectedSegment: Segment = .browse
+    @State private var browseSubSegment: BrowseSubSegment = .all
     @State private var showingCreateSheet = false
     @State private var showingFilterSheet = false
     @State private var filter = GatheringBrowseFilter()
     @State private var navPath = NavigationPath()
+    @AppStorage("hasSeenGatheringTutorial") private var hasSeenGatheringTutorial = false
+    @State private var tutorialStep: GatheringTutorialStep?
+    @State private var tutorialAnchors: [String: Anchor<CGRect>] = [:]
 
     enum Segment: String, CaseIterable {
         case browse, hosted
@@ -24,16 +28,33 @@ struct GatheringListView: View {
         }
     }
 
+    /// 「みんなの募集」内で、まだ応募していないものと自分が応募済みのものを分けて見られるようにする
+    /// (以前は一つのリストに混ざっていて、自分が応募したものがどれか探しにくかった)。
+    enum BrowseSubSegment: String, CaseIterable {
+        case all, applied
+        var label: String {
+            switch self {
+            case .all: return "一覧"
+            case .applied: return "参加依頼済み"
+            }
+        }
+    }
+
     private var visibleSummaries: [GatheringSummary] {
         switch selectedSegment {
         case .browse:
-            return filter.isActive ? manager.openSummaries.filter(filter.matches) : manager.openSummaries
+            let base = filter.isActive ? manager.openSummaries.filter(filter.matches) : manager.openSummaries
+            switch browseSubSegment {
+            case .all: return base
+            case .applied: return base.filter { $0.myApplication != nil }
+            }
         case .hosted:
             return manager.hostedSummaries
         }
     }
 
     var body: some View {
+        ZStack {
         NavigationStack(path: $navPath) {
             ScrollView {
                 VStack(spacing: 16) {
@@ -45,8 +66,16 @@ struct GatheringListView: View {
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
                     .padding(.top, 8)
+                    .tutorialAnchor("gatheringSegments")
 
                     if selectedSegment == .browse {
+                        Picker("", selection: $browseSubSegment) {
+                            ForEach(BrowseSubSegment.allCases, id: \.self) { sub in
+                                Text(LocalizedStringKey(sub.label)).tag(sub)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.horizontal)
                         filterBar
                     }
 
@@ -79,6 +108,7 @@ struct GatheringListView: View {
                             .font(.title2)
                             .foregroundStyle(Color.brandPurple)
                     }
+                    .tutorialAnchor("gatheringCreate")
                 }
             }
             .refreshable {
@@ -86,7 +116,13 @@ struct GatheringListView: View {
             }
             .task {
                 await manager.load()
+                let isEligible = UserDefaults.standard.bool(forKey: AuthManager.eligibleForOnboardingTutorialKey)
+                if isEligible && !hasSeenGatheringTutorial {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    withAnimation { tutorialStep = .segments }
+                }
             }
+            .onPreferenceChange(TutorialAnchorKey.self) { tutorialAnchors = $0 }
             .sheet(isPresented: $showingCreateSheet, onDismiss: {
                 Task { await manager.load() }
             }) {
@@ -111,6 +147,12 @@ struct GatheringListView: View {
             } message: {
                 Text(LocalizedStringKey(manager.errorMessage ?? ""))
             }
+        }
+        if tutorialStep != nil {
+            GatheringTutorialOverlay(step: $tutorialStep, anchors: tutorialAnchors) {
+                hasSeenGatheringTutorial = true
+            }
+        }
         }
     }
 
@@ -143,15 +185,24 @@ struct GatheringListView: View {
         .padding(.horizontal)
     }
 
+    private var emptyStateText: String {
+        switch selectedSegment {
+        case .browse:
+            return browseSubSegment == .applied ? "まだ応募した集まりはありません" : "募集中の集まりはまだありません"
+        case .hosted:
+            return "まだ主催した集まりはありません"
+        }
+    }
+
     private var emptyState: some View {
         VStack(spacing: 10) {
             Image(systemName: "person.3")
                 .font(.system(size: 44))
                 .foregroundStyle(.secondary)
-            Text(LocalizedStringKey(selectedSegment == .browse ? "募集中の集まりはまだありません" : "まだ主催した集まりはありません"))
+            Text(LocalizedStringKey(emptyStateText))
                 .font(.subheadline.bold())
                 .foregroundStyle(.secondary)
-            if selectedSegment == .browse {
+            if selectedSegment == .browse && browseSubSegment == .all {
                 Text("右上の+から、ご飯や集まりを募集してみましょう")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -165,14 +216,18 @@ struct GatheringListView: View {
 private struct GatheringCard: View {
     let summary: GatheringSummary
 
+    /// 主催している集まりに承認待ちの応募が来ているかどうか。
+    /// 他のステータス表示(承認待ち/参加確定など)と同じ薄いピル型バッジだと、
+    /// 「対応が必要な通知」なのか「単なる状態表示」なのか見分けがつかず気付きにくかったため、
+    /// これだけは別枠の目立つ丸バッジで出す。
+    private var pendingApplicationBadge: Int? {
+        guard summary.isHost, !summary.gathering.isCanceled, summary.pendingCount > 0 else { return nil }
+        return summary.pendingCount
+    }
+
     private var statusBadge: (text: String, color: Color)? {
         if summary.gathering.isCanceled { return ("キャンセル済み", Color(.systemGray)) }
-        // 主催している集まりは、承認待ちの応募が来ていることがひと目で分かるようにする
-        // (以前はここに何も出ておらず、応募が来ていても一覧から気付けなかった)。
-        if summary.isHost {
-            guard summary.pendingCount > 0 else { return nil }
-            return (String.appLocalized("応募%lld件", summary.pendingCount), Color.brandOrange)
-        }
+        if summary.isHost { return nil }
         switch summary.myApplication?.status {
         case "pending": return ("承認待ち", Color.brandOrange)
         case "accepted": return ("参加確定", Color.brandTeal)
@@ -213,7 +268,18 @@ private struct GatheringCard: View {
                     }
                 }
                 Spacer()
-                if let statusBadge {
+                if let pendingApplicationBadge {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bell.fill")
+                        Text(String.appLocalized("応募%lld件", pendingApplicationBadge))
+                    }
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.brandOrange, in: Capsule())
+                    .shadow(color: Color.brandOrange.opacity(0.4), radius: 4, y: 2)
+                } else if let statusBadge {
                     Text(LocalizedStringKey(statusBadge.text))
                         .font(.caption2.bold())
                         .padding(.horizontal, 8)

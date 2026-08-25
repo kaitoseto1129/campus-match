@@ -202,9 +202,11 @@ struct DiscoverView: View {
                 }
                 Spacer()
                 if missionsManager.hasClaimableMission {
-                    Circle()
-                        .fill(Color.brandOrange)
-                        .frame(width: 9, height: 9)
+                    Text("\(missionsManager.claimableMissionCount)")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 22, minHeight: 22)
+                        .background(Color.brandOrange, in: Circle())
                 }
                 Image(systemName: "chevron.right")
                     .font(.caption)

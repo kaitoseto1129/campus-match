@@ -144,7 +144,7 @@ struct DiscoverTutorialOverlay: View {
         let rect = anchors[anchorId].map { proxy[$0] } ?? .zero
         let placeBelow = rect.midY < proxy.size.height / 2
         return VStack {
-            Text(text)
+            Text(LocalizedStringKey(text))
                 .font(.subheadline.bold())
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.leading)

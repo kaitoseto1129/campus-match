@@ -7926,6 +7926,66 @@
           }
         }
       }
+    },
+    "一覧": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        }
+      }
+    },
+    "参加依頼済み": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied"
+          }
+        }
+      }
+    },
+    "まだ応募した集まりはありません": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You haven't applied to any gatherings yet"
+          }
+        }
+      }
+    },
+    "「みんなの募集」で他の人が募集している集まりを探せます。「自分が主催」では自分が募集した・応募した集まりを確認できます。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Browse postings\" lets you find gatherings other people are hosting. \"Hosted by me\" shows gatherings you've posted or applied to."
+          }
+        }
+      }
+    },
+    "ここから「ご飯行きませんか」のような集まりを自分で募集できます。応募が来たら承認して、そのままグループトークができます。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this to post your own gathering, like \"want to grab a meal?\" When someone applies, you can approve them and start a group chat right away."
+          }
+        }
+      }
+    },
+    "気軽にご飯や集まりに誘ってみましょう!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feel free to invite people to a meal or hangout!"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
