@@ -216,7 +216,7 @@ final class DiscoverManager: ObservableObject {
                 .rpc("send_like_atomic", params: SendLikeParams(pToUserId: userId, pIsSpecial: isSpecial))
                 .execute()
             likedIds.insert(userId)
-            await PushNotifier.notify(userId: userId, title: "いいねが届きました!", body: "誰かがあなたのプロフィールにいいねしました")
+            await PushNotifier.notify(userId: userId, title: String.appLocalized("いいねが届きました!"), body: String.appLocalized("誰かがあなたのプロフィールにいいねしました"))
             return true
         } catch {
             errorMessage = "いいねが足りません"

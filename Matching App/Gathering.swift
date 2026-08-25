@@ -26,6 +26,9 @@ struct Gathering: Codable, Identifiable, Equatable {
     let category: String?
     /// だいたいの所要時間(時間単位)。任意入力で、未入力の集まりもある。
     let durationHours: Int?
+    /// 応募の締切日時(任意)。設定した場合、この日時を過ぎると応募できなくなる。
+    let deadlineAtString: String?
+    let deadlineNotified: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -38,6 +41,8 @@ struct Gathering: Codable, Identifiable, Equatable {
         case imageUrlString = "image_url"
         case category
         case durationHours = "duration_hours"
+        case deadlineAtString = "deadline_at"
+        case deadlineNotified = "deadline_notified"
     }
 
     var scheduledAt: Date { ISO8601DateFormatter.matchingApp.date(from: scheduledAtString) ?? Date() }
@@ -45,6 +50,8 @@ struct Gathering: Codable, Identifiable, Equatable {
     var isCanceled: Bool { status == "canceled" }
     var isPast: Bool { scheduledAt < Date() }
     var imageURL: URL? { imageUrlString.flatMap(URL.init(string:)) }
+    var deadlineAt: Date? { deadlineAtString.flatMap { ISO8601DateFormatter.matchingApp.date(from: $0) } }
+    var isPastDeadline: Bool { deadlineAt.map { $0 < Date() } ?? false }
 }
 
 struct GatheringApplication: Codable, Identifiable, Equatable {
@@ -95,7 +102,8 @@ struct GatheringInsertPayload: Encodable {
     let scheduledAtString: String
     let capacity: Int
     let category: String
-    let durationHours: Int
+    let durationHours: Int?
+    let deadlineAtString: String?
 
     enum CodingKeys: String, CodingKey {
         case hostId = "host_id"
@@ -104,6 +112,7 @@ struct GatheringInsertPayload: Encodable {
         case scheduledAtString = "scheduled_at"
         case capacity, category
         case durationHours = "duration_hours"
+        case deadlineAtString = "deadline_at"
     }
 }
 

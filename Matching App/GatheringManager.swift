@@ -99,6 +99,8 @@ final class GatheringManager: ObservableObject {
             hostedSummaries = summaries
                 .filter { $0.isHost }
                 .sorted { $0.gathering.scheduledAt < $1.gathering.scheduledAt }
+
+            await notifyPassedDeadlinesIfNeeded()
         } catch {
             errorMessage = "集まりを読み込めませんでした"
             print("gathering load error: \(error)")
@@ -106,8 +108,30 @@ final class GatheringManager: ObservableObject {
         isLoading = false
     }
 
+    /// アプリを開いた・集まり一覧を再読み込みしたタイミングで、応募締切を過ぎているのに
+    /// まだ通知していない自分主催の集まりがあれば、その場で気づけるようプッシュ通知を送る。
+    /// (常駐サーバー側での定時通知ではなく、あくまでアプリを開いた時点でのベストエフォート)
+    private func notifyPassedDeadlinesIfNeeded() async {
+        guard let myId else { return }
+        let due = hostedSummaries.filter {
+            $0.gathering.isOpen && !$0.gathering.deadlineNotified && $0.gathering.isPastDeadline
+        }
+        for summary in due {
+            await PushNotifier.notify(
+                userId: myId,
+                title: String.appLocalized("「%@」の募集締切になりました", summary.gathering.title),
+                body: String.appLocalized("応募状況を確認して参加者を決めましょう")
+            )
+            try? await supabase()
+                .from("gatherings")
+                .update(["deadline_notified": true])
+                .eq("id", value: summary.gathering.id)
+                .execute()
+        }
+    }
+
     @discardableResult
-    func create(title: String, description: String, location: String, scheduledAt: Date, capacity: Int, category: String, durationHours: Int, image: UIImage?) async -> Bool {
+    func create(title: String, description: String, location: String, scheduledAt: Date, capacity: Int, category: String, durationHours: Int, deadlineAt: Date?, image: UIImage?) async -> Bool {
         guard let myId, let myUniversityId else { return false }
         do {
             let inserted: Gathering = try await supabase()
@@ -121,7 +145,8 @@ final class GatheringManager: ObservableObject {
                     scheduledAtString: ISO8601DateFormatter.matchingApp.string(from: scheduledAt),
                     capacity: capacity,
                     category: category,
-                    durationHours: durationHours
+                    durationHours: durationHours,
+                    deadlineAtString: deadlineAt.map { ISO8601DateFormatter.matchingApp.string(from: $0) }
                 ))
                 .select()
                 .single()
@@ -162,13 +187,17 @@ final class GatheringManager: ObservableObject {
     @discardableResult
     func apply(to gathering: Gathering, comment: String) async -> Bool {
         guard let myId else { return false }
+        guard !gathering.isPastDeadline else {
+            errorMessage = "応募の締切を過ぎています"
+            return false
+        }
         do {
             try await supabase()
                 .from("gathering_applications")
                 .insert(GatheringApplicationInsertPayload(gatheringId: gathering.id, applicantId: myId, comment: comment.isEmpty ? nil : comment))
                 .execute()
             await load()
-            await PushNotifier.notify(userId: gathering.hostId, title: "「\(gathering.title)」に応募がありました", body: "内容を確認して承認するか選びましょう")
+            await PushNotifier.notify(userId: gathering.hostId, title: String.appLocalized("「%@」に応募がありました", gathering.title), body: String.appLocalized("内容を確認して承認するか選びましょう"))
             return true
         } catch {
             errorMessage = "応募できませんでした"
@@ -204,7 +233,7 @@ final class GatheringManager: ObservableObject {
                 .execute()
             await load()
             if accept {
-                await PushNotifier.notify(userId: application.applicantId, title: "「\(gathering.title)」への参加が決まりました!", body: "グループトークで挨拶してみましょう")
+                await PushNotifier.notify(userId: application.applicantId, title: String.appLocalized("「%@」への参加が決まりました!", gathering.title), body: String.appLocalized("グループトークで挨拶してみましょう"))
             }
             return true
         } catch {
@@ -233,7 +262,7 @@ final class GatheringManager: ObservableObject {
                 .execute()
             await load()
             for application in acceptedApplications {
-                await PushNotifier.notify(userId: application.applicantId, title: "「\(gathering.title)」がキャンセルされました", body: "主催者が集まりを取りやめました")
+                await PushNotifier.notify(userId: application.applicantId, title: String.appLocalized("「%@」がキャンセルされました", gathering.title), body: String.appLocalized("主催者が集まりを取りやめました"))
             }
             return true
         } catch {

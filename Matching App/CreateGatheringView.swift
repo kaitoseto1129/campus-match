@@ -17,6 +17,8 @@ struct CreateGatheringView: View {
     @State private var capacity = 4
     @State private var category = gatheringCategoryOptions[0]
     @State private var durationHours = 2
+    @State private var hasDeadline = false
+    @State private var deadlineAt = Date().addingTimeInterval(60 * 60 * 2)
     @State private var pickerItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var isSubmitting = false
@@ -80,6 +82,14 @@ struct CreateGatheringView: View {
                     }
                     TextField("場所(駅名やお店の名前など)", text: $location)
                 }
+                Section {
+                    Toggle("応募の締切を設ける", isOn: $hasDeadline.animation())
+                    if hasDeadline {
+                        DatePicker("締切日時", selection: $deadlineAt, in: Date()...scheduledAt, displayedComponents: [.date, .hourAndMinute])
+                    }
+                } footer: {
+                    Text("締切を過ぎると応募できなくなります。設定した場合は締切の到来を通知でお知らせします。")
+                }
                 Section("人数") {
                     Stepper(value: $capacity, in: 2...8) {
                         HStack {
@@ -114,6 +124,7 @@ struct CreateGatheringView: View {
                                 capacity: capacity,
                                 category: category,
                                 durationHours: durationHours,
+                                deadlineAt: hasDeadline ? deadlineAt : nil,
                                 image: selectedImage
                             )
                             isSubmitting = false
@@ -143,6 +154,11 @@ struct CreateGatheringView: View {
                     guard let newValue, let data = try? await newValue.loadTransferable(type: Data.self) else { return }
                     selectedImage = UIImage(data: data)
                 }
+            }
+            .onChange(of: scheduledAt) { _, newValue in
+                // 締切のDatePickerはDate()...scheduledAtの範囲を取るため、開催日時を
+                // 締切より前に変更されると範囲が壊れてしまう。締切側を自動で追従させる。
+                if deadlineAt > newValue { deadlineAt = newValue }
             }
         }
     }

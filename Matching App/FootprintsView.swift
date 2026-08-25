@@ -138,7 +138,7 @@ private struct FootprintCardView: View {
             try await supabase()
                 .rpc("send_like_atomic", params: SendLikeParams(pToUserId: footprint.profile.id, pIsSpecial: false))
                 .execute()
-            await PushNotifier.notify(userId: footprint.profile.id, title: "いいねが届きました!", body: "誰かがあなたのプロフィールにいいねしました")
+            await PushNotifier.notify(userId: footprint.profile.id, title: String.appLocalized("いいねが届きました!"), body: String.appLocalized("誰かがあなたのプロフィールにいいねしました"))
             didSend = true
             showingSentConfirmation = true
             try? await Task.sleep(nanoseconds: 900_000_000)
@@ -205,7 +205,7 @@ private struct FootprintLikeButton: View {
             try await supabase()
                 .rpc("send_like_atomic", params: SendLikeParams(pToUserId: profile.id, pIsSpecial: false))
                 .execute()
-            await PushNotifier.notify(userId: profile.id, title: "いいねが届きました!", body: "誰かがあなたのプロフィールにいいねしました")
+            await PushNotifier.notify(userId: profile.id, title: String.appLocalized("いいねが届きました!"), body: String.appLocalized("誰かがあなたのプロフィールにいいねしました"))
             didSend = true
             return true
         } catch {

@@ -12,6 +12,8 @@ struct GatheringDetailView: View {
 
     @State private var applicants: [(application: GatheringApplication, profile: Profile?, photoURL: URL?)] = []
     @State private var isLoadingApplicants = false
+    @State private var participants: [(profile: Profile?, photoURL: URL?)] = []
+    @State private var isLoadingParticipants = false
     @State private var showingApplySheet = false
     @State private var showingChat = false
     @State private var toastMessage: String?
@@ -31,6 +33,8 @@ struct GatheringDetailView: View {
                 header
                 if currentSummary.isHost {
                     hostApplicantsSection
+                } else {
+                    participantsSection
                 }
             }
             .padding()
@@ -39,6 +43,12 @@ struct GatheringDetailView: View {
         .navigationTitle("集まりの詳細")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareLink(item: shareText) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel("共有する")
+            }
             if currentSummary.isHost && !currentSummary.gathering.isCanceled {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -97,16 +107,38 @@ struct GatheringDetailView: View {
         .task {
             if currentSummary.isHost {
                 await loadApplicants()
+            } else {
+                await loadParticipants()
             }
         }
         .onAppear { tabRouter.pushDetailScreen() }
         .onDisappear { tabRouter.popDetailScreen() }
     }
 
+    private var shareText: String {
+        let s = currentSummary
+        return String.appLocalized(
+            "「%@」に集まりで参加しませんか?\n%@ 〜\n場所: %@",
+            s.gathering.title,
+            s.gathering.scheduledAt.formatted(date: .abbreviated, time: .shortened),
+            s.gathering.location
+        )
+    }
+
     private func loadApplicants() async {
         isLoadingApplicants = true
         applicants = await manager.loadApplicantProfiles(for: currentSummary.gathering.id)
         isLoadingApplicants = false
+    }
+
+    /// 主催者以外の閲覧者にも、既に承認済みで参加が決まっている人が誰かを見せる。
+    /// (以前は主催者だけがhostApplicantsSectionで見られ、応募を検討している人には
+    /// 誰が既に参加するのか一切分からなかった)
+    private func loadParticipants() async {
+        isLoadingParticipants = true
+        let all = await manager.loadApplicantProfiles(for: currentSummary.gathering.id)
+        participants = all.filter { $0.application.status == "accepted" }.map { ($0.profile, $0.photoURL) }
+        isLoadingParticipants = false
     }
 
     /// sentConfirmationCoverは全画面を覆うため、表示しっぱなしにすると裏の画面を一切操作できなくなる。
@@ -183,6 +215,12 @@ struct GatheringDetailView: View {
                 }
                 detailRow(icon: "mappin.and.ellipse", text: currentSummary.gathering.location)
                 detailRow(icon: "person.2.fill", text: String.appLocalized("%lld/%lld人", currentSummary.currentMemberCount, currentSummary.gathering.capacity))
+                if let deadlineAt = currentSummary.gathering.deadlineAt {
+                    detailRow(
+                        icon: "hourglass.tophalf.filled",
+                        text: String.appLocalized("応募締切: %@", deadlineAt.formatted(date: .abbreviated, time: .shortened))
+                    )
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -217,6 +255,39 @@ struct GatheringDetailView: View {
                 VStack(spacing: 10) {
                     ForEach(applicants, id: \.application.id) { item in
                         applicantRow(item)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    /// 主催者以外に見せる、参加が決まっている人だけの読み取り専用リスト。
+    /// (承認/却下ボタンはなく、既に誰が参加するのかが分かるだけのもの)
+    private var participantsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("参加者")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+
+            if isLoadingParticipants {
+                ProgressView().frame(maxWidth: .infinity)
+            } else if participants.isEmpty {
+                Text("まだ参加者はいません")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(Array(participants.enumerated()), id: \.offset) { _, item in
+                        HStack(spacing: 10) {
+                            IconImage(url: item.photoURL, size: 36)
+                            Text(item.profile?.name.displayNameForCurrentLanguage ?? "-")
+                                .font(.subheadline.bold())
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }

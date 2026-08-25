@@ -486,8 +486,8 @@ struct ChatView: View {
     /// 送信自体が失敗していても通知だけ送ってしまう可能性はあるが、失敗はまれで実害も小さいため、
     /// ここでは送信結果を厳密に判定せず割り切っている。
     private func notifyOtherOfNewMessage() async {
-        let title = myProfile.map { "\($0.name)さんからメッセージが届きました" } ?? "メッセージが届きました"
-        await PushNotifier.notify(userId: otherProfile.id, title: title, body: "トークを確認してみましょう")
+        let title = myProfile.map { String.appLocalized("%@さんからメッセージが届きました", $0.name.displayNameForCurrentLanguage) } ?? String.appLocalized("メッセージが届きました")
+        await PushNotifier.notify(userId: otherProfile.id, title: title, body: String.appLocalized("トークを確認してみましょう"))
     }
 
     /// 既読表示はVIPオプション限定の機能。通常会員のトークでは既読は分からない。
