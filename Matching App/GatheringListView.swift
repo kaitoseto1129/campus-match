@@ -166,6 +166,13 @@ private struct GatheringCard: View {
     let summary: GatheringSummary
 
     private var statusBadge: (text: String, color: Color)? {
+        if summary.gathering.isCanceled { return ("キャンセル済み", Color(.systemGray)) }
+        // 主催している集まりは、承認待ちの応募が来ていることがひと目で分かるようにする
+        // (以前はここに何も出ておらず、応募が来ていても一覧から気付けなかった)。
+        if summary.isHost {
+            guard summary.pendingCount > 0 else { return nil }
+            return (String.appLocalized("応募%lld件", summary.pendingCount), Color.brandOrange)
+        }
         switch summary.myApplication?.status {
         case "pending": return ("承認待ち", Color.brandOrange)
         case "accepted": return ("参加確定", Color.brandTeal)
@@ -266,19 +273,12 @@ private struct GatheringFilterSheet: View {
         NavigationStack {
             Form {
                 Section("日付で絞り込む") {
-                    Toggle("開始日を指定", isOn: Binding(
-                        get: { draft.dateFrom != nil },
-                        set: { draft.dateFrom = $0 ? (draft.dateFrom ?? Date()) : nil }
+                    Toggle("日付を指定", isOn: Binding(
+                        get: { draft.date != nil },
+                        set: { draft.date = $0 ? (draft.date ?? Date()) : nil }
                     ))
-                    if let dateFrom = draft.dateFrom {
-                        DatePicker("この日から", selection: Binding(get: { dateFrom }, set: { draft.dateFrom = $0 }), displayedComponents: [.date])
-                    }
-                    Toggle("終了日を指定", isOn: Binding(
-                        get: { draft.dateTo != nil },
-                        set: { draft.dateTo = $0 ? (draft.dateTo ?? Date()) : nil }
-                    ))
-                    if let dateTo = draft.dateTo {
-                        DatePicker("この日まで", selection: Binding(get: { dateTo }, set: { draft.dateTo = $0 }), displayedComponents: [.date])
+                    if let date = draft.date {
+                        DatePicker("この日に開催", selection: Binding(get: { date }, set: { draft.date = $0 }), displayedComponents: [.date])
                     }
                 }
                 Section("カテゴリで絞り込む") {

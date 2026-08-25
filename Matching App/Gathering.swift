@@ -42,6 +42,7 @@ struct Gathering: Codable, Identifiable, Equatable {
 
     var scheduledAt: Date { ISO8601DateFormatter.matchingApp.date(from: scheduledAtString) ?? Date() }
     var isOpen: Bool { status == "open" }
+    var isCanceled: Bool { status == "canceled" }
     var isPast: Bool { scheduledAt < Date() }
     var imageURL: URL? { imageUrlString.flatMap(URL.init(string:)) }
 }
@@ -137,6 +138,8 @@ struct GatheringSummary: Identifiable {
     let hostPhotoURL: URL?
     /// 承認済みの応募者数(主催者は含まない)。
     let acceptedCount: Int
+    /// 承認待ちの応募者数。主催者向けの一覧に「応募3件」のように出すために使う。
+    let pendingCount: Int
     /// 自分自身の応募(あれば)。
     let myApplication: GatheringApplication?
 
@@ -154,21 +157,17 @@ struct GatheringSummary: Identifiable {
 }
 
 /// 「みんなの募集」タブの絞り込み条件(日付・カテゴリ)。
+/// 集まりは開始日と終了日を持つ期間ではなく単発の日時なので、範囲指定ではなく
+/// 「この日に開催されるものを見る」という単一の日付指定にしている。
 struct GatheringBrowseFilter: Equatable {
-    var dateFrom: Date? = nil
-    var dateTo: Date? = nil
+    var date: Date? = nil
     var categories: Set<String> = []
 
-    var isActive: Bool { dateFrom != nil || dateTo != nil || !categories.isEmpty }
+    var isActive: Bool { date != nil || !categories.isEmpty }
 
     func matches(_ summary: GatheringSummary) -> Bool {
-        let calendar = Calendar.current
-        if let dateFrom, summary.gathering.scheduledAt < calendar.startOfDay(for: dateFrom) {
+        if let date, !Calendar.current.isDate(summary.gathering.scheduledAt, inSameDayAs: date) {
             return false
-        }
-        if let dateTo {
-            let endOfDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: dateTo)) ?? dateTo
-            if summary.gathering.scheduledAt >= endOfDay { return false }
         }
         if !categories.isEmpty {
             guard let category = summary.gathering.category, categories.contains(category) else { return false }

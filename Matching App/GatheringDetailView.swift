@@ -16,7 +16,9 @@ struct GatheringDetailView: View {
     @State private var showingChat = false
     @State private var toastMessage: String?
     @State private var showingApplyConfirmation = false
+    @State private var showingAcceptConfirmation = false
     @State private var showingWithdrawConfirm = false
+    @State private var showingCancelConfirm = false
 
     /// managerの最新状態(応募・承認直後の反映)を都度反映するため、渡された初期値ではなく探し直す。
     private var currentSummary: GatheringSummary {
@@ -36,17 +38,34 @@ struct GatheringDetailView: View {
         .background(Color.appListBackground.ignoresSafeArea())
         .navigationTitle("集まりの詳細")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if currentSummary.isHost && !currentSummary.gathering.isCanceled {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button(role: .destructive) {
+                            showingCancelConfirm = true
+                        } label: {
+                            Label("集まりをキャンセルする", systemImage: "xmark.circle")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("その他の操作")
+                }
+            }
+        }
         .safeAreaInset(edge: .bottom) {
             bottomActionBar
         }
         .actionToast($toastMessage)
         .sentConfirmationCover(isPresented: $showingApplyConfirmation, message: "応募しました", icon: "hand.raised.fill")
+        .sentConfirmationCover(isPresented: $showingAcceptConfirmation, message: "いこう!と伝えました", icon: "hand.thumbsup.fill")
         .sheet(isPresented: $showingApplySheet) {
             GatheringApplySheet(summary: currentSummary) { comment in
                 Task {
                     let succeeded = await manager.apply(to: currentSummary.gathering, comment: comment)
                     if succeeded {
-                        showingApplyConfirmation = true
+                        await flashConfirmation($showingApplyConfirmation)
                     } else {
                         toastMessage = "応募できませんでした"
                     }
@@ -64,6 +83,17 @@ struct GatheringDetailView: View {
             }
             Button("キャンセル", role: .cancel) {}
         }
+        .confirmationDialog("集まりをキャンセルしますか?", isPresented: $showingCancelConfirm, titleVisibility: .visible) {
+            Button("キャンセルする", role: .destructive) {
+                Task {
+                    let succeeded = await manager.cancelGathering(currentSummary.gathering)
+                    toastMessage = succeeded ? "集まりをキャンセルしました" : "キャンセルできませんでした"
+                }
+            }
+            Button("戻る", role: .cancel) {}
+        } message: {
+            Text("参加が決まっているメンバーに通知が届き、グループトークは使えなくなります")
+        }
         .task {
             if currentSummary.isHost {
                 await loadApplicants()
@@ -79,8 +109,28 @@ struct GatheringDetailView: View {
         isLoadingApplicants = false
     }
 
+    /// sentConfirmationCoverは全画面を覆うため、表示しっぱなしにすると裏の画面を一切操作できなくなる。
+    /// 呼び出し側で必ず一定時間後に閉じる必要があるため、その責務をここに共通化する。
+    private func flashConfirmation(_ binding: Binding<Bool>) async {
+        binding.wrappedValue = true
+        try? await Task.sleep(nanoseconds: 900_000_000)
+        binding.wrappedValue = false
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 14) {
+            if currentSummary.gathering.isCanceled {
+                HStack(spacing: 6) {
+                    Image(systemName: "xmark.circle.fill")
+                    Text("この集まりはキャンセルされました")
+                        .font(.caption.bold())
+                }
+                .foregroundStyle(Color(.systemGray))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(.systemGray6), in: Capsule())
+            }
+
             if let imageURL = currentSummary.gathering.imageURL {
                 AsyncImage(url: imageURL) { phase in
                     switch phase {
@@ -197,11 +247,15 @@ struct GatheringDetailView: View {
                     Button {
                         Task {
                             let succeeded = await manager.respond(to: item.application, gathering: currentSummary.gathering, accept: true)
-                            toastMessage = succeeded ? "承認しました" : "承認できませんでした"
+                            if succeeded {
+                                await flashConfirmation($showingAcceptConfirmation)
+                            } else {
+                                toastMessage = "承認できませんでした"
+                            }
                             await loadApplicants()
                         }
                     } label: {
-                        Text("承認する")
+                        Text("いこう!")
                             .font(.caption.bold())
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)
@@ -250,7 +304,13 @@ struct GatheringDetailView: View {
     private var bottomActionBar: some View {
         let s = currentSummary
         Group {
-            if s.isMember {
+            if s.gathering.isCanceled {
+                Text("この集まりはキャンセルされました")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+            } else if s.isMember {
                 Button {
                     showingChat = true
                 } label: {
@@ -280,6 +340,15 @@ struct GatheringDetailView: View {
                     }
                 case "declined":
                     Text("今回は参加が見送られました")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                case "canceled":
+                    // 自分で応募を取り消した後の状態。ここをEmptyViewのままにすると、
+                    // 中身の無いバー背景(白い四角)だけが表示されてしまっていたため、
+                    // きちんと状態が分かるメッセージを出す。
+                    Text("応募を取り消しました")
                         .font(.caption.bold())
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)

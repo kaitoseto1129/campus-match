@@ -77,12 +77,14 @@ final class GatheringManager: ObservableObject {
             let summaries: [GatheringSummary] = gatherings.map { gathering in
                 let gatheringApplications = applicationsByGathering[gathering.id] ?? []
                 let acceptedCount = gatheringApplications.filter { $0.status == "accepted" }.count
+                let pendingCount = gatheringApplications.filter { $0.status == "pending" }.count
                 let myApplication = gatheringApplications.first { $0.applicantId == myId }
                 return GatheringSummary(
                     gathering: gathering,
                     hostProfile: hostProfilesById[gathering.hostId],
                     hostPhotoURL: hostPhotoURLs[gathering.hostId],
                     acceptedCount: acceptedCount,
+                    pendingCount: pendingCount,
                     myApplication: myApplication,
                     isHost: gathering.hostId == myId
                 )
@@ -208,6 +210,35 @@ final class GatheringManager: ObservableObject {
         } catch {
             errorMessage = accept ? "承認できませんでした(定員に達している可能性があります)" : "却下できませんでした"
             print("gathering respond error: \(error)")
+            return false
+        }
+    }
+
+    /// 主催者が集まりをキャンセルする。承認済みメンバー全員にプッシュ通知する
+    /// (グループトークは以後アクセスできなくなる=実質の解体)。
+    @discardableResult
+    func cancelGathering(_ gathering: Gathering) async -> Bool {
+        do {
+            let acceptedApplications: [GatheringApplication] = try await supabase()
+                .from("gathering_applications")
+                .select("*")
+                .eq("gathering_id", value: gathering.id)
+                .eq("status", value: "accepted")
+                .execute()
+                .value
+            try await supabase()
+                .from("gatherings")
+                .update(["status": "canceled"])
+                .eq("id", value: gathering.id)
+                .execute()
+            await load()
+            for application in acceptedApplications {
+                await PushNotifier.notify(userId: application.applicantId, title: "「\(gathering.title)」がキャンセルされました", body: "主催者が集まりを取りやめました")
+            }
+            return true
+        } catch {
+            errorMessage = "キャンセルできませんでした"
+            print("gathering cancel error: \(error)")
             return false
         }
     }

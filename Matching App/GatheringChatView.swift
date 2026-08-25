@@ -14,6 +14,8 @@ struct GatheringChatView: View {
     @State private var draftFieldResetToken = UUID()
     @State private var membersById: [UUID: Profile] = [:]
     @State private var photoURLsById: [UUID: URL] = [:]
+    /// 表示順を安定させるため、辞書とは別に主催者を先頭にしたID順を保持する。
+    @State private var orderedMemberIds: [UUID] = []
 
     private var myId: UUID? { supabase().auth.currentUser?.id }
 
@@ -64,6 +66,9 @@ struct GatheringChatView: View {
         }
         .navigationTitle(gathering.title)
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            memberHeader
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             inputBar
         }
@@ -88,7 +93,8 @@ struct GatheringChatView: View {
                 .eq("status", value: "accepted")
                 .execute()
                 .value
-            let memberIds = Array(Set(applications.map(\.applicantId) + [gathering.hostId]))
+            let otherMemberIds = applications.map(\.applicantId).filter { $0 != gathering.hostId }
+            let memberIds = [gathering.hostId] + otherMemberIds
             let profiles: [Profile] = try await supabase()
                 .from("profiles")
                 .select("*")
@@ -97,9 +103,47 @@ struct GatheringChatView: View {
                 .value
             membersById = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0) })
             photoURLsById = await loadMainPhotoURLs(userIds: memberIds)
+            orderedMemberIds = memberIds
         } catch {
             print("gathering members load error: \(error)")
         }
+    }
+
+    /// トーク画面を開いた時、誰が参加予定なのかひと目で分かるように上部に出すヘッダー。
+    private var memberHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 14) {
+                Label {
+                    Text(gathering.scheduledAt, format: .dateTime.month().day().hour().minute())
+                } icon: {
+                    Image(systemName: "clock")
+                }
+                Label {
+                    Text(gathering.location).lineLimit(1)
+                } icon: {
+                    Image(systemName: "mappin.and.ellipse")
+                }
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(orderedMemberIds, id: \.self) { id in
+                        VStack(spacing: 4) {
+                            IconImage(url: photoURLsById[id], size: 40)
+                            Text(membersById[id]?.name.displayNameForCurrentLanguage ?? "-")
+                                .font(.caption2)
+                                .lineLimit(1)
+                        }
+                        .frame(width: 56)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .background(.bar)
     }
 
     private var inputBar: some View {
