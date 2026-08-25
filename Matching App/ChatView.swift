@@ -374,6 +374,11 @@ struct ChatView: View {
         }
         .task {
             await messageManager.load()
+            // load()の完了を待つ間に画面を閉じていた場合、.taskはキャンセルされるが
+            // onDisappear側のunsubscribe()は既にchannelがnilの状態で空振りしてしまっている
+            // ことがある。ここでキャンセル済みならsubscribe()自体を呼ばないようにして、
+            // 誰にも解除されない購読済みチャンネルが残ってしまうのを防ぐ。
+            guard !Task.isCancelled else { return }
             await messageManager.subscribe()
             await notificationManager.refresh()
             if let myId {

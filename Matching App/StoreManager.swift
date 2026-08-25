@@ -111,12 +111,27 @@ final class StoreManager: ObservableObject {
     /// サーバー側で特典を付与してもらう。
     private func requestServerGrant(jws: String) async throws {
         let params = VerifyPurchaseParams(transactionJWS: jws)
-        let response: VerifyPurchaseResponse = try await supabase().functions.invoke(
-            "verify-purchase",
-            options: FunctionInvokeOptions(body: params)
-        )
-        guard response.success else {
-            throw StoreError.serverGrantFailed
+        do {
+            let response: VerifyPurchaseResponse = try await supabase().functions.invoke(
+                "verify-purchase",
+                options: FunctionInvokeOptions(body: params)
+            )
+            guard response.success else {
+                throw StoreError.serverGrantFailed
+            }
+        } catch let error as FunctionsError {
+            // 同じ取引が、purchase()内の成功パスと並行稼働しているTransaction.updates
+            // リスナーの両方から送られることがある(StoreKit 2の仕様上の正常な競合)。
+            // 片方が先にredeemed_transactionsへ記録すると、もう片方はサーバー側の
+            // ユニーク制約違反で409(transaction already redeemed)を受け取る。
+            // これは失敗ではなく「既に別経路で特典が付与済み」を意味するため、
+            // ここで再スローしなければ呼び出し元はtransaction.finish()できる。
+            // 再スローしたままだと、finish()されない取引が次回起動のたびに
+            // Transaction.updatesで再配信され、また409を受けて…と無限に再送され続けてしまう。
+            if case .httpError(409, _) = error {
+                return
+            }
+            throw error
         }
     }
 

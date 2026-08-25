@@ -66,7 +66,19 @@ final class AuthManager : ObservableObject {
             UserDefaults.standard.set(true, forKey: "hasSeenDiscoverTutorial")
             UserDefaults.standard.set(true, forKey: "hasSeenMyPageTutorial")
         } catch let error {
-            errorMessage = "メールアドレスまたはパスワードが間違っています"
+            // メール未確認のまま(確認コード入力前にアプリを閉じた・SMTP遅延で届くのが遅れたなど)
+            // ログインしようとした場合、以前は他の全エラーと同じ「パスワードが間違っています」に
+            // なってしまい、本当の原因(メール未確認)も、確認画面へ戻る手段も分からなかった。
+            // pendingVerificationEmailは再起動でリセットされてしまうため、ここで再度セットして
+            // 確認コード入力画面に戻れるようにする。
+            if let authError = error as? AuthError,
+               case .api(_, let errorCode, _, _) = authError,
+               errorCode == .emailNotConfirmed {
+                pendingVerificationEmail = email
+                errorMessage = "メールアドレスの確認が完了していません。届いた確認コードを入力してください。"
+            } else {
+                errorMessage = "メールアドレスまたはパスワードが間違っています"
+            }
             print("sign in error: \(error)")
         }
         isLoading = false

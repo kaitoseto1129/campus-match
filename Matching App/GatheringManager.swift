@@ -217,12 +217,16 @@ final class GatheringManager: ObservableObject {
     }
 
     /// 承認待ちの自分の応募を取り消す。
+    /// 以前はstatus='canceled'に更新するだけで行を残していたため、「参加依頼済み」タブに
+    /// 取り消し済みの応募が永久に残り続けてバッジも出ず分かりにくく、さらに(gathering_id,
+    /// applicant_id)の一意制約により同じ集まりへ再応募しようとすると一意制約違反で
+    /// サイレントに失敗していた。行ごと削除することでどちらも解消する。
     @discardableResult
     func withdraw(_ application: GatheringApplication) async -> Bool {
         do {
             try await supabase()
                 .from("gathering_applications")
-                .update(["status": "canceled"])
+                .delete()
                 .eq("id", value: application.id)
                 .execute()
             await load()
