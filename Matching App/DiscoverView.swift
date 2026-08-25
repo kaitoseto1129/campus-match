@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct DiscoverView: View {
     @StateObject private var discoverManager = DiscoverManager()
@@ -134,6 +135,13 @@ struct DiscoverView: View {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     withAnimation { tutorialStep = .missions }
                 }
+            }
+            // アピール(ブースト)は約1時間で自動的に切れるが、この画面を開いたまま
+            // 何も操作せずにいると、期限が過ぎても「アピール中」の表示とボタンのdisabledが
+            // 残ったままになってしまっていた(load()し直すまで気づけない)。
+            // 通信を伴わない軽い再判定を1分おきに行い、切れたら自動でボタンを再度押せるようにする。
+            .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
+                discoverManager.refreshBoostStatus()
             }
             .sheet(isPresented: $showingFilterSheet) {
                 FilterSheetView(filter: $discoverManager.filter, showsTutorialHint: tutorialStep == .filter) { draft in

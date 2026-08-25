@@ -517,7 +517,7 @@ struct ProfileEditView: View {
                 self.gender = profile.gender
                 self.hasChosenBirthday = profile.birthday != nil
                 self.birthday = profile.birthday ?? (Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date())
-                self.area = profile.area
+                self.area = profile.area ?? ""
                 self.city = profile.city ?? ""
                 self.height = profile.height
                 self.major = profile.major ?? unselectedOption

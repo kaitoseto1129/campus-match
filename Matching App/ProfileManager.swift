@@ -41,14 +41,23 @@ class ProfileManager: ObservableObject {
         let photoB = photos.first(where: { $0.orderNumber == slotB })
         do {
             try await supabase().from("profile_photos").update(["order_number": -1]).eq("id", value: photoA.id).execute()
-            if let photoB {
-                try await supabase().from("profile_photos").update(["order_number": slotA]).eq("id", value: photoB.id).execute()
+            do {
+                if let photoB {
+                    try await supabase().from("profile_photos").update(["order_number": slotA]).eq("id", value: photoB.id).execute()
+                }
+                try await supabase().from("profile_photos").update(["order_number": slotB]).eq("id", value: photoA.id).execute()
+            } catch {
+                // ここで失敗すると、photoAがどのスロットにも属さないorder_number=-1のまま
+                // 永久に取り残され、UI上から消えてしまう。元のスロットへ戻すことを試みる。
+                try? await supabase().from("profile_photos").update(["order_number": slotA]).eq("id", value: photoA.id).execute()
+                throw error
             }
-            try await supabase().from("profile_photos").update(["order_number": slotB]).eq("id", value: photoA.id).execute()
-            await loadPhotos()
         } catch {
             print("swap photos error: \(error)")
         }
+        // 成功・失敗どちらの場合も、DB側の実際の状態とローカルのphotos配列がズレたままに
+        // ならないよう、必ず読み直す。
+        await loadPhotos()
     }
     func load() async {
         guard let uid = supabase().auth.currentUser?.id else {return}
@@ -297,13 +306,17 @@ class ProfileManager: ObservableObject {
     @discardableResult
     func deletePhoto(photo: ProfilePhoto) async -> Bool {
         do {
+            // DB行を先に消してからStorageを消すと、Storage側の削除だけ失敗した場合に
+            // 所有者のいないファイルが永久に残ってしまう(ユーザーからは既に削除済みに見えて
+            // 二度と消せない)。Storageを先に消すことで、途中で失敗してもDB行が残っている限り
+            // ユーザーは再度削除を試せる。
+            let filePath = "\(photo.userId.uuidString)/\(photo.id.uuidString).jpg"
+            try await supabase().storage.from("profile_photos").remove(paths: [filePath])
             try await supabase()
                 .from("profile_photos")
                 .delete()
                 .eq("id", value: photo.id)
                 .execute()
-            let filePath = "\(photo.userId.uuidString)/\(photo.id.uuidString).jpg"
-            try await supabase().storage.from("profile_photos").remove(paths: [filePath])
             await loadPhotos()
             return true
         } catch {

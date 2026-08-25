@@ -117,16 +117,26 @@ final class GatheringManager: ObservableObject {
             $0.gathering.isOpen && !$0.gathering.deadlineNotified && $0.gathering.isPastDeadline
         }
         for summary in due {
+            // load()が複数同時に走った場合(例: 手動更新中に自動再読み込みが重なる)、
+            // 両方が同じ「まだ通知していない」状態を読んで二重に通知してしまうことがあった。
+            // 先にdeadline_notified=falseを条件にUPDATEし、実際に自分の呼び出しが更新できた
+            // 場合だけ通知することで、DB側を排他の判定材料として使う。
+            struct UpdatedRow: Decodable { let id: UUID }
+            let updated: [UpdatedRow] = (try? await supabase()
+                .from("gatherings")
+                .update(["deadline_notified": true])
+                .eq("id", value: summary.gathering.id)
+                .eq("deadline_notified", value: false)
+                .select("id")
+                .execute()
+                .value) ?? []
+            guard !updated.isEmpty else { continue }
+
             await PushNotifier.notify(
                 userId: myId,
                 title: String.appLocalized("「%@」の募集締切になりました", summary.gathering.title),
                 body: String.appLocalized("応募状況を確認して参加者を決めましょう")
             )
-            try? await supabase()
-                .from("gatherings")
-                .update(["deadline_notified": true])
-                .eq("id", value: summary.gathering.id)
-                .execute()
         }
     }
 
@@ -255,10 +265,11 @@ final class GatheringManager: ObservableObject {
                 .eq("status", value: "accepted")
                 .execute()
                 .value
+            // gatherings.statusの更新と、承認待ち応募の一括却下を1つのRPCで原子的に行う。
+            // (却下側はhostによる直接UPDATEを許可するRLSポリシーを持たないため、
+            // SECURITY DEFINER関数を経由する必要がある)
             try await supabase()
-                .from("gatherings")
-                .update(["status": "canceled"])
-                .eq("id", value: gathering.id)
+                .rpc("cancel_gathering", params: CancelGatheringParams(pGatheringId: gathering.id))
                 .execute()
             await load()
             for application in acceptedApplications {
@@ -306,5 +317,12 @@ private struct RespondParams: Encodable {
     enum CodingKeys: String, CodingKey {
         case pApplicationId = "p_application_id"
         case pAccept = "p_accept"
+    }
+}
+
+private struct CancelGatheringParams: Encodable {
+    let pGatheringId: UUID
+    enum CodingKeys: String, CodingKey {
+        case pGatheringId = "p_gathering_id"
     }
 }

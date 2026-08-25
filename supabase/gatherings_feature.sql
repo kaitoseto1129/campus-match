@@ -120,10 +120,15 @@ using (
   )
 );
 
+-- 2026-08-25: block_chat_after_gathering_canceled マイグレーションで修正済み。
+-- 集まりがキャンセルされた後も、既にトーク画面を開いていたメンバーがメッセージを
+-- 送り続けられてしまっていた(UI側でボタンを隠すだけではその画面を開いたままの人を防げない)。
+-- status='open'の集まりに対してのみ送信できるようサーバー側でも制限する。
 create policy "Members can send gathering messages"
 on public.gathering_messages for insert to authenticated
 with check (
   sender_id = (select auth.uid())
+  and exists (select 1 from public.gatherings g where g.id = gathering_id and g.status = 'open')
   and (
     exists (
       select 1 from public.gatherings g
@@ -138,6 +143,31 @@ with check (
   )
 );
 
+-- 2026-08-25: allow_viewing_accepted_gathering_participants /
+-- respect_blocks_in_gathering_participants_view マイグレーションで追加・修正済み。
+-- 応募を検討している人にも、既に参加が決まっている人が誰かを見せたい。ただし
+-- ブロックし合っている相手には見せない(既存のブロック機能と矛盾しないようにする)。
+create policy "Same university users can view accepted participants"
+on public.gathering_applications for select
+to authenticated
+using (
+  status = 'accepted'
+  and exists (
+    select 1 from public.gatherings g
+    join public.profiles p on p.id = (select auth.uid())
+    where g.id = gathering_applications.gathering_id
+      and g.university_id = p.university_id
+  )
+  and not exists (
+    select 1 from public.user_actions ua
+    where ua.action = 'block'
+      and (
+        (ua.actor_id = (select auth.uid()) and ua.target_id = gathering_applications.applicant_id)
+        or (ua.actor_id = gathering_applications.applicant_id and ua.target_id = (select auth.uid()))
+      )
+  )
+);
+
 -- gathering_reads: 自分の既読位置だけ読み書きできる。
 create policy "Users can manage their own gathering read state"
 on public.gathering_reads for all to authenticated
@@ -146,6 +176,13 @@ with check (user_id = (select auth.uid()));
 
 -- 応募の承認・却下。定員(主催者含む)を超えて承認できないよう、ここで原子的にチェックする。
 -- 満員になった時点でgatherings.statusを'closed'に自動更新する。
+--
+-- 2026-08-25: fix_gathering_accept_race_and_canceled_status マイグレーションで修正済み。
+-- 以前はgathering_applications側の行だけをロックしていたため、同じ集まりへの「別々の」
+-- 応募を同時に承認されると両方が同じ承認済み人数を読んでしまい、定員を超えて承認できて
+-- しまっていた。gatherings側の行ロックを取ることで承認処理全体を直列化する。
+-- また、キャンセル済み・満員の集まりに対してその後も承認/却下できてしまっていたのを、
+-- openの間だけ応答できるように修正した。
 create or replace function public.respond_to_gathering_application(p_application_id uuid, p_accept boolean)
 returns void
 language plpgsql
@@ -156,20 +193,28 @@ declare
   v_gathering_id uuid;
   v_host_id uuid;
   v_capacity int;
+  v_status text;
   v_accepted_count int;
 begin
-  select ga.gathering_id, g.host_id, g.capacity
-    into v_gathering_id, v_host_id, v_capacity
+  select ga.gathering_id into v_gathering_id
   from public.gathering_applications ga
-  join public.gatherings g on g.id = ga.gathering_id
-  where ga.id = p_application_id
-  for update of ga;
+  where ga.id = p_application_id;
 
   if v_gathering_id is null then
     raise exception 'application not found';
   end if;
+
+  select g.host_id, g.capacity, g.status
+    into v_host_id, v_capacity, v_status
+  from public.gatherings g
+  where g.id = v_gathering_id
+  for update;
+
   if v_host_id != auth.uid() then
     raise exception 'only the host can respond to applications';
+  end if;
+  if v_status != 'open' then
+    raise exception 'this gathering is no longer open';
   end if;
 
   if not p_accept then
@@ -199,6 +244,36 @@ end;
 $$;
 grant execute on function public.respond_to_gathering_application(uuid, boolean) to authenticated;
 
+-- 2026-08-25: add_cancel_gathering_rpc マイグレーションで追加。
+-- 主催者が集まりをキャンセルする。gatherings.statusの更新と、承認待ち応募の一括却下を
+-- 1つのRPCで原子的に行う(却下側はhostによる直接UPDATEを許可するRLSポリシーを
+-- 持たないため、SECURITY DEFINER関数を経由する必要がある)。
+create or replace function public.cancel_gathering(p_gathering_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_host_id uuid;
+begin
+  select host_id into v_host_id from public.gatherings where id = p_gathering_id for update;
+  if v_host_id is null then
+    raise exception 'gathering not found';
+  end if;
+  if v_host_id != auth.uid() then
+    raise exception 'only the host can cancel this gathering';
+  end if;
+
+  update public.gatherings set status = 'canceled' where id = p_gathering_id;
+
+  update public.gathering_applications
+  set status = 'declined', responded_at = now()
+  where gathering_id = p_gathering_id and status = 'pending';
+end;
+$$;
+grant execute on function public.cancel_gathering(uuid) to authenticated;
+
 alter publication supabase_realtime add table public.gatherings;
 alter publication supabase_realtime add table public.gathering_applications;
 alter publication supabase_realtime add table public.gathering_messages;
@@ -209,6 +284,19 @@ alter table public.gatherings
   add column image_url text,
   add column category text,
   add column duration_hours int;
+
+-- 2026-08-25: add_gathering_deadline_fields マイグレーションで追加。
+-- 応募の締切(任意)。deadline_notifiedは、締切到来をホストへ通知済みかどうかのフラグ
+-- (クライアント側でアプリを開いたタイミングにベストエフォートで通知するために使う)。
+alter table public.gatherings
+  add column if not exists deadline_at timestamptz,
+  add column if not exists deadline_notified boolean not null default false;
+
+-- 2026-08-25: add_gathering_deadline_before_scheduled_check マイグレーションで追加。
+-- 締切が開催日時より後に設定されてしまうのを防ぐ。
+alter table public.gatherings
+  add constraint gatherings_deadline_before_scheduled
+  check (deadline_at is null or deadline_at <= scheduled_at);
 
 insert into storage.buckets (id, name, public)
 values ('gathering_photos', 'gathering_photos', true)

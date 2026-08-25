@@ -33,12 +33,16 @@ struct Profile: Codable, Identifiable {
         guard let profileImageUrlString else { return nil }
         return URL(string: profileImageUrlString)
     }
-    let area: String
+    /// サインアップ直後、プロフィールを完成させる前はまだ入力されていないためDB上はNULL許容。
+    /// 以前はここが非Optionalだったため、他ユーザー(例: 集まりの主催者、いいねの送信者)の
+    /// プロフィールをまとめて配列で取得する処理が、1件でもプロフィール未完成のユーザーを含むと
+    /// デコード自体が失敗し、リスト全体が読み込めなくなってしまっていた。
+    let area: String?
     /// 都道府県よりも詳細な市区町村(政令指定都市の区・東京23区など、データがある地域のみ)。任意項目。
     let city: String?
     /// 表示用に「都道府県 市区町村」を組み立てる。市区町村が無ければ都道府県のみ。
     var areaLabel: String {
-        guard let city, !city.isEmpty else { return area }
+        guard let city, !city.isEmpty else { return area ?? "-" }
         return "\(area) \(city)"
     }
     let height: Int?

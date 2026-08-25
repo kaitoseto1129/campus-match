@@ -18,6 +18,21 @@ final class DiscoverManager: ObservableObject {
     @Published var likedIds: Set<UUID> = []
     /// 自分がいまアピール(ブースト)中かどうか。探す画面のバナー表示に使う。
     @Published var isBoostActive = false
+    /// isBoostActiveの根拠になる期限。load()やactivateBoost()の時点のスナップショットでしか
+    /// 更新されないため、探す画面を開いたまま何もせず期限が過ぎると、実際にはブーストが
+    /// 切れているのに「アピール中」の表示・ボタンのdisabledが残り続けてしまう。
+    /// 画面側でTimerから定期的にrefreshBoostStatus()を呼んでもらい、この値と現在時刻を
+    /// 突き合わせてisBoostActiveを更新し直す。
+    private var boostExpiresAt: Date?
+
+    /// 現在時刻と照らし合わせてisBoostActiveを再評価する。ネットワーク通信は行わない軽量な処理。
+    func refreshBoostStatus() {
+        guard let boostExpiresAt else { return }
+        let stillActive = boostExpiresAt > Date()
+        if isBoostActive != stillActive {
+            isBoostActive = stillActive
+        }
+    }
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var filter = DiscoverFilter()
@@ -51,6 +66,7 @@ final class DiscoverManager: ObservableObject {
             myUniversityId = myProfile.universityId
             oppositeGender = myGender == .male ? .female : .male
             isBoostActive = myProfile.isBoosted
+            boostExpiresAt = myProfile.boostExpiresAt
 
             let likeRows: [Like] = try await supabase()
                 .from("likes")

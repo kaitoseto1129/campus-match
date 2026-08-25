@@ -7906,6 +7906,26 @@
           }
         }
       }
+    },
+    "分析": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analytics"
+          }
+        }
+      }
+    },
+    "通報管理(管理者)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report Management (Admin)"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

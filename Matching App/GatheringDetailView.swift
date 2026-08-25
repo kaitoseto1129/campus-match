@@ -98,6 +98,10 @@ struct GatheringDetailView: View {
                 Task {
                     let succeeded = await manager.cancelGathering(currentSummary.gathering)
                     toastMessage = succeeded ? "集まりをキャンセルしました" : "キャンセルできませんでした"
+                    // キャンセルすると承認待ちの応募はサーバー側で自動的に却下されるため、
+                    // 表示中の応募一覧もここで最新化しないと、動かなくなったはずの
+                    // 「いこう!/見送る」ボタンが古い状態のまま残ってしまう。
+                    if succeeded { await loadApplicants() }
                 }
             }
             Button("戻る", role: .cancel) {}
