@@ -14,6 +14,14 @@ import Supabase
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         let token = deviceToken.map { String(format: "%02x", $0) }.joined()
@@ -28,6 +36,36 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         print("push notification registration failed: \(error)")
+    }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    /// 通知をタップしてアプリを開いた(または前面に戻した)時に呼ばれる。
+    /// 以前はここに何の実装もなく、通知をタップしても最後に開いていたタブが
+    /// そのまま表示されるだけだった。ペイロードのtypeを見て、該当するタブへ
+    /// 切り替わるようNotificationRouter経由でMainTabViewに伝える。
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let userInfo = response.notification.request.content.userInfo
+        if let typeRaw = userInfo["type"] as? String, let type = PushNotificationType(rawValue: typeRaw) {
+            Task { @MainActor in
+                NotificationRouter.shared.pendingTab = type.destinationTab
+            }
+        }
+        completionHandler()
+    }
+
+    /// アプリがフォアグラウンドにある間に通知を受信した場合も、これまで通り
+    /// バナー・サウンド・バッジで表示する(delegateを設定する前のデフォルト挙動を維持する)。
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge])
     }
 }
 

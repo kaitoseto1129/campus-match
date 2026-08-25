@@ -135,7 +135,8 @@ final class GatheringManager: ObservableObject {
             await PushNotifier.notify(
                 userId: myId,
                 title: String.appLocalized("「%@」の募集締切になりました", summary.gathering.title),
-                body: String.appLocalized("応募状況を確認して参加者を決めましょう")
+                body: String.appLocalized("応募状況を確認して参加者を決めましょう"),
+                type: .gathering
             )
         }
     }
@@ -207,7 +208,7 @@ final class GatheringManager: ObservableObject {
                 .insert(GatheringApplicationInsertPayload(gatheringId: gathering.id, applicantId: myId, comment: comment.isEmpty ? nil : comment))
                 .execute()
             await load()
-            await PushNotifier.notify(userId: gathering.hostId, title: String.appLocalized("「%@」に応募がありました", gathering.title), body: String.appLocalized("内容を確認して承認するか選びましょう"))
+            await PushNotifier.notify(userId: gathering.hostId, title: String.appLocalized("「%@」に応募がありました", gathering.title), body: String.appLocalized("内容を確認して承認するか選びましょう"), type: .gathering)
             return true
         } catch {
             errorMessage = "応募できませんでした"
@@ -247,7 +248,7 @@ final class GatheringManager: ObservableObject {
                 .execute()
             await load()
             if accept {
-                await PushNotifier.notify(userId: application.applicantId, title: String.appLocalized("「%@」への参加が決まりました!", gathering.title), body: String.appLocalized("グループトークで挨拶してみましょう"))
+                await PushNotifier.notify(userId: application.applicantId, title: String.appLocalized("「%@」への参加が決まりました!", gathering.title), body: String.appLocalized("グループトークで挨拶してみましょう"), type: .gathering)
             }
             return true
         } catch {
@@ -277,7 +278,7 @@ final class GatheringManager: ObservableObject {
                 .execute()
             await load()
             for application in acceptedApplications {
-                await PushNotifier.notify(userId: application.applicantId, title: String.appLocalized("「%@」がキャンセルされました", gathering.title), body: String.appLocalized("主催者が集まりを取りやめました"))
+                await PushNotifier.notify(userId: application.applicantId, title: String.appLocalized("「%@」がキャンセルされました", gathering.title), body: String.appLocalized("主催者が集まりを取りやめました"), type: .gathering)
             }
             return true
         } catch {

@@ -18,19 +18,22 @@ enum PushNotifier {
         let userId: UUID
         let title: String
         let body: String
+        /// APNsペイロードのトップレベルにそのままマージされ、通知タップ時に
+        /// UNNotificationのuserInfoとして読み取れる(タップしたら適切なタブへ遷移させるために使う)。
+        let data: [String: String]
     }
 
     private struct NotifyResponse: Decodable {
         let success: Bool
     }
 
-    static func notify(userId: UUID, title: String, body: String) async {
+    static func notify(userId: UUID, title: String, body: String, type: PushNotificationType) async {
         // 自分自身の操作(例: 自分でいいねした通知が自分に飛ぶ)を誤って送らないための保険。
         guard userId != supabase().auth.currentUser?.id else { return }
         do {
             let _: NotifyResponse = try await supabase().functions.invoke(
                 "send-push",
-                options: FunctionInvokeOptions(body: NotifyParams(userId: userId, title: title, body: body))
+                options: FunctionInvokeOptions(body: NotifyParams(userId: userId, title: title, body: body, data: ["type": type.rawValue]))
             )
         } catch {
             print("push notify error: \(error)")

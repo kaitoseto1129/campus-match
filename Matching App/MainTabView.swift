@@ -43,6 +43,13 @@ struct MainTabView: View {
         }
         .animation(.spring(response: 0.35), value: notificationManager.activeToast?.id)
         .task {
+            // 通知タップでアプリがコールド起動された場合、AppDelegateがpendingTabを
+            // セットするのはMainTabViewがまだマウントされる前のことがある。
+            // .onReceiveは購読開始後の変化しか拾えないため、起動時にも一度直接確認する。
+            if let tab = NotificationRouter.shared.pendingTab {
+                tabRouter.selectTab(tab)
+                NotificationRouter.shared.pendingTab = nil
+            }
             await matchManager.start()
             await notificationManager.start()
         }
@@ -64,6 +71,15 @@ struct MainTabView: View {
         .environmentObject(notificationManager)
         .environmentObject(tabRouter)
         .environmentObject(matchManager)
+        // 通知をタップした時、AppDelegate(UNUserNotificationCenterDelegate)が
+        // NotificationRouter.shared.pendingTabに行き先タブをセットする。
+        // AppDelegateからはTabRouterの実体(このViewの@StateObject)に直接触れないため、
+        // ここで監視して受け渡す。
+        .onReceive(NotificationRouter.shared.$pendingTab) { tab in
+            guard let tab else { return }
+            tabRouter.selectTab(tab)
+            NotificationRouter.shared.pendingTab = nil
+        }
     }
 
     private var customTabBar: some View {

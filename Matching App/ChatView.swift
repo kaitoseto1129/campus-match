@@ -492,7 +492,7 @@ struct ChatView: View {
     /// ここでは送信結果を厳密に判定せず割り切っている。
     private func notifyOtherOfNewMessage() async {
         let title = myProfile.map { String.appLocalized("%@さんからメッセージが届きました", $0.name.displayNameForCurrentLanguage) } ?? String.appLocalized("メッセージが届きました")
-        await PushNotifier.notify(userId: otherProfile.id, title: title, body: String.appLocalized("トークを確認してみましょう"))
+        await PushNotifier.notify(userId: otherProfile.id, title: title, body: String.appLocalized("トークを確認してみましょう"), type: .message)
     }
 
     /// 既読表示はVIPオプション限定の機能。通常会員のトークでは既読は分からない。

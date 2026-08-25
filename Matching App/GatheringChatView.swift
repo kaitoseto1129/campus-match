@@ -187,7 +187,7 @@ struct GatheringChatView: View {
         let myName = membersById[myId]?.name.displayNameForCurrentLanguage
         let title = myName.map { String.appLocalized("%@さんからメッセージが届きました", $0) } ?? String.appLocalized("メッセージが届きました")
         for memberId in membersById.keys where memberId != myId {
-            await PushNotifier.notify(userId: memberId, title: title, body: gathering.title)
+            await PushNotifier.notify(userId: memberId, title: title, body: gathering.title, type: .gathering)
         }
     }
 }
