@@ -1,8 +1,10 @@
 "use client";
 
 import { startTransition, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
+import { hobbyCardsFor } from "@/lib/hobbyCards";
 import { isBoostActive, type Profile } from "@/lib/types";
 
 interface Mission {
@@ -117,7 +119,7 @@ export function MyPageExtras({
   const boosted = isBoostActive(profile);
 
   return (
-    <section className="mt-6 flex flex-col gap-4">
+    <section className="flex flex-col gap-4">
       <div className="brand-gradient rounded-3xl p-6 text-center text-white shadow-lg shadow-purple-200">
         <p className="text-sm font-semibold opacity-90">{t("myPageExtras.remainingLikes")}</p>
         <p className="text-5xl font-extrabold tracking-tight">{profile.remaining_likes}</p>
@@ -192,18 +194,23 @@ export function MyPageExtras({
         )}
       </div>
 
-      {profile.hobby_cards.length > 0 && (
-        <div className="card p-4">
-          <p className="mb-2 text-sm font-bold">{t("myPageExtras.hobbyCards")}</p>
+      <div className="card p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-sm font-bold">{t("myPageExtras.hobbyCards")}</p>
+          <Link href="/profile/hobby-cards" className="text-xs font-bold text-[var(--brand-purple-dark)]">
+            {profile.hobby_cards.length > 0 ? t("completeness.edit") : t("completeness.set")}
+          </Link>
+        </div>
+        {profile.hobby_cards.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {profile.hobby_cards.map((card) => (
-              <span key={card} className="rounded-full bg-purple-50 px-3 py-1 text-xs text-purple-600">
-                {card}
+            {hobbyCardsFor(profile.hobby_cards).map((card) => (
+              <span key={card.id} className="rounded-full bg-purple-50 px-3 py-1 text-xs text-purple-600">
+                {card.emoji} {card.title}
               </span>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
