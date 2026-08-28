@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+:root {
+  /* iOS版(Matching App/ProfileView.swift)のColor拡張と同じブランドカラー。 */
+  --brand-purple: #8f78eb;
+  --brand-purple-dark: #7360d6;
+  --brand-navy: #1a2e66;
+  --brand-pink: #ed8fbf;
+  --brand-teal: #33bfad;
+  --brand-orange: #f59e47;
+  --background: #fbfaff;
+  --foreground: #22203a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-purple-dark: var(--brand-purple-dark);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-orange: var(--brand-orange);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+}
+
+@layer components {
+  /* アプリアイコンと同じ紫→ピンクのグラデーション(iOS版 Color.brandGradient と対応)。 */
+  .brand-gradient {
+    background-image: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));
+  }
+
+  /* iOS版 Color.appListBackground と対応する、一覧画面のうっすらしたグラデーション背景。 */
+  .app-list-background {
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--brand-purple) 12%, transparent),
+      color-mix(in srgb, var(--brand-pink) 8%, transparent) 40%,
+      #f6f5fb 75%
+    );
+  }
+
+  .input {
+    width: 100%;
+    border-radius: 0.9rem;
+    border: 1px solid #e7e4f5;
+    background: #ffffff;
+    padding: 0.8rem 1.1rem;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--brand-purple);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-purple) 18%, transparent);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    font-weight: 700;
+    color: white;
+    background-image: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));
+    box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--brand-purple) 60%, transparent);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
+  .btn-primary:active {
+    transform: scale(0.97);
+  }
+  .btn-primary:disabled {
+    opacity: 0.45;
+    box-shadow: none;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    font-weight: 700;
+    color: var(--foreground);
+    background: #f1eff9;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .btn-secondary:active {
+    transform: scale(0.97);
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    box-shadow: 0 6px 20px -12px rgba(80, 60, 140, 0.25);
+    border: 1px solid #f1eff9;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid #e7e4f5;
+    color: #5b5680;
+    background: white;
+    transition: all 0.15s ease;
+  }
+  .chip[data-selected="true"] {
+    background-image: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));
+    border-color: transparent;
+    color: white;
+  }
+}
