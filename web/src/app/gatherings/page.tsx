@@ -30,6 +30,7 @@ interface Summary {
 }
 
 type Segment = "browse" | "hosted";
+type BrowseSubSegment = "all" | "applied";
 
 export default function GatheringsPage() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function GatheringsPage() {
   const { t } = useTranslation();
 
   const [segment, setSegment] = useState<Segment>("browse");
+  const [browseSubSegment, setBrowseSubSegment] = useState<BrowseSubSegment>("all");
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -129,7 +131,9 @@ export default function GatheringsPage() {
     if (s.isHost) return false;
     const isOpenAndUpcoming =
       s.gathering.status === "open" && new Date(s.gathering.scheduled_at) > new Date();
-    return s.myApplication !== undefined || isOpenAndUpcoming;
+    if (!(s.myApplication !== undefined || isOpenAndUpcoming)) return false;
+    if (browseSubSegment === "applied") return s.myApplication !== undefined;
+    return true;
   });
 
   return (
@@ -163,6 +167,31 @@ export default function GatheringsPage() {
         </button>
       </div>
 
+      {segment === "browse" && (
+        <div className="mb-5 flex gap-2">
+          <button
+            onClick={() => setBrowseSubSegment("all")}
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+              browseSubSegment === "all"
+                ? "bg-[var(--brand-purple)] text-white"
+                : "bg-[#f1eff9] text-gray-400"
+            }`}
+          >
+            {t("gatherings.browseAll")}
+          </button>
+          <button
+            onClick={() => setBrowseSubSegment("applied")}
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+              browseSubSegment === "applied"
+                ? "bg-[var(--brand-purple)] text-white"
+                : "bg-[#f1eff9] text-gray-400"
+            }`}
+          >
+            {t("gatherings.browseApplied")}
+          </button>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -175,7 +204,11 @@ export default function GatheringsPage() {
         <div className="card flex flex-col items-center gap-2 py-16 text-center">
           <p className="text-3xl">🎉</p>
           <p className="font-bold text-gray-600">
-            {segment === "hosted" ? t("gatherings.emptyHosted") : t("gatherings.emptyBrowse")}
+            {segment === "hosted"
+              ? t("gatherings.emptyHosted")
+              : browseSubSegment === "applied"
+                ? t("gatherings.emptyBrowseApplied")
+                : t("gatherings.emptyBrowse")}
           </p>
         </div>
       ) : (
