@@ -173,7 +173,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="min-h-screen bg-white pb-28">
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[#e5e5ea] bg-white/95 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--line)] bg-white/95 px-4 py-3 backdrop-blur-md">
         <button onClick={() => router.back()} aria-label={t("common.back")} className="text-xl text-[var(--brand-purple)]">
           ‹
         </button>
@@ -247,7 +247,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
       )}
 
       <div className="px-4 pt-2">
-        <div className="aspect-square w-full overflow-hidden rounded-[20px] bg-[#f1f1f4]">
+        <div className="aspect-square w-full overflow-hidden rounded-[20px] bg-[var(--paper-sunken)]">
           {mainPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mainPhoto.url} alt="" className="h-full w-full object-cover" />
@@ -286,7 +286,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
         {university && (
           <p className="mt-1.5 text-xs text-gray-400">🎓 {university.name}</p>
         )}
-        <div className="mt-3 border-t border-[#e5e5ea]" />
+        <div className="mt-3 border-t border-[var(--line)]" />
       </div>
 
       <div className="mt-3 px-4">
@@ -358,7 +358,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
 
 function InfoRow({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
   return (
-    <div className={`flex items-center justify-between py-3.5 ${last ? "" : "border-b border-[#e5e5ea]"}`}>
+    <div className={`flex items-center justify-between py-3.5 ${last ? "" : "border-b border-[var(--line)]"}`}>
       <span className="text-[15px] text-gray-500">{label}</span>
       <span className="text-[15px] font-medium text-[var(--brand-purple)]">{value}</span>
     </div>

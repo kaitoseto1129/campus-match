@@ -16,7 +16,7 @@ export function AppStoreButton({ className = "" }: { className?: string }) {
         href={APP_STORE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1.5 rounded-full border border-[#e7e4f5] bg-white px-4 py-2 text-sm font-bold text-[var(--brand-purple-dark)] shadow-sm transition hover:bg-[#f8f7fd] ${className}`}
+        className={`inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-bold text-[var(--brand-purple-dark)] shadow-sm transition hover:bg-[var(--brand-purple-soft)] ${className}`}
       >
         📱 {t("appStore.button")}
       </a>
@@ -31,7 +31,7 @@ export function AppStoreButton({ className = "" }: { className?: string }) {
           setShowComingSoon(true);
           setTimeout(() => setShowComingSoon(false), 2000);
         }}
-        className="inline-flex items-center gap-1.5 rounded-full border border-[#e7e4f5] bg-white px-4 py-2 text-sm font-bold text-[var(--brand-purple-dark)] shadow-sm transition hover:bg-[#f8f7fd]"
+        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-bold text-[var(--brand-purple-dark)] shadow-sm transition hover:bg-[var(--brand-purple-soft)]"
       >
         📱 {t("appStore.button")}
       </button>

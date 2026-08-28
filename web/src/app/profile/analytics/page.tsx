@@ -146,9 +146,9 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="brand-gradient mb-4 rounded-2xl p-5 text-center text-white shadow-lg shadow-purple-200">
-          <p className="text-sm font-semibold opacity-90">{t("analytics.likeRate")}</p>
-          <p className="text-4xl font-extrabold">{likeRate}%</p>
+        <div className="mb-4 rounded-2xl border border-[var(--line)] bg-[var(--brand-purple-soft)] p-5 text-center">
+          <p className="text-sm font-semibold text-[var(--brand-purple-dark)]">{t("analytics.likeRate")}</p>
+          <p className="text-4xl font-extrabold text-[var(--brand-purple-dark)]">{likeRate}%</p>
         </div>
 
         {totalVisits === 0 && insights.length === 0 ? (
@@ -177,9 +177,9 @@ export default function AnalyticsPage() {
                       <span className="w-14 shrink-0 text-xs text-gray-400">
                         {index === 0 ? t("analytics.mainPhotoLabel") : t("analytics.nthPhotoLabel", { n: index + 1 })}
                       </span>
-                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#f1eff9]">
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
                         <div
-                          className="brand-gradient h-full rounded-full"
+                          className="h-full rounded-full bg-[var(--brand-purple)]"
                           style={{ width: `${(count / maxPhotoCount) * 100}%` }}
                         />
                       </div>
@@ -200,7 +200,7 @@ export default function AnalyticsPage() {
                         <span className="text-gray-500">{t(section.labelKey)}</span>
                         <span className="font-bold text-[var(--brand-purple-dark)]">{section.percentage}%</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-[#f1eff9]">
+                      <div className="h-2 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
                         <div
                           className="h-full rounded-full bg-[var(--brand-purple)]"
                           style={{ width: `${section.percentage}%` }}

@@ -10,7 +10,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
       type="button"
       onClick={() => setLocale(locale === "ja" ? "en" : "ja")}
       aria-label="Switch language"
-      className={`rounded-full border border-[#e7e4f5] bg-white px-2.5 py-1 text-xs font-bold text-[var(--brand-purple-dark)] shadow-sm transition hover:bg-[#f8f7fd] ${className}`}
+      className={`rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-xs font-bold text-[var(--brand-purple-dark)] shadow-sm transition hover:bg-[var(--brand-purple-soft)] ${className}`}
     >
       {locale === "ja" ? "EN" : "JP"}
     </button>

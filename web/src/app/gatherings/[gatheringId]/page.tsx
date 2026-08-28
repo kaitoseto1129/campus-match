@@ -187,7 +187,7 @@ export default function GatheringDetailPage({
         )}
 
         <div className="mb-3 flex items-center gap-2">
-          <div className="h-8 w-8 overflow-hidden rounded-full bg-[#f1eff9]">
+          <div className="h-8 w-8 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
             {hostPhotoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={hostPhotoUrl} alt="" className="h-full w-full object-cover" />
@@ -219,9 +219,9 @@ export default function GatheringDetailPage({
               {t("gatheringDetail.membersCount", { current: acceptedCount + 1, capacity: gathering.capacity })}
               {isFull && ` ・ ${t("gatheringDetail.full")}`}
             </p>
-            <div className="h-1.5 w-full max-w-[160px] overflow-hidden rounded-full bg-[#f1eff9]">
+            <div className="h-1.5 w-full max-w-[160px] overflow-hidden rounded-full bg-[var(--paper-sunken)]">
               <div
-                className={`h-full rounded-full transition-all ${isFull ? "bg-[var(--brand-orange)]" : "brand-gradient"}`}
+                className={`h-full rounded-full transition-all ${isFull ? "bg-[var(--brand-orange)]" : "bg-[var(--brand-purple)]"}`}
                 style={{ width: `${Math.min(100, ((acceptedCount + 1) / gathering.capacity) * 100)}%` }}
               />
             </div>
@@ -280,7 +280,7 @@ export default function GatheringDetailPage({
             <div className="flex flex-col gap-2">
               {applicants.map((row) => (
                 <div key={row.application.id} className="card flex items-center gap-3 p-3">
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
                     {row.photoUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={row.photoUrl} alt="" className="h-full w-full object-cover" />
@@ -397,7 +397,7 @@ function GroupChat({ gatheringId, myId }: { gatheringId: string; myId: string | 
   return (
     <div className="mt-6">
       <h2 className="mb-2 font-bold text-[var(--brand-navy)]">{t("gatheringDetail.groupChatTitle")}</h2>
-      <div className="app-list-background flex h-64 flex-col overflow-y-auto rounded-2xl border border-[#f1eff9] p-3">
+      <div className="app-list-background flex h-64 flex-col overflow-y-auto rounded-2xl border border-[var(--paper-sunken)] p-3">
         {messages.map((message) => (
           <div key={message.id} className={`mb-2 flex flex-col ${message.sender_id === myId ? "items-end" : "items-start"}`}>
             {message.sender_id !== myId && (
@@ -405,7 +405,7 @@ function GroupChat({ gatheringId, myId }: { gatheringId: string; myId: string | 
             )}
             <p
               className={`max-w-[75%] rounded-xl px-3 py-1.5 text-sm ${
-                message.sender_id === myId ? "brand-gradient text-white" : "bg-white text-[var(--brand-navy)] shadow-sm"
+                message.sender_id === myId ? "bg-[var(--brand-purple)] text-white" : "bg-white text-[var(--brand-navy)] border border-[var(--line)]"
               }`}
             >
               {message.body}

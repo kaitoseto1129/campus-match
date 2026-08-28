@@ -61,7 +61,7 @@ export function MyPageSettings({
     <div>
       <p className="mb-2 px-1 text-sm font-bold text-gray-500">{t("myPage.settings")}</p>
 
-      <div className="card mb-3 flex flex-col divide-y divide-[#f1eff9]">
+      <div className="card mb-3 flex flex-col divide-y divide-[var(--paper-sunken)]">
         <ToggleRow
           label={t("privacySettings.showLikeCount")}
           checked={profile.show_like_count}
@@ -115,7 +115,7 @@ function ToggleRow({
       <div className="flex min-w-0 items-center gap-2">
         <span className="truncate text-sm text-gray-700">{label}</span>
         {lockedLabel && (
-          <span className="shrink-0 rounded-full bg-[#f1eff9] px-2 py-0.5 text-[10px] font-bold text-[var(--brand-purple-dark)]">
+          <span className="shrink-0 rounded-full bg-[var(--paper-sunken)] px-2 py-0.5 text-[10px] font-bold text-[var(--brand-purple-dark)]">
             {lockedLabel}
           </span>
         )}

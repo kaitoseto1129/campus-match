@@ -148,7 +148,7 @@ export default function GatheringsPage() {
         }
       />
 
-      <div className="mb-5 flex rounded-full bg-[#f1eff9] p-1">
+      <div className="mb-5 flex rounded-full bg-[var(--paper-sunken)] p-1">
         <button
           onClick={() => setSegment("browse")}
           className={`flex-1 rounded-full py-2 text-sm font-bold transition ${
@@ -174,7 +174,7 @@ export default function GatheringsPage() {
             className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
               browseSubSegment === "all"
                 ? "bg-[var(--brand-purple)] text-white"
-                : "bg-[#f1eff9] text-gray-400"
+                : "bg-[var(--paper-sunken)] text-gray-400"
             }`}
           >
             {t("gatherings.browseAll")}
@@ -184,7 +184,7 @@ export default function GatheringsPage() {
             className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
               browseSubSegment === "applied"
                 ? "bg-[var(--brand-purple)] text-white"
-                : "bg-[#f1eff9] text-gray-400"
+                : "bg-[var(--paper-sunken)] text-gray-400"
             }`}
           >
             {t("gatherings.browseApplied")}
@@ -195,7 +195,7 @@ export default function GatheringsPage() {
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card h-28 animate-pulse bg-[#f8f7fc]" />
+            <div key={i} className="card h-28 animate-pulse bg-[var(--paper-sunken)]" />
           ))}
         </div>
       ) : errorMessage ? (
@@ -285,7 +285,7 @@ function GatheringCard({ summary }: { summary: Summary }) {
       </p>
       <div className="mt-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 overflow-hidden rounded-full bg-[#f1eff9]">
+          <div className="h-6 w-6 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
             {summary.hostPhotoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={summary.hostPhotoUrl} alt="" className="h-full w-full object-cover" />
@@ -409,7 +409,7 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
               </button>
             </div>
           ) : (
-            <label className="flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[#e7e4f5] text-sm text-[var(--brand-purple)] transition hover:bg-[#f8f7fd]">
+            <label className="flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[var(--line)] text-sm text-[var(--brand-purple)] transition hover:bg-[var(--brand-purple-soft)]">
               {t("gatherings.addPhoto")}
               <input
                 type="file"

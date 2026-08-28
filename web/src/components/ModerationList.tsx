@@ -113,7 +113,7 @@ export function ModerationList({
           <div className="flex flex-col gap-3">
             {rows.map((row) => (
               <div key={row.targetId} className="card flex items-center gap-3 p-3">
-                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
                   {row.photoUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={row.photoUrl} alt="" className="h-full w-full object-cover" />

@@ -26,7 +26,7 @@ export function PageHeader({
       <Link
         href="/discover"
         aria-label="キャンマッチ"
-        className="absolute top-1/2 left-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl brand-gradient text-xs font-extrabold text-white shadow-md shadow-purple-200"
+        className="absolute top-1/2 left-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl bg-[var(--brand-purple)] text-xs font-extrabold text-white"
       >
         CM
       </Link>

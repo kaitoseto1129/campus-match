@@ -149,10 +149,10 @@ export default function ChatListPage() {
         <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="card flex items-center gap-3 p-3">
-              <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-[#f1eff9]" />
+              <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-[var(--paper-sunken)]" />
               <div className="flex-1 space-y-2">
-                <div className="h-3.5 w-1/3 animate-pulse rounded bg-[#f1eff9]" />
-                <div className="h-3 w-2/3 animate-pulse rounded bg-[#f1eff9]" />
+                <div className="h-3.5 w-1/3 animate-pulse rounded bg-[var(--paper-sunken)]" />
+                <div className="h-3 w-2/3 animate-pulse rounded bg-[var(--paper-sunken)]" />
               </div>
             </div>
           ))}
@@ -175,7 +175,7 @@ export default function ChatListPage() {
                 match.unreadCount > 0 ? "border-[var(--brand-purple)]/40" : ""
               }`}
             >
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
                 {match.photoUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={match.photoUrl} alt="" className="h-full w-full object-cover" />
@@ -201,7 +201,7 @@ export default function ChatListPage() {
                   <p className="text-xs text-gray-400">{relativeTime(match.lastMessage.created_at, t)}</p>
                 )}
                 {match.unreadCount > 0 && (
-                  <span className="brand-gradient flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-purple)] text-xs font-bold text-white">
                     {match.unreadCount}
                   </span>
                 )}

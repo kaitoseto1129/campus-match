@@ -55,10 +55,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="brand-gradient relative flex min-h-screen items-center justify-center px-6 py-10">
+    <div className="relative flex min-h-screen items-center justify-center bg-[var(--paper-sunken)] px-6 py-10">
       <LanguageToggle className="absolute top-5 right-5" />
       <div className="card w-full max-w-sm p-8">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl brand-gradient text-2xl font-bold text-white shadow-lg">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand-purple)] text-2xl font-bold text-white">
           CM
         </div>
         <h1 className="mb-6 text-center text-lg font-bold text-[var(--brand-navy)]">{t("resetPassword.title")}</h1>

@@ -115,7 +115,7 @@ export default function SentLikesPage() {
                   href={`/discover/${row.toUserId}`}
                   className="card flex items-center gap-3 p-3"
                 >
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
                     {row.photoUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={row.photoUrl} alt="" className="h-full w-full object-cover" />

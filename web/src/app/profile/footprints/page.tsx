@@ -133,7 +133,7 @@ export default function FootprintsPage() {
               return (
                 <div key={row.viewerId} className="card overflow-hidden">
                   <Link href={`/discover/${row.viewerId}`} className="block">
-                    <div className="aspect-square bg-[#f1eff9]">
+                    <div className="aspect-square bg-[var(--paper-sunken)]">
                       {row.photoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={row.photoUrl} alt="" className="h-full w-full object-cover" />

@@ -72,7 +72,7 @@ export default function MyPageHome() {
         <PageHeader title={t("myPage.title")} />
 
         <div className="mb-5 flex flex-col items-center">
-          <div className="h-[90px] w-[90px] overflow-hidden rounded-full border-4 border-white bg-[#f1eff9] shadow-md">
+          <div className="h-[90px] w-[90px] overflow-hidden rounded-full border-4 border-white bg-[var(--paper-sunken)] shadow-md">
             {mainPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={mainPhotoUrl} alt="" className="h-full w-full object-cover" />

@@ -153,10 +153,10 @@ export default function LoginPage() {
 
   if (pendingVerificationEmail) {
     return (
-      <div className="brand-gradient relative flex min-h-screen items-center justify-center px-6 py-10">
+      <div className="relative flex min-h-screen items-center justify-center bg-[var(--paper-sunken)] px-6 py-10">
         <LanguageToggle className="absolute top-5 right-5" />
         <div className="card w-full max-w-sm p-8">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl brand-gradient text-2xl font-bold text-white shadow-lg">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand-purple)] text-2xl font-bold text-white">
             CM
           </div>
           <h1 className="mb-2 text-center text-lg font-bold">{t("login.otpTitle")}</h1>
@@ -198,11 +198,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="brand-gradient relative flex min-h-screen items-center justify-center px-6 py-10">
+    <div className="relative flex min-h-screen items-center justify-center bg-[var(--paper-sunken)] px-6 py-10">
       <LanguageToggle className="absolute top-5 right-5" />
       <div className="card w-full max-w-sm p-8">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl brand-gradient text-2xl font-bold text-white shadow-lg shadow-purple-300/50">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand-purple)] text-2xl font-bold text-white">
             CM
           </div>
           <h1 className="text-xl font-bold text-[var(--brand-navy)]">{t("login.appName")}</h1>
@@ -212,7 +212,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="mb-5 flex rounded-full bg-[#f1eff9] p-1">
+        <div className="mb-5 flex rounded-full bg-[var(--paper-sunken)] p-1">
           <button
             onClick={() => setMode("signup")}
             className={`flex-1 rounded-full py-2 text-sm font-bold transition ${

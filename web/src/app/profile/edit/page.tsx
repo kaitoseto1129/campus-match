@@ -223,7 +223,7 @@ export default function ProfileEditPage() {
                 className={`h-24 w-24 rounded-2xl object-cover ${index === 0 ? "ring-2 ring-[var(--brand-purple)] ring-offset-2" : ""}`}
               />
               {index === 0 ? (
-                <span className="brand-gradient absolute -top-2 left-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                <span className="absolute -top-2 left-1 rounded-full bg-[var(--brand-purple)] px-2 py-0.5 text-[10px] font-bold text-white">
                   {t("profile.main")}
                 </span>
               ) : (
@@ -247,8 +247,8 @@ export default function ProfileEditPage() {
           ))}
           {photos.length < 4 && (
             <label
-              className={`flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-[#e7e4f5] text-2xl text-[var(--brand-purple)] transition ${
-                isUploadingPhoto ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-[#f8f7fd]"
+              className={`flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-[var(--line)] text-2xl text-[var(--brand-purple)] transition ${
+                isUploadingPhoto ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-[var(--brand-purple-soft)]"
               }`}
             >
               {isUploadingPhoto ? (

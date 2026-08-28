@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 export function DetailHeader({ title, action }: { title: string; action?: ReactNode }) {
   const router = useRouter();
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[#e5e5ea] bg-white/95 px-4 py-3 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--line)] bg-white/95 px-4 py-3 backdrop-blur-md">
       <button onClick={() => router.back()} aria-label="戻る" className="text-xl text-[var(--brand-purple)]">
         ‹
       </button>

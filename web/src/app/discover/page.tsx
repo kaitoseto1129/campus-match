@@ -231,10 +231,10 @@ export default function DiscoverPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="card overflow-hidden">
-              <div className="aspect-square animate-pulse bg-[#f1eff9]" />
+              <div className="aspect-square animate-pulse bg-[var(--paper-sunken)]" />
               <div className="space-y-2 p-3">
-                <div className="h-3.5 w-3/4 animate-pulse rounded bg-[#f1eff9]" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-[#f1eff9]" />
+                <div className="h-3.5 w-3/4 animate-pulse rounded bg-[var(--paper-sunken)]" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-[var(--paper-sunken)]" />
               </div>
             </div>
           ))}
@@ -308,7 +308,7 @@ function CandidateCard({ candidate, alreadyLiked }: { candidate: Candidate; alre
       className="card block overflow-hidden transition hover:-translate-y-0.5"
       style={{ borderColor: accent }}
     >
-      <div className="relative aspect-square bg-[#f1eff9]">
+      <div className="relative aspect-square bg-[var(--paper-sunken)]">
         {candidate.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={candidate.photoUrl} alt="" className="h-full w-full object-cover" />

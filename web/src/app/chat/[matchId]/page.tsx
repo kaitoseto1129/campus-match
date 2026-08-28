@@ -177,7 +177,7 @@ export default function ChatDetailPage({
 
   return (
     <main className="mx-auto flex h-screen max-w-2xl flex-col bg-white">
-      <header className="flex items-center gap-3 border-b border-[#f1eff9] px-4 py-3 shadow-sm">
+      <header className="flex items-center gap-3 border-b border-[var(--paper-sunken)] px-4 py-3 shadow-sm">
         <Link href="/chat" className="text-lg text-[var(--brand-purple-dark)]">
           ←
         </Link>
@@ -185,7 +185,7 @@ export default function ChatDetailPage({
           href={otherProfile ? `/discover/${otherProfile.id}` : "#"}
           className="flex items-center gap-3 transition hover:opacity-75"
         >
-          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
+          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
             {otherPhotoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={otherPhotoUrl} alt="" className="h-full w-full object-cover" />
@@ -217,7 +217,7 @@ export default function ChatDetailPage({
 
       {errorMessage && <p className="bg-red-50 px-4 py-2 text-xs text-red-500">{errorMessage}</p>}
 
-      <div className="flex items-center gap-2 border-t border-[#f1eff9] p-3">
+      <div className="flex items-center gap-2 border-t border-[var(--paper-sunken)] p-3">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isSending}
@@ -288,7 +288,7 @@ function MessageBubble({
     <div className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
       <div
         className={`max-w-[75%] rounded-2xl px-4 py-2 shadow-sm ${
-          isMine ? "brand-gradient text-white" : "bg-white text-[var(--brand-navy)]"
+          isMine ? "bg-[var(--brand-purple)] text-white" : "bg-white text-[var(--brand-navy)] border border-[var(--line)]"
         }`}
       >
         {message.image_url ? (

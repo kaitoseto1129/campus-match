@@ -120,7 +120,7 @@ export function MyPageExtras({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="brand-gradient rounded-3xl p-6 text-center text-white shadow-lg shadow-purple-200">
+      <div className="rounded-3xl bg-[var(--brand-purple)] p-6 text-center text-white">
         <p className="text-sm font-semibold opacity-90">{t("myPageExtras.remainingLikes")}</p>
         <p className="text-5xl font-extrabold tracking-tight">{profile.remaining_likes}</p>
         <p className="mt-2 text-xs opacity-80">{t("myPageExtras.purchaseHint")}</p>
@@ -128,7 +128,7 @@ export function MyPageExtras({
 
       <div className="card flex items-center justify-between p-4">
         <p className="text-sm font-bold text-gray-700">{t("myPageExtras.membershipStatus")}</p>
-        <span className="rounded-full bg-[#f1eff9] px-3 py-1 text-xs font-bold text-[var(--brand-purple-dark)]">
+        <span className="rounded-full bg-[var(--paper-sunken)] px-3 py-1 text-xs font-bold text-[var(--brand-purple-dark)]">
           {t(`membershipTier.${profile.membership_tier ?? "free"}`)}
         </span>
       </div>
@@ -147,7 +147,7 @@ export function MyPageExtras({
         <button
           onClick={handleBoost}
           disabled={isBoosting || boosted}
-          className="w-full rounded-full bg-[var(--brand-orange)] py-2.5 text-sm font-bold text-white shadow-md shadow-orange-200 transition disabled:opacity-40 disabled:shadow-none"
+          className="w-full rounded-full bg-[var(--brand-orange)] py-2.5 text-sm font-bold text-white transition disabled:opacity-40"
         >
           {boosted ? t("myPageExtras.boosting") : isBoosting ? t("common.processing") : t("myPageExtras.boostButton")}
         </button>
@@ -173,9 +173,9 @@ export function MyPageExtras({
                         reward: mission.reward,
                       })}
                     </p>
-                    <div className="h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-[#f1eff9]">
+                    <div className="h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-[var(--paper-sunken)]">
                       <div
-                        className={`h-full rounded-full transition-all ${isComplete ? "bg-[var(--brand-teal)]" : "brand-gradient"}`}
+                        className={`h-full rounded-full transition-all ${isComplete ? "bg-[var(--brand-teal)]" : "bg-[var(--brand-purple)]"}`}
                         style={{ width: `${Math.min(100, (mission.current / mission.target) * 100)}%` }}
                       />
                     </div>
