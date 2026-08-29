@@ -201,7 +201,7 @@ export default function ProfileEditPage() {
   if (!profile) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-[var(--ink-muted)]">{t("profile.loadError")}</p>
+        <p className="text-gray-400">{t("profile.loadError")}</p>
       </main>
     );
   }
@@ -210,7 +210,7 @@ export default function ProfileEditPage() {
     <div className="app-list-background min-h-screen">
       <DetailHeader title={t("profile.title")} />
       <main className="mx-auto w-full max-w-lg px-5 py-6 sm:px-8">
-        {university && <p className="mb-4 text-sm text-[var(--ink-muted)]">🎓 {university.name}</p>}
+        {university && <p className="mb-4 text-sm text-gray-400">🎓 {university.name}</p>}
       <div className="card p-5">
       <section className="mb-6">
         <h2 className="mb-2 text-sm font-bold text-gray-500">{t("profile.photos")}</h2>
@@ -223,7 +223,7 @@ export default function ProfileEditPage() {
                 className={`h-24 w-24 rounded-2xl object-cover ${index === 0 ? "ring-2 ring-[var(--brand-purple)] ring-offset-2" : ""}`}
               />
               {index === 0 ? (
-                <span className="absolute -top-2 left-1 rounded-full bg-[var(--brand-purple)] px-2 py-0.5 text-[10px] font-bold text-white">
+                <span className="brand-gradient absolute -top-2 left-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow">
                   {t("profile.main")}
                 </span>
               ) : (
@@ -247,8 +247,8 @@ export default function ProfileEditPage() {
           ))}
           {photos.length < 4 && (
             <label
-              className={`flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-[var(--line)] text-2xl text-[var(--brand-purple)] transition ${
-                isUploadingPhoto ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-[var(--brand-purple-soft)]"
+              className={`flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-[#e7e4f5] text-2xl text-[var(--brand-purple)] transition ${
+                isUploadingPhoto ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-[#f8f7fd]"
               }`}
             >
               {isUploadingPhoto ? (
@@ -288,7 +288,7 @@ export default function ProfileEditPage() {
           placeholder={t("profile.taglinePlaceholder")}
           className="input"
         />
-        <p className="mt-1 px-1 text-right text-xs text-[var(--ink-muted)]">
+        <p className="mt-1 px-1 text-right text-xs text-gray-400">
           {t("profile.taglineCounter", { count: (profile.tagline ?? "").length, max: MAX_TAGLINE_LENGTH })}
         </p>
       </Field>

@@ -20,7 +20,7 @@ const MAIN_ITEMS: MenuItem[] = [
 
 export function MyPageMenu() {
   return (
-    <div className="card flex flex-col divide-y divide-[var(--paper-sunken)]">
+    <div className="card flex flex-col divide-y divide-[#f1eff9]">
       {MAIN_ITEMS.map((item) => (
         <MenuRow key={item.href} {...item} />
       ))}
@@ -39,7 +39,7 @@ export function MyPageSupport() {
   return (
     <div>
       <p className="mb-2 px-1 text-sm font-bold text-gray-500">{t("myPage.support")}</p>
-      <div className="card flex flex-col divide-y divide-[var(--paper-sunken)]">
+      <div className="card flex flex-col divide-y divide-[#f1eff9]">
         {SUPPORT_ITEMS.map((item) =>
           item.external ? (
             <a
@@ -47,11 +47,11 @@ export function MyPageSupport() {
               href={item.external}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 transition hover:bg-[var(--brand-purple-soft)]"
+              className="flex items-center gap-3 p-4 transition hover:bg-[#faf9fe]"
             >
               <RowIcon emoji={item.emoji} />
               <span className="flex-1 text-sm text-gray-700">{t(item.labelKey)}</span>
-              <span className="text-[var(--ink-muted)]">↗</span>
+              <span className="text-gray-300">↗</span>
             </a>
           ) : (
             <MenuRow key={item.href} {...item} />
@@ -65,17 +65,17 @@ export function MyPageSupport() {
 function MenuRow({ href, emoji, labelKey }: MenuItem) {
   const { t } = useTranslation();
   return (
-    <Link href={href} className="flex items-center gap-3 p-4 transition hover:bg-[var(--brand-purple-soft)]">
+    <Link href={href} className="flex items-center gap-3 p-4 transition hover:bg-[#faf9fe]">
       <RowIcon emoji={emoji} />
       <span className="flex-1 text-sm text-gray-700">{t(labelKey)}</span>
-      <span className="text-[var(--ink-muted)]">›</span>
+      <span className="text-gray-300">›</span>
     </Link>
   );
 }
 
 function RowIcon({ emoji }: { emoji: string }) {
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--paper-sunken)] text-base">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1eff9] text-base">
       {emoji}
     </span>
   );

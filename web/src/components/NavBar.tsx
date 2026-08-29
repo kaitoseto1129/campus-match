@@ -27,7 +27,7 @@ export function NavBar() {
   };
 
   return (
-    <nav className="sticky bottom-0 z-40 border-t border-[var(--line)] bg-white/95 backdrop-blur-md">
+    <nav className="sticky bottom-0 z-40 border-t border-[#e5e5ea] bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-2xl pt-2 pb-1">
         {TABS.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
@@ -39,13 +39,13 @@ export function NavBar() {
               key={tab.href}
               href={tab.href}
               className={`flex flex-1 flex-col items-center gap-1 py-1 transition ${
-                isActive ? "text-[var(--brand-purple)]" : "text-[var(--ink-muted)]"
+                isActive ? "text-[var(--brand-purple)]" : "text-[#8e8e93]"
               }`}
             >
               <span className="relative flex h-9 w-9 items-center justify-center">
                 <span
                   className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
-                    isActive ? "bg-[var(--brand-purple)] text-white" : ""
+                    isActive ? "bg-[var(--brand-purple)] text-white shadow-sm shadow-purple-300/60" : ""
                   } ${showTodoDot && !isActive ? "bg-[var(--brand-purple)]/12" : ""}`}
                 >
                   <Icon bold={isActive} />

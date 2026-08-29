@@ -150,7 +150,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
   if (!profile) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-white text-center">
-        <p className="text-[var(--ink-muted)]">{t("discoverDetail.notFound")}</p>
+        <p className="text-gray-400">{t("discoverDetail.notFound")}</p>
         <Link href="/discover" className="text-sm font-semibold text-[var(--brand-purple-dark)]">
           {t("discoverDetail.backToDiscover")}
         </Link>
@@ -173,7 +173,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="min-h-screen bg-white pb-28">
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--line)] bg-white/95 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[#e5e5ea] bg-white/95 px-4 py-3 backdrop-blur-md">
         <button onClick={() => router.back()} aria-label={t("common.back")} className="text-xl text-[var(--brand-purple)]">
           ‹
         </button>
@@ -182,7 +182,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
           <button
             onClick={() => setShowingMenu((v) => !v)}
             aria-label={t("discoverDetail.moreActions")}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-xl text-[var(--ink-muted)] hover:bg-gray-100"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-xl text-gray-400 hover:bg-gray-100"
           >
             ⋯
           </button>
@@ -212,8 +212,8 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
       </header>
 
       {showingReportSheet && (
-        <div className="sheet-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm sm:items-center">
-          <div className="sheet max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm sm:items-center">
+          <div className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200 sm:hidden" />
             <h2 className="mb-4 text-lg font-bold text-[var(--brand-navy)]">
               {profile.name}
@@ -247,7 +247,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
       )}
 
       <div className="px-4 pt-2">
-        <div className="aspect-square w-full overflow-hidden rounded-[20px] bg-[var(--paper-sunken)]">
+        <div className="aspect-square w-full overflow-hidden rounded-[20px] bg-[#f1f1f4]">
           {mainPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mainPhoto.url} alt="" className="h-full w-full object-cover" />
@@ -280,13 +280,13 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
       <div className="mt-4 px-4">
         <div className="flex flex-wrap items-baseline gap-2">
           <span className="text-xl font-bold text-[var(--brand-navy)]">{profile.name}</span>
-          {age && <span className="text-sm text-[var(--ink-muted)]">{locale === "ja" ? `${age}歳` : age}</span>}
-          <span className="text-sm text-[var(--ink-muted)]">{areaLabel}</span>
+          {age && <span className="text-sm text-gray-400">{locale === "ja" ? `${age}歳` : age}</span>}
+          <span className="text-sm text-gray-400">{areaLabel}</span>
         </div>
         {university && (
-          <p className="mt-1.5 text-xs text-[var(--ink-muted)]">🎓 {university.name}</p>
+          <p className="mt-1.5 text-xs text-gray-400">🎓 {university.name}</p>
         )}
-        <div className="mt-3 border-t border-[var(--line)]" />
+        <div className="mt-3 border-t border-[#e5e5ea]" />
       </div>
 
       <div className="mt-3 px-4">
@@ -358,7 +358,7 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
 
 function InfoRow({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
   return (
-    <div className={`flex items-center justify-between py-3.5 ${last ? "" : "border-b border-[var(--line)]"}`}>
+    <div className={`flex items-center justify-between py-3.5 ${last ? "" : "border-b border-[#e5e5ea]"}`}>
       <span className="text-[15px] text-gray-500">{label}</span>
       <span className="text-[15px] font-medium text-[var(--brand-purple)]">{value}</span>
     </div>

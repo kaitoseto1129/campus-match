@@ -115,7 +115,7 @@ export default function SentLikesPage() {
                   href={`/discover/${row.toUserId}`}
                   className="card flex items-center gap-3 p-3"
                 >
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
                     {row.photoUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={row.photoUrl} alt="" className="h-full w-full object-cover" />
@@ -123,7 +123,7 @@ export default function SentLikesPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold text-[var(--brand-navy)]">{row.profile.name}</p>
-                    <p className="truncate text-xs text-[var(--ink-muted)]">
+                    <p className="truncate text-xs text-gray-400">
                       {age ? `${age}歳` : ""} {row.profile.major ? `・ ${row.profile.major}` : ""}
                     </p>
                   </div>

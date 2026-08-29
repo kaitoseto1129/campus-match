@@ -55,10 +55,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[var(--brand-purple-soft)] px-6 py-10">
+    <div className="brand-gradient relative flex min-h-screen items-center justify-center px-6 py-10">
       <LanguageToggle className="absolute top-5 right-5" />
       <div className="card w-full max-w-sm p-8">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand-purple)] text-2xl font-bold text-white">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl brand-gradient text-2xl font-bold text-white shadow-lg">
           CM
         </div>
         <h1 className="mb-6 text-center text-lg font-bold text-[var(--brand-navy)]">{t("resetPassword.title")}</h1>
@@ -99,13 +99,13 @@ export default function ResetPasswordPage() {
                 type="button"
                 onClick={() => setIsPasswordVisible((v) => !v)}
                 aria-label={isPasswordVisible ? t("login.hide") : t("login.show")}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-semibold text-[var(--ink-muted)] hover:text-gray-600"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-semibold text-gray-400 hover:text-gray-600"
               >
                 {isPasswordVisible ? t("login.hide") : t("login.show")}
               </button>
             </div>
             {password.length > 0 && (
-              <p className={`mb-4 px-1 text-xs ${password.length >= 6 ? "text-[var(--brand-teal)]" : "text-[var(--ink-muted)]"}`}>
+              <p className={`mb-4 px-1 text-xs ${password.length >= 6 ? "text-[var(--brand-teal)]" : "text-gray-400"}`}>
                 {password.length >= 6 ? t("login.passwordOk") : t("login.passwordHintShort", { n: 6 - password.length })}
               </p>
             )}

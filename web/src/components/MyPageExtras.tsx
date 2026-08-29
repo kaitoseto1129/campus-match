@@ -120,7 +120,7 @@ export function MyPageExtras({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="rounded-3xl bg-[var(--brand-purple)] p-6 text-center text-white">
+      <div className="brand-gradient rounded-3xl p-6 text-center text-white shadow-lg shadow-purple-200">
         <p className="text-sm font-semibold opacity-90">{t("myPageExtras.remainingLikes")}</p>
         <p className="text-5xl font-extrabold tracking-tight">{profile.remaining_likes}</p>
         <p className="mt-2 text-xs opacity-80">{t("myPageExtras.purchaseHint")}</p>
@@ -128,16 +128,16 @@ export function MyPageExtras({
 
       <div className="card flex items-center justify-between p-4">
         <p className="text-sm font-bold text-gray-700">{t("myPageExtras.membershipStatus")}</p>
-        <span className="rounded-full bg-[var(--paper-sunken)] px-3 py-1 text-xs font-bold text-[var(--brand-purple-dark)]">
+        <span className="rounded-full bg-[#f1eff9] px-3 py-1 text-xs font-bold text-[var(--brand-purple-dark)]">
           {t(`membershipTier.${profile.membership_tier ?? "free"}`)}
         </span>
       </div>
 
       <div className="card border-orange-100 p-4">
-        <p className="mb-1 text-sm font-bold text-[var(--brand-orange-dark)]">
+        <p className="mb-1 text-sm font-bold text-[var(--brand-orange)]">
           ⚡ {boosted ? t("myPageExtras.boosting") : t("myPageExtras.boost")}
         </p>
-        <p className="mb-3 text-xs text-[var(--ink-muted)]">
+        <p className="mb-3 text-xs text-gray-400">
           {boosted
             ? t("myPageExtras.boostActiveDesc", {
                 time: new Date(profile.boost_expires_at!).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }),
@@ -147,7 +147,7 @@ export function MyPageExtras({
         <button
           onClick={handleBoost}
           disabled={isBoosting || boosted}
-          className="w-full rounded-full bg-[var(--brand-orange-dark)] py-2.5 text-sm font-bold text-white transition disabled:opacity-40"
+          className="w-full rounded-full bg-[var(--brand-orange)] py-2.5 text-sm font-bold text-white shadow-md shadow-orange-200 transition disabled:opacity-40 disabled:shadow-none"
         >
           {boosted ? t("myPageExtras.boosting") : isBoosting ? t("common.processing") : t("myPageExtras.boostButton")}
         </button>
@@ -156,7 +156,7 @@ export function MyPageExtras({
       <div className="card p-4">
         <p className="mb-3 text-sm font-bold text-gray-700">{t("myPageExtras.missionsTitle")}</p>
         {isLoadingMissions ? (
-          <p className="text-xs text-[var(--ink-muted)]">{t("common.loading")}</p>
+          <p className="text-xs text-gray-400">{t("common.loading")}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {missions.map((mission) => {
@@ -166,16 +166,16 @@ export function MyPageExtras({
                 <div key={mission.key} className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-gray-700">{t(mission.titleKey)}</p>
-                    <p className="mb-1 text-xs text-[var(--ink-muted)]">
+                    <p className="mb-1 text-xs text-gray-400">
                       {t("myPageExtras.missionReward", {
                         current: mission.current,
                         target: mission.target,
                         reward: mission.reward,
                       })}
                     </p>
-                    <div className="h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+                    <div className="h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-[#f1eff9]">
                       <div
-                        className={`h-full rounded-full transition-all ${isComplete ? "bg-[var(--brand-teal)]" : "bg-[var(--brand-purple)]"}`}
+                        className={`h-full rounded-full transition-all ${isComplete ? "bg-[var(--brand-teal)]" : "brand-gradient"}`}
                         style={{ width: `${Math.min(100, (mission.current / mission.target) * 100)}%` }}
                       />
                     </div>

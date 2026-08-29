@@ -70,7 +70,7 @@ export default function HobbyCardsPage() {
     <div className="app-list-background min-h-screen pb-28">
       <DetailHeader
         title={t("hobbyCards.title")}
-        action={<span className="text-xs font-bold text-[var(--ink-muted)]">{selected.length} / {HOBBY_CARD_MAX_SELECTION}</span>}
+        action={<span className="text-xs font-bold text-gray-400">{selected.length} / {HOBBY_CARD_MAX_SELECTION}</span>}
       />
       <main className="mx-auto w-full max-w-lg px-5 py-6 sm:px-8">
         {hobbyCategoryOrder.map((category) => (

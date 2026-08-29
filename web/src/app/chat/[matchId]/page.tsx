@@ -177,7 +177,7 @@ export default function ChatDetailPage({
 
   return (
     <main className="mx-auto flex h-screen max-w-2xl flex-col bg-white">
-      <header className="flex items-center gap-3 border-b border-[var(--paper-sunken)] px-4 py-3 shadow-sm">
+      <header className="flex items-center gap-3 border-b border-[#f1eff9] px-4 py-3 shadow-sm">
         <Link href="/chat" className="text-lg text-[var(--brand-purple-dark)]">
           ←
         </Link>
@@ -185,7 +185,7 @@ export default function ChatDetailPage({
           href={otherProfile ? `/discover/${otherProfile.id}` : "#"}
           className="flex items-center gap-3 transition hover:opacity-75"
         >
-          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
             {otherPhotoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={otherPhotoUrl} alt="" className="h-full w-full object-cover" />
@@ -217,7 +217,7 @@ export default function ChatDetailPage({
 
       {errorMessage && <p className="bg-red-50 px-4 py-2 text-xs text-red-500">{errorMessage}</p>}
 
-      <div className="flex items-center gap-2 border-t border-[var(--paper-sunken)] p-3">
+      <div className="flex items-center gap-2 border-t border-[#f1eff9] p-3">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isSending}
@@ -278,7 +278,7 @@ function MessageBubble({
   if (message.deleted_at) {
     return (
       <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-        <p className="rounded-2xl bg-white px-4 py-2 text-sm italic text-[var(--ink-muted)] shadow-sm">
+        <p className="rounded-2xl bg-white px-4 py-2 text-sm italic text-gray-400 shadow-sm">
           {t("chatDetail.deleted")}
         </p>
       </div>
@@ -288,7 +288,7 @@ function MessageBubble({
     <div className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
       <div
         className={`max-w-[75%] rounded-2xl px-4 py-2 shadow-sm ${
-          isMine ? "bg-[var(--brand-purple)] text-white" : "bg-white text-[var(--brand-navy)] border border-[var(--line)]"
+          isMine ? "brand-gradient text-white" : "bg-white text-[var(--brand-navy)]"
         }`}
       >
         {message.image_url ? (
@@ -299,13 +299,13 @@ function MessageBubble({
         )}
       </div>
       <div className="mt-1 flex items-center gap-2">
-        <p className="text-[10px] text-[var(--ink-muted)]">{messageTime(message.created_at)}</p>
+        <p className="text-[10px] text-gray-400">{messageTime(message.created_at)}</p>
         {isMine && (
           <button
             onClick={() => {
               if (confirm(t("chatDetail.confirmUnsend"))) onUnsend();
             }}
-            className="text-xs text-[var(--ink-muted)] hover:text-gray-500"
+            className="text-xs text-gray-300 hover:text-gray-500"
           >
             {t("chatDetail.unsend")}
           </button>

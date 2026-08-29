@@ -1,32 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  /* 単一のアクセントカラーとして紫を残しつつ、彩度を落として上品にした
-     (iOS版のColor拡張とは意図的に少し変えている: グラデーション濫用をやめ、
-     単色のアクセントとして使うための調整版)。 */
-  --brand-purple: oklch(56% 0.14 296);
-  --brand-purple-dark: oklch(46% 0.15 296);
-  --brand-purple-soft: oklch(94% 0.02 296);
-  --brand-navy: oklch(28% 0.06 276);
-  --brand-pink: oklch(74% 0.11 358);
-  --brand-teal: oklch(64% 0.1 178);
-  --brand-orange: oklch(72% 0.15 55);
-  --brand-orange-dark: oklch(55% 0.16 55);
-
-  --ink: oklch(24% 0.02 290);
-  --ink-muted: oklch(48% 0.02 290);
-  --ink-faint: oklch(66% 0.015 290);
-  --paper: oklch(99% 0.003 290);
-  --paper-sunken: oklch(97% 0.006 296);
-  --line: oklch(90% 0.01 290);
-
-  --background: var(--paper);
-  --foreground: var(--ink);
-
-  --radius-sm: 0.6rem;
-  --radius-md: 0.85rem;
-  --radius-lg: 1rem;
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* iOS版(Matching App/ProfileView.swift)のColor拡張と同じブランドカラー。 */
+  --brand-purple: #8f78eb;
+  --brand-purple-dark: #7360d6;
+  --brand-navy: #1a2e66;
+  --brand-pink: #ed8fbf;
+  --brand-teal: #33bfad;
+  --brand-orange: #f59e47;
+  --background: #fbfaff;
+  --foreground: #22203a;
 }
 
 @theme inline {
@@ -42,97 +25,41 @@
   --font-mono: var(--font-geist-mono);
 }
 
-* {
-  border-color: var(--line);
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-h1, h2, h3 {
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-}
-
-::selection {
-  background: var(--brand-purple-soft);
-  color: var(--brand-purple-dark);
-}
-
-:focus-visible {
-  outline: 2px solid var(--brand-purple);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-@keyframes sheet-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes sheet-in {
-  from { transform: translateY(12px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes dialog-in {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
 }
 
 @layer components {
-  /* ボトムシート・モーダルの背景と本体。フェード+わずかな移動/拡大で
-     「何もないところから突然現れる」感覚を避ける(prefers-reduced-motionは
-     ファイル冒頭のグローバル指定で自動的に無効化される)。 */
-  .sheet-backdrop {
-    animation: sheet-backdrop-in 0.2s var(--ease-out);
-  }
-  .sheet {
-    animation: sheet-in 0.25s var(--ease-out);
-  }
-  .dialog {
-    animation: dialog-in 0.2s var(--ease-out);
-  }
-
-  /* マッチ演出など、ここぞという瞬間だけに使うグラデーション。
-     ボタンやバッジの既定スタイルとしては使わない(単色アクセントに統一)。 */
+  /* アプリアイコンと同じ紫→ピンクのグラデーション(iOS版 Color.brandGradient と対応)。 */
   .brand-gradient {
     background-image: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));
   }
 
+  /* iOS版 Color.appListBackground と対応する、一覧画面のうっすらしたグラデーション背景。 */
   .app-list-background {
-    background: var(--paper-sunken);
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--brand-purple) 12%, transparent),
+      color-mix(in srgb, var(--brand-pink) 8%, transparent) 40%,
+      #f6f5fb 75%
+    );
   }
 
   .input {
     width: 100%;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--line);
-    background: var(--paper);
-    color: var(--ink);
-    padding: 0.75rem 1rem;
+    border-radius: 0.9rem;
+    border: 1px solid #e7e4f5;
+    background: #ffffff;
+    padding: 0.8rem 1.1rem;
     font-size: 0.95rem;
-    transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
-  }
-  .input::placeholder {
-    /* ink-faint (66%L)はWCAG AAの4.5:1を満たさないため、プレースホルダーには使わない */
-    color: var(--ink-muted);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .input:focus {
     outline: none;
     border-color: var(--brand-purple);
-    box-shadow: 0 0 0 3px var(--brand-purple-soft);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-purple) 18%, transparent);
   }
 
   .btn-primary {
@@ -141,19 +68,18 @@ h1, h2, h3 {
     justify-content: center;
     gap: 0.4rem;
     border-radius: 999px;
-    font-weight: 600;
-    color: var(--paper);
-    background: var(--brand-purple);
-    transition: background-color 0.15s var(--ease-out), transform 0.1s var(--ease-out), opacity 0.15s var(--ease-out);
-  }
-  .btn-primary:hover {
-    background: var(--brand-purple-dark);
+    font-weight: 700;
+    color: white;
+    background-image: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));
+    box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--brand-purple) 60%, transparent);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
   }
   .btn-primary:active {
     transform: scale(0.97);
   }
   .btn-primary:disabled {
-    opacity: 0.4;
+    opacity: 0.45;
+    box-shadow: none;
   }
 
   .btn-secondary {
@@ -162,32 +88,20 @@ h1, h2, h3 {
     justify-content: center;
     gap: 0.4rem;
     border-radius: 999px;
-    font-weight: 600;
-    color: var(--ink);
-    background: var(--paper-sunken);
-    border: 1px solid var(--line);
-    transition: background-color 0.15s var(--ease-out), transform 0.1s var(--ease-out);
-  }
-  .btn-secondary:hover {
-    background: var(--brand-purple-soft);
+    font-weight: 700;
+    color: var(--foreground);
+    background: #f1eff9;
+    transition: background 0.15s ease, transform 0.15s ease;
   }
   .btn-secondary:active {
     transform: scale(0.97);
   }
 
-  /* ボーダーとシャドウを同時に使わない(輪郭がにじむ「ゴーストカード」を避ける)。
-     既定は1pxのボーダーのみ。elevationが本当に必要な場面(モーダル等)だけ
-     .card-elevated を別途使う。 */
   .card {
-    background: var(--paper);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
-  }
-
-  .card-elevated {
-    background: var(--paper);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 2px 8px -2px oklch(28% 0.06 276 / 12%);
+    background: #ffffff;
+    border-radius: 1.25rem;
+    box-shadow: 0 6px 20px -12px rgba(80, 60, 140, 0.25);
+    border: 1px solid #f1eff9;
   }
 
   .chip {
@@ -196,15 +110,15 @@ h1, h2, h3 {
     border-radius: 999px;
     padding: 0.4rem 0.85rem;
     font-size: 0.8rem;
-    font-weight: 500;
-    border: 1px solid var(--line);
-    color: var(--ink-muted);
-    background: var(--paper);
-    transition: background-color 0.15s var(--ease-out), border-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+    font-weight: 600;
+    border: 1px solid #e7e4f5;
+    color: #5b5680;
+    background: white;
+    transition: all 0.15s ease;
   }
   .chip[data-selected="true"] {
-    background: var(--brand-purple);
-    border-color: var(--brand-purple);
-    color: var(--paper);
+    background-image: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));
+    border-color: transparent;
+    color: white;
   }
 }

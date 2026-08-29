@@ -149,10 +149,10 @@ export default function ChatListPage() {
         <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="card flex items-center gap-3 p-3">
-              <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-[var(--paper-sunken)]" />
+              <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-[#f1eff9]" />
               <div className="flex-1 space-y-2">
-                <div className="h-3.5 w-1/3 animate-pulse rounded bg-[var(--paper-sunken)]" />
-                <div className="h-3 w-2/3 animate-pulse rounded bg-[var(--paper-sunken)]" />
+                <div className="h-3.5 w-1/3 animate-pulse rounded bg-[#f1eff9]" />
+                <div className="h-3 w-2/3 animate-pulse rounded bg-[#f1eff9]" />
               </div>
             </div>
           ))}
@@ -163,7 +163,7 @@ export default function ChatListPage() {
         <div className="card flex flex-col items-center gap-2 py-16 text-center">
           <p className="text-3xl">💬</p>
           <p className="font-bold text-gray-600">{t("chat.empty")}</p>
-          <p className="text-sm text-[var(--ink-muted)]">{t("chat.emptyHint")}</p>
+          <p className="text-sm text-gray-400">{t("chat.emptyHint")}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -175,7 +175,7 @@ export default function ChatListPage() {
                 match.unreadCount > 0 ? "border-[var(--brand-purple)]/40" : ""
               }`}
             >
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
                 {match.photoUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={match.photoUrl} alt="" className="h-full w-full object-cover" />
@@ -184,13 +184,13 @@ export default function ChatListPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <p className="truncate font-bold text-[var(--brand-navy)]">{match.profile.name}</p>
-                  <p className="text-xs text-[var(--ink-muted)]">
+                  <p className="text-xs text-gray-400">
                     {locale === "ja" ? `${ageFromBirthday(match.profile.birthday)}歳` : ageFromBirthday(match.profile.birthday)}
                   </p>
                 </div>
                 <p
                   className={`truncate text-sm ${
-                    match.unreadCount > 0 ? "font-semibold text-gray-800" : "text-[var(--ink-muted)]"
+                    match.unreadCount > 0 ? "font-semibold text-gray-800" : "text-gray-400"
                   }`}
                 >
                   {previewText(match)}
@@ -198,10 +198,10 @@ export default function ChatListPage() {
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 {match.lastMessage && (
-                  <p className="text-xs text-[var(--ink-muted)]">{relativeTime(match.lastMessage.created_at, t)}</p>
+                  <p className="text-xs text-gray-400">{relativeTime(match.lastMessage.created_at, t)}</p>
                 )}
                 {match.unreadCount > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-purple)] text-xs font-bold text-white">
+                  <span className="brand-gradient flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white">
                     {match.unreadCount}
                   </span>
                 )}

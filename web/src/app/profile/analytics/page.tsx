@@ -138,21 +138,21 @@ export default function AnalyticsPage() {
         <div className="mb-4 grid grid-cols-2 gap-3">
           <div className="card p-4 text-center">
             <p className="text-3xl font-extrabold text-[var(--brand-navy)]">{totalVisits}</p>
-            <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("analytics.profileViews")}</p>
+            <p className="mt-1 text-xs text-gray-400">{t("analytics.profileViews")}</p>
           </div>
           <div className="card p-4 text-center">
             <p className="text-3xl font-extrabold text-[var(--brand-navy)]">{totalLikesReceived}</p>
-            <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("analytics.likesReceived")}</p>
+            <p className="mt-1 text-xs text-gray-400">{t("analytics.likesReceived")}</p>
           </div>
         </div>
 
-        <div className="mb-4 rounded-2xl border border-[var(--line)] bg-[var(--brand-purple-soft)] p-5 text-center">
-          <p className="text-sm font-semibold text-[var(--brand-purple-dark)]">{t("analytics.likeRate")}</p>
-          <p className="text-4xl font-extrabold text-[var(--brand-purple-dark)]">{likeRate}%</p>
+        <div className="brand-gradient mb-4 rounded-2xl p-5 text-center text-white shadow-lg shadow-purple-200">
+          <p className="text-sm font-semibold opacity-90">{t("analytics.likeRate")}</p>
+          <p className="text-4xl font-extrabold">{likeRate}%</p>
         </div>
 
         {totalVisits === 0 && insights.length === 0 ? (
-          <div className="card p-5 text-center text-sm text-[var(--ink-muted)]">{t("analytics.noVisitsYet")}</div>
+          <div className="card p-5 text-center text-sm text-gray-400">{t("analytics.noVisitsYet")}</div>
         ) : (
           <>
             {insights.length > 0 && (
@@ -174,12 +174,12 @@ export default function AnalyticsPage() {
                 <div className="flex flex-col gap-2.5">
                   {photoStats.map(({ photo, index, count }) => (
                     <div key={photo.id} className="flex items-center gap-3">
-                      <span className="w-14 shrink-0 text-xs text-[var(--ink-muted)]">
+                      <span className="w-14 shrink-0 text-xs text-gray-400">
                         {index === 0 ? t("analytics.mainPhotoLabel") : t("analytics.nthPhotoLabel", { n: index + 1 })}
                       </span>
-                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#f1eff9]">
                         <div
-                          className="h-full rounded-full bg-[var(--brand-purple)]"
+                          className="brand-gradient h-full rounded-full"
                           style={{ width: `${(count / maxPhotoCount) * 100}%` }}
                         />
                       </div>
@@ -200,7 +200,7 @@ export default function AnalyticsPage() {
                         <span className="text-gray-500">{t(section.labelKey)}</span>
                         <span className="font-bold text-[var(--brand-purple-dark)]">{section.percentage}%</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+                      <div className="h-2 overflow-hidden rounded-full bg-[#f1eff9]">
                         <div
                           className="h-full rounded-full bg-[var(--brand-purple)]"
                           style={{ width: `${section.percentage}%` }}
