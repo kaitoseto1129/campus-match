@@ -195,7 +195,7 @@ export default function GatheringDetailPage({
           </div>
           <div>
             <p className="text-sm font-bold text-gray-700">{hostProfile?.name ?? "-"}</p>
-            <p className="text-xs text-gray-400">{t("gatheringDetail.host")}</p>
+            <p className="text-xs text-[var(--ink-muted)]">{t("gatheringDetail.host")}</p>
           </div>
         </div>
 
@@ -275,7 +275,7 @@ export default function GatheringDetailPage({
         <div className="mt-4">
           <h2 className="mb-2 font-bold text-[var(--brand-navy)]">{t("gatheringDetail.applicantsTitle")}</h2>
           {applicants.length === 0 ? (
-            <p className="text-sm text-gray-400">{t("gatheringDetail.noApplicants")}</p>
+            <p className="text-sm text-[var(--ink-muted)]">{t("gatheringDetail.noApplicants")}</p>
           ) : (
             <div className="flex flex-col gap-2">
               {applicants.map((row) => (
@@ -289,7 +289,7 @@ export default function GatheringDetailPage({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-gray-700">{row.profile?.name ?? "-"}</p>
                     {row.application.comment && (
-                      <p className="truncate text-xs text-gray-400">{row.application.comment}</p>
+                      <p className="truncate text-xs text-[var(--ink-muted)]">{row.application.comment}</p>
                     )}
                   </div>
                   {row.application.status === "pending" ? (
@@ -401,7 +401,7 @@ function GroupChat({ gatheringId, myId }: { gatheringId: string; myId: string | 
         {messages.map((message) => (
           <div key={message.id} className={`mb-2 flex flex-col ${message.sender_id === myId ? "items-end" : "items-start"}`}>
             {message.sender_id !== myId && (
-              <p className="mb-0.5 text-xs text-gray-400">{senderNames[message.sender_id] ?? "-"}</p>
+              <p className="mb-0.5 text-xs text-[var(--ink-muted)]">{senderNames[message.sender_id] ?? "-"}</p>
             )}
             <p
               className={`max-w-[75%] rounded-xl px-3 py-1.5 text-sm ${
@@ -410,7 +410,7 @@ function GroupChat({ gatheringId, myId }: { gatheringId: string; myId: string | 
             >
               {message.body}
             </p>
-            <p className="mt-0.5 text-[10px] text-gray-400">
+            <p className="mt-0.5 text-[10px] text-[var(--ink-muted)]">
               {new Date(message.created_at).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
             </p>
           </div>

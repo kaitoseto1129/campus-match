@@ -138,11 +138,11 @@ export default function AnalyticsPage() {
         <div className="mb-4 grid grid-cols-2 gap-3">
           <div className="card p-4 text-center">
             <p className="text-3xl font-extrabold text-[var(--brand-navy)]">{totalVisits}</p>
-            <p className="mt-1 text-xs text-gray-400">{t("analytics.profileViews")}</p>
+            <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("analytics.profileViews")}</p>
           </div>
           <div className="card p-4 text-center">
             <p className="text-3xl font-extrabold text-[var(--brand-navy)]">{totalLikesReceived}</p>
-            <p className="mt-1 text-xs text-gray-400">{t("analytics.likesReceived")}</p>
+            <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("analytics.likesReceived")}</p>
           </div>
         </div>
 
@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
         </div>
 
         {totalVisits === 0 && insights.length === 0 ? (
-          <div className="card p-5 text-center text-sm text-gray-400">{t("analytics.noVisitsYet")}</div>
+          <div className="card p-5 text-center text-sm text-[var(--ink-muted)]">{t("analytics.noVisitsYet")}</div>
         ) : (
           <>
             {insights.length > 0 && (
@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-col gap-2.5">
                   {photoStats.map(({ photo, index, count }) => (
                     <div key={photo.id} className="flex items-center gap-3">
-                      <span className="w-14 shrink-0 text-xs text-gray-400">
+                      <span className="w-14 shrink-0 text-xs text-[var(--ink-muted)]">
                         {index === 0 ? t("analytics.mainPhotoLabel") : t("analytics.nthPhotoLabel", { n: index + 1 })}
                       </span>
                       <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--paper-sunken)]">

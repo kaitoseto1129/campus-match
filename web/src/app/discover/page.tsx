@@ -243,7 +243,7 @@ export default function DiscoverPage() {
         <div className="card flex flex-col items-center gap-2 py-16 text-center">
           <p className="text-3xl">🔍</p>
           <p className="font-bold text-gray-600">{t("discover.empty")}</p>
-          <p className="text-sm text-gray-400">{t("discover.emptyHint")}</p>
+          <p className="text-sm text-[var(--ink-muted)]">{t("discover.emptyHint")}</p>
         </div>
       ) : (
         <>
@@ -328,7 +328,7 @@ function CandidateCard({ candidate, alreadyLiked }: { candidate: Candidate; alre
       </div>
       <div className="p-3">
         <p className="truncate font-bold text-[var(--brand-navy)]">{candidate.name}</p>
-        <p className="truncate text-xs text-gray-400">
+        <p className="truncate text-xs text-[var(--ink-muted)]">
           {age ? (locale === "ja" ? `${age}歳` : `${age}`) : ""} {candidate.major ? `・ ${candidate.major}` : ""}
         </p>
       </div>
@@ -371,15 +371,15 @@ function FilterSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm sm:items-center">
-      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+    <div className="sheet-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm sm:items-center">
+      <div className="sheet max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200 sm:hidden" />
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold text-[var(--brand-navy)]">{t("discover.filterTitle")}</h2>
           {isDiscoverFilterActive(draft) && (
             <button
               onClick={() => setDraft(defaultDiscoverFilter)}
-              className="text-xs font-bold text-gray-400 underline hover:text-gray-600"
+              className="text-xs font-bold text-[var(--ink-muted)] underline hover:text-gray-600"
             >
               {t("discover.reset")}
             </button>

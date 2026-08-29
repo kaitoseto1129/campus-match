@@ -201,7 +201,7 @@ export default function ProfileEditPage() {
   if (!profile) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-400">{t("profile.loadError")}</p>
+        <p className="text-[var(--ink-muted)]">{t("profile.loadError")}</p>
       </main>
     );
   }
@@ -210,7 +210,7 @@ export default function ProfileEditPage() {
     <div className="app-list-background min-h-screen">
       <DetailHeader title={t("profile.title")} />
       <main className="mx-auto w-full max-w-lg px-5 py-6 sm:px-8">
-        {university && <p className="mb-4 text-sm text-gray-400">🎓 {university.name}</p>}
+        {university && <p className="mb-4 text-sm text-[var(--ink-muted)]">🎓 {university.name}</p>}
       <div className="card p-5">
       <section className="mb-6">
         <h2 className="mb-2 text-sm font-bold text-gray-500">{t("profile.photos")}</h2>
@@ -288,7 +288,7 @@ export default function ProfileEditPage() {
           placeholder={t("profile.taglinePlaceholder")}
           className="input"
         />
-        <p className="mt-1 px-1 text-right text-xs text-gray-400">
+        <p className="mt-1 px-1 text-right text-xs text-[var(--ink-muted)]">
           {t("profile.taglineCounter", { count: (profile.tagline ?? "").length, max: MAX_TAGLINE_LENGTH })}
         </p>
       </Field>

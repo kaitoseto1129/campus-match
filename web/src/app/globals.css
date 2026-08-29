@@ -11,6 +11,7 @@
   --brand-pink: oklch(74% 0.11 358);
   --brand-teal: oklch(64% 0.1 178);
   --brand-orange: oklch(72% 0.15 55);
+  --brand-orange-dark: oklch(55% 0.16 55);
 
   --ink: oklch(24% 0.02 290);
   --ink-muted: oklch(48% 0.02 290);
@@ -75,7 +76,35 @@ h1, h2, h3 {
   }
 }
 
+@keyframes sheet-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheet-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes dialog-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 @layer components {
+  /* ボトムシート・モーダルの背景と本体。フェード+わずかな移動/拡大で
+     「何もないところから突然現れる」感覚を避ける(prefers-reduced-motionは
+     ファイル冒頭のグローバル指定で自動的に無効化される)。 */
+  .sheet-backdrop {
+    animation: sheet-backdrop-in 0.2s var(--ease-out);
+  }
+  .sheet {
+    animation: sheet-in 0.25s var(--ease-out);
+  }
+  .dialog {
+    animation: dialog-in 0.2s var(--ease-out);
+  }
+
   /* マッチ演出など、ここぞという瞬間だけに使うグラデーション。
      ボタンやバッジの既定スタイルとしては使わない(単色アクセントに統一)。 */
   .brand-gradient {
@@ -97,7 +126,8 @@ h1, h2, h3 {
     transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
   }
   .input::placeholder {
-    color: var(--ink-faint);
+    /* ink-faint (66%L)はWCAG AAの4.5:1を満たさないため、プレースホルダーには使わない */
+    color: var(--ink-muted);
   }
   .input:focus {
     outline: none;

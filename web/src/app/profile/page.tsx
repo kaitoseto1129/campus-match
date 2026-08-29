@@ -61,7 +61,7 @@ export default function MyPageHome() {
   if (!profile || !userId) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-400">{t("profile.loadError")}</p>
+        <p className="text-[var(--ink-muted)]">{t("profile.loadError")}</p>
       </main>
     );
   }

@@ -143,7 +143,7 @@ export default function FootprintsPage() {
                     </div>
                     <div className="p-3">
                       <p className="truncate font-bold text-[var(--brand-navy)]">{row.profile.name}</p>
-                      <p className="mb-2 truncate text-xs text-gray-400">
+                      <p className="mb-2 truncate text-xs text-[var(--ink-muted)]">
                         {age ? `${age}歳` : ""} {row.profile.major ? `・ ${row.profile.major}` : ""}
                       </p>
                     </div>
@@ -153,7 +153,7 @@ export default function FootprintsPage() {
                     disabled={sendingId === row.viewerId || row.alreadyLiked}
                     className={`mx-3 mb-3 rounded-full py-2 text-xs font-bold transition ${
                       row.alreadyLiked
-                        ? "bg-gray-100 text-gray-400"
+                        ? "bg-gray-100 text-[var(--ink-muted)]"
                         : "btn-primary"
                     } ${sendingId === row.viewerId ? "opacity-60" : ""}`}
                     style={{ width: "calc(100% - 1.5rem)" }}

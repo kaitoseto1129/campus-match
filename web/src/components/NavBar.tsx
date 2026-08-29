@@ -39,7 +39,7 @@ export function NavBar() {
               key={tab.href}
               href={tab.href}
               className={`flex flex-1 flex-col items-center gap-1 py-1 transition ${
-                isActive ? "text-[var(--brand-purple)]" : "text-[var(--ink-faint)]"
+                isActive ? "text-[var(--brand-purple)]" : "text-[var(--ink-muted)]"
               }`}
             >
               <span className="relative flex h-9 w-9 items-center justify-center">

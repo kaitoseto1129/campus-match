@@ -20,7 +20,7 @@ export function PageHeader({
     <div className="relative mb-6 flex items-center justify-between gap-3">
       <div className="min-w-0">
         <h1 className="text-2xl font-bold text-[var(--brand-navy)]">{title}</h1>
-        {subtitle && <p className="mt-0.5 truncate text-sm text-gray-400">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 truncate text-sm text-[var(--ink-muted)]">{subtitle}</p>}
       </div>
 
       <Link

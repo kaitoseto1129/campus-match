@@ -28,6 +28,9 @@ export default function LoginPage() {
   // サインアップ直後はまだセッションが発行されず、6桁コードの検証が必要)。
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // iOS版 AuthView.forgotPasswordSheet と同じ: パスワード再設定メールの送信フロー。
   const [showingForgotPassword, setShowingForgotPassword] = useState(false);
@@ -59,6 +62,12 @@ export default function LoginPage() {
         if (data) setValidDomains(data.map((row) => row.domain as string));
       });
   }, [supabase]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => setResendCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const trimmedEmail = email.trim();
 
@@ -151,9 +160,26 @@ export default function LoginPage() {
     setIsLoading(false);
   }
 
+  async function handleResend() {
+    if (!pendingVerificationEmail || isResending || resendCooldown > 0) return;
+    setIsResending(true);
+    setResendMessage(null);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingVerificationEmail,
+    });
+    setIsResending(false);
+    if (error) {
+      setResendMessage(t("login.otpResendError"));
+    } else {
+      setResendMessage(t("login.otpResendSent"));
+      setResendCooldown(30);
+    }
+  }
+
   if (pendingVerificationEmail) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center bg-[var(--paper-sunken)] px-6 py-10">
+      <div className="relative flex min-h-screen items-center justify-center bg-[var(--brand-purple-soft)] px-6 py-10">
         <LanguageToggle className="absolute top-5 right-5" />
         <div className="card w-full max-w-sm p-8">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand-purple)] text-2xl font-bold text-white">
@@ -183,12 +209,24 @@ export default function LoginPage() {
             {isLoading ? t("login.otpVerifying") : t("login.otpVerify")}
           </button>
           <button
+            onClick={handleResend}
+            disabled={isResending || resendCooldown > 0}
+            className="mt-4 w-full text-center text-sm font-semibold text-[var(--brand-purple-dark)] disabled:opacity-50"
+          >
+            {isResending
+              ? t("login.otpResending")
+              : resendCooldown > 0
+                ? `${t("login.otpResend")} (${resendCooldown}s)`
+                : t("login.otpResend")}
+          </button>
+          {resendMessage && <p className="mt-2 text-center text-xs text-[var(--ink-muted)]">{resendMessage}</p>}
+          <button
             onClick={() => {
               setPendingVerificationEmail(null);
               setVerificationCode("");
               setErrorMessage(null);
             }}
-            className="mt-4 w-full text-center text-sm font-semibold text-gray-400 hover:text-gray-600"
+            className="mt-4 w-full text-center text-sm font-semibold text-[var(--ink-muted)] hover:text-gray-600"
           >
             {t("login.otpBack")}
           </button>
@@ -198,7 +236,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[var(--paper-sunken)] px-6 py-10">
+    <div className="relative flex min-h-screen items-center justify-center bg-[var(--brand-purple-soft)] px-6 py-10">
       <LanguageToggle className="absolute top-5 right-5" />
       <div className="card w-full max-w-sm p-8">
         <div className="mb-7 text-center">
@@ -206,7 +244,7 @@ export default function LoginPage() {
             CM
           </div>
           <h1 className="text-xl font-bold text-[var(--brand-navy)]">{t("login.appName")}</h1>
-          <p className="mt-1 text-sm text-gray-400">{t("login.tagline")}</p>
+          <p className="mt-1 text-sm text-[var(--ink-muted)]">{t("login.tagline")}</p>
           <div className="mt-4">
             <AppStoreButton />
           </div>
@@ -215,16 +253,16 @@ export default function LoginPage() {
         <div className="mb-5 flex rounded-full bg-[var(--paper-sunken)] p-1">
           <button
             onClick={() => setMode("signup")}
-            className={`flex-1 rounded-full py-2 text-sm font-bold transition ${
-              mode === "signup" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-gray-400"
+            className={`flex-1 rounded-full py-2 text-sm font-bold transition active:scale-[0.97] ${
+              mode === "signup" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-[var(--ink-muted)]"
             }`}
           >
             {t("login.signup")}
           </button>
           <button
             onClick={() => setMode("signin")}
-            className={`flex-1 rounded-full py-2 text-sm font-bold transition ${
-              mode === "signin" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-gray-400"
+            className={`flex-1 rounded-full py-2 text-sm font-bold transition active:scale-[0.97] ${
+              mode === "signin" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-[var(--ink-muted)]"
             }`}
           >
             {t("login.signin")}
@@ -253,7 +291,7 @@ export default function LoginPage() {
               className="input"
             />
             {mode === "signup" && (
-              <p className="mt-1.5 px-1 text-xs text-gray-400">{t("login.domainHint")}</p>
+              <p className="mt-1.5 px-1 text-xs text-[var(--ink-muted)]">{t("login.domainHint")}</p>
             )}
           </div>
           <div>
@@ -271,13 +309,13 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setIsPasswordVisible((v) => !v)}
                 aria-label={isPasswordVisible ? t("login.hide") : t("login.show")}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-semibold text-gray-400 hover:text-gray-600"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-semibold text-[var(--ink-muted)] hover:text-gray-600"
               >
                 {isPasswordVisible ? t("login.hide") : t("login.show")}
               </button>
             </div>
             {mode === "signup" && password.length > 0 && (
-              <p className={`mt-1.5 px-1 text-xs ${password.length >= 6 ? "text-[var(--brand-teal)]" : "text-gray-400"}`}>
+              <p className={`mt-1.5 px-1 text-xs ${password.length >= 6 ? "text-[var(--brand-teal)]" : "text-[var(--ink-muted)]"}`}>
                 {password.length >= 6 ? t("login.passwordOk") : t("login.passwordHintShort", { n: 6 - password.length })}
               </p>
             )}
@@ -292,7 +330,7 @@ export default function LoginPage() {
               setResetSent(false);
               setShowingForgotPassword(true);
             }}
-            className="mt-3 text-xs font-semibold text-gray-400 hover:text-gray-600"
+            className="mt-3 text-xs font-semibold text-[var(--ink-muted)] hover:text-gray-600"
           >
             {t("login.forgotPassword")}
           </button>
@@ -324,7 +362,7 @@ export default function LoginPage() {
           {isLoading ? t("login.submitting") : mode === "signup" ? t("login.submitSignup") : t("login.submitSignin")}
         </button>
 
-        <p className="mt-6 text-center text-[11px] text-gray-400">
+        <p className="mt-6 text-center text-[11px] text-[var(--ink-muted)]">
           {t("login.termsAgreePrefix")}
           <a
             href="https://kaitoseto1129.github.io/campus-match/terms.html"
@@ -348,8 +386,8 @@ export default function LoginPage() {
       </div>
 
       {showingForgotPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6 backdrop-blur-sm">
-          <div className="card w-full max-w-sm p-7">
+        <div className="sheet-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6 backdrop-blur-sm">
+          <div className="dialog card w-full max-w-sm p-7">
             <h2 className="mb-2 text-lg font-bold text-[var(--brand-navy)]">{t("login.resetTitle")}</h2>
             {resetSent ? (
               <>

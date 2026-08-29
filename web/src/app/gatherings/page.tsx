@@ -151,16 +151,16 @@ export default function GatheringsPage() {
       <div className="mb-5 flex rounded-full bg-[var(--paper-sunken)] p-1">
         <button
           onClick={() => setSegment("browse")}
-          className={`flex-1 rounded-full py-2 text-sm font-bold transition ${
-            segment === "browse" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-gray-400"
+          className={`flex-1 rounded-full py-2 text-sm font-bold transition active:scale-[0.97] ${
+            segment === "browse" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-[var(--ink-muted)]"
           }`}
         >
           {t("gatherings.browse")}
         </button>
         <button
           onClick={() => setSegment("hosted")}
-          className={`flex-1 rounded-full py-2 text-sm font-bold transition ${
-            segment === "hosted" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-gray-400"
+          className={`flex-1 rounded-full py-2 text-sm font-bold transition active:scale-[0.97] ${
+            segment === "hosted" ? "bg-white text-[var(--brand-purple-dark)] shadow" : "text-[var(--ink-muted)]"
           }`}
         >
           {t("gatherings.hosted")}
@@ -171,20 +171,20 @@ export default function GatheringsPage() {
         <div className="mb-5 flex gap-2">
           <button
             onClick={() => setBrowseSubSegment("all")}
-            className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition active:scale-[0.97] ${
               browseSubSegment === "all"
                 ? "bg-[var(--brand-purple)] text-white"
-                : "bg-[var(--paper-sunken)] text-gray-400"
+                : "bg-[var(--paper-sunken)] text-[var(--ink-muted)]"
             }`}
           >
             {t("gatherings.browseAll")}
           </button>
           <button
             onClick={() => setBrowseSubSegment("applied")}
-            className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition active:scale-[0.97] ${
               browseSubSegment === "applied"
                 ? "bg-[var(--brand-purple)] text-white"
-                : "bg-[var(--paper-sunken)] text-gray-400"
+                : "bg-[var(--paper-sunken)] text-[var(--ink-muted)]"
             }`}
           >
             {t("gatherings.browseApplied")}
@@ -279,7 +279,7 @@ function GatheringCard({ summary }: { summary: Summary }) {
           </span>
         )}
       </div>
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-[var(--ink-muted)]">
         🕒 {scheduledDate.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
         {"  "}📍 {gathering.location}
       </p>
@@ -386,8 +386,8 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm sm:items-center">
-      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+    <div className="sheet-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm sm:items-center">
+      <div className="sheet max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200 sm:hidden" />
         <h2 className="mb-5 text-lg font-bold text-[var(--brand-navy)]">{t("gatherings.createTitle")}</h2>
         <div className="mb-3">
@@ -460,7 +460,7 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
             onChange={(e) => setDeadlineAt(e.target.value)}
             className="input"
           />
-          <p className="mt-1 px-1 text-xs text-gray-400">{t("gatherings.deadlineHint")}</p>
+          <p className="mt-1 px-1 text-xs text-[var(--ink-muted)]">{t("gatherings.deadlineHint")}</p>
         </div>
         <div className="mb-3">
           <label className="mb-1 block text-sm font-bold text-gray-500">{t("gatherings.capacity")}</label>
@@ -472,7 +472,7 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
             onChange={(e) => setCapacity(Math.min(8, Math.max(2, Number(e.target.value) || 2)))}
             className="input"
           />
-          <p className="mt-1 px-1 text-xs text-gray-400">{t("gatherings.capacityHint")}</p>
+          <p className="mt-1 px-1 text-xs text-[var(--ink-muted)]">{t("gatherings.capacityHint")}</p>
         </div>
         <div className="mb-4">
           <label className="mb-1 block text-sm font-bold text-gray-500">{t("gatherings.category")}</label>

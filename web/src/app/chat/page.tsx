@@ -163,7 +163,7 @@ export default function ChatListPage() {
         <div className="card flex flex-col items-center gap-2 py-16 text-center">
           <p className="text-3xl">💬</p>
           <p className="font-bold text-gray-600">{t("chat.empty")}</p>
-          <p className="text-sm text-gray-400">{t("chat.emptyHint")}</p>
+          <p className="text-sm text-[var(--ink-muted)]">{t("chat.emptyHint")}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -184,13 +184,13 @@ export default function ChatListPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <p className="truncate font-bold text-[var(--brand-navy)]">{match.profile.name}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-[var(--ink-muted)]">
                     {locale === "ja" ? `${ageFromBirthday(match.profile.birthday)}歳` : ageFromBirthday(match.profile.birthday)}
                   </p>
                 </div>
                 <p
                   className={`truncate text-sm ${
-                    match.unreadCount > 0 ? "font-semibold text-gray-800" : "text-gray-400"
+                    match.unreadCount > 0 ? "font-semibold text-gray-800" : "text-[var(--ink-muted)]"
                   }`}
                 >
                   {previewText(match)}
@@ -198,7 +198,7 @@ export default function ChatListPage() {
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 {match.lastMessage && (
-                  <p className="text-xs text-gray-400">{relativeTime(match.lastMessage.created_at, t)}</p>
+                  <p className="text-xs text-[var(--ink-muted)]">{relativeTime(match.lastMessage.created_at, t)}</p>
                 )}
                 {match.unreadCount > 0 && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-purple)] text-xs font-bold text-white">

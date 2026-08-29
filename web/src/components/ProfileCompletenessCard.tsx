@@ -55,7 +55,7 @@ export function ProfileCompletenessCard({ profile, photoCount }: { profile: Prof
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
         <div className="h-full rounded-full bg-[var(--brand-purple)] transition-all" style={{ width: `${percent}%` }} />
       </div>
-      <p className="mb-2 text-xs font-bold text-gray-400">{t("completeness.todoTitle")}</p>
+      <p className="mb-2 text-xs font-bold text-[var(--ink-muted)]">{t("completeness.todoTitle")}</p>
       <div className="flex flex-col divide-y divide-[var(--paper-sunken)]">
         {missing.map((item) => (
           <div key={item.key} className="flex items-center justify-between py-2">

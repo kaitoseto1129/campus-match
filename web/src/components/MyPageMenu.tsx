@@ -51,7 +51,7 @@ export function MyPageSupport() {
             >
               <RowIcon emoji={item.emoji} />
               <span className="flex-1 text-sm text-gray-700">{t(item.labelKey)}</span>
-              <span className="text-gray-300">↗</span>
+              <span className="text-[var(--ink-muted)]">↗</span>
             </a>
           ) : (
             <MenuRow key={item.href} {...item} />
@@ -68,7 +68,7 @@ function MenuRow({ href, emoji, labelKey }: MenuItem) {
     <Link href={href} className="flex items-center gap-3 p-4 transition hover:bg-[var(--brand-purple-soft)]">
       <RowIcon emoji={emoji} />
       <span className="flex-1 text-sm text-gray-700">{t(labelKey)}</span>
-      <span className="text-gray-300">›</span>
+      <span className="text-[var(--ink-muted)]">›</span>
     </Link>
   );
 }

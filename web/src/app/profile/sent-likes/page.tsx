@@ -123,7 +123,7 @@ export default function SentLikesPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold text-[var(--brand-navy)]">{row.profile.name}</p>
-                    <p className="truncate text-xs text-gray-400">
+                    <p className="truncate text-xs text-[var(--ink-muted)]">
                       {age ? `${age}歳` : ""} {row.profile.major ? `・ ${row.profile.major}` : ""}
                     </p>
                   </div>

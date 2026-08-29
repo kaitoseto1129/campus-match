@@ -278,7 +278,7 @@ function MessageBubble({
   if (message.deleted_at) {
     return (
       <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-        <p className="rounded-2xl bg-white px-4 py-2 text-sm italic text-gray-400 shadow-sm">
+        <p className="rounded-2xl bg-white px-4 py-2 text-sm italic text-[var(--ink-muted)] shadow-sm">
           {t("chatDetail.deleted")}
         </p>
       </div>
@@ -299,13 +299,13 @@ function MessageBubble({
         )}
       </div>
       <div className="mt-1 flex items-center gap-2">
-        <p className="text-[10px] text-gray-400">{messageTime(message.created_at)}</p>
+        <p className="text-[10px] text-[var(--ink-muted)]">{messageTime(message.created_at)}</p>
         {isMine && (
           <button
             onClick={() => {
               if (confirm(t("chatDetail.confirmUnsend"))) onUnsend();
             }}
-            className="text-xs text-gray-300 hover:text-gray-500"
+            className="text-xs text-[var(--ink-muted)] hover:text-gray-500"
           >
             {t("chatDetail.unsend")}
           </button>

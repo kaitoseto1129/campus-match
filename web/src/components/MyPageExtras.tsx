@@ -134,10 +134,10 @@ export function MyPageExtras({
       </div>
 
       <div className="card border-orange-100 p-4">
-        <p className="mb-1 text-sm font-bold text-[var(--brand-orange)]">
+        <p className="mb-1 text-sm font-bold text-[var(--brand-orange-dark)]">
           ⚡ {boosted ? t("myPageExtras.boosting") : t("myPageExtras.boost")}
         </p>
-        <p className="mb-3 text-xs text-gray-400">
+        <p className="mb-3 text-xs text-[var(--ink-muted)]">
           {boosted
             ? t("myPageExtras.boostActiveDesc", {
                 time: new Date(profile.boost_expires_at!).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }),
@@ -147,7 +147,7 @@ export function MyPageExtras({
         <button
           onClick={handleBoost}
           disabled={isBoosting || boosted}
-          className="w-full rounded-full bg-[var(--brand-orange)] py-2.5 text-sm font-bold text-white transition disabled:opacity-40"
+          className="w-full rounded-full bg-[var(--brand-orange-dark)] py-2.5 text-sm font-bold text-white transition disabled:opacity-40"
         >
           {boosted ? t("myPageExtras.boosting") : isBoosting ? t("common.processing") : t("myPageExtras.boostButton")}
         </button>
@@ -156,7 +156,7 @@ export function MyPageExtras({
       <div className="card p-4">
         <p className="mb-3 text-sm font-bold text-gray-700">{t("myPageExtras.missionsTitle")}</p>
         {isLoadingMissions ? (
-          <p className="text-xs text-gray-400">{t("common.loading")}</p>
+          <p className="text-xs text-[var(--ink-muted)]">{t("common.loading")}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {missions.map((mission) => {
@@ -166,7 +166,7 @@ export function MyPageExtras({
                 <div key={mission.key} className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-gray-700">{t(mission.titleKey)}</p>
-                    <p className="mb-1 text-xs text-gray-400">
+                    <p className="mb-1 text-xs text-[var(--ink-muted)]">
                       {t("myPageExtras.missionReward", {
                         current: mission.current,
                         target: mission.target,
