@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { NavBar } from "@/components/NavBar";
 import { PageHeader } from "@/components/PageHeader";
+import { TutorialSpotlight, TutorialClosingCard } from "@/components/TutorialSpotlight";
+import { useTutorialAnchors } from "@/lib/useTutorialAnchors";
+import { isEligibleForOnboardingTutorial, hasSeenTutorial, markSeenTutorial } from "@/lib/tutorialState";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { loadMainPhotoUrls } from "@/lib/discover";
 import { gatheringCategoryOptions } from "@/lib/constants";
@@ -43,6 +46,23 @@ export default function GatheringsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+
+  // iOS版 GatheringTutorialOverlay と同じ、サインアップ直後だけの簡易チュートリアル。
+  type TutorialStep = "segments" | "createButton" | "closing" | null;
+  const [tutorialStep, setTutorialStep] = useState<TutorialStep>(null);
+  const { rects: tutorialRects, ref: tutorialRef } = useTutorialAnchors();
+
+  useEffect(() => {
+    if (isEligibleForOnboardingTutorial() && !hasSeenTutorial("Gathering")) {
+      const timer = setTimeout(() => setTutorialStep("segments"), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  function finishGatheringTutorial() {
+    setTutorialStep(null);
+    markSeenTutorial("Gathering");
+  }
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -142,13 +162,17 @@ export default function GatheringsPage() {
       <PageHeader
         title={t("gatherings.title")}
         action={
-          <button onClick={() => setShowCreate(true)} className="btn-primary px-4 py-2 text-sm">
+          <button
+            ref={tutorialRef("gatheringCreate")}
+            onClick={() => setShowCreate(true)}
+            className="btn-primary px-4 py-2 text-sm"
+          >
             {t("gatherings.create")}
           </button>
         }
       />
 
-      <div className="mb-5 flex rounded-full border border-black/5 bg-black/[0.05] p-1">
+      <div ref={tutorialRef("gatheringSegments")} className="mb-5 flex rounded-full border border-black/5 bg-black/[0.05] p-1">
         <button
           onClick={() => setSegment("browse")}
           className={`flex-1 rounded-full py-2 text-sm font-bold transition ${
@@ -226,6 +250,33 @@ export default function GatheringsPage() {
             setShowCreate(false);
             load();
           }}
+        />
+      )}
+
+      {tutorialStep === "segments" && (
+        <TutorialSpotlight
+          rect={tutorialRects["gatheringSegments"] ?? null}
+          message="「みんなの募集」で他の人が募集している集まりを探せます。「自分が主催」では自分が募集した・応募した集まりを確認できます。"
+          onSkip={finishGatheringTutorial}
+          nextLabel="次へ"
+          onNext={() => setTutorialStep("createButton")}
+        />
+      )}
+      {tutorialStep === "createButton" && (
+        <TutorialSpotlight
+          rect={tutorialRects["gatheringCreate"] ?? null}
+          message="ここから「ご飯行きませんか」のような集まりを自分で募集できます。応募が来たら承認して、そのままグループトークができます。"
+          onSkip={finishGatheringTutorial}
+          nextLabel="次へ"
+          onNext={() => setTutorialStep("closing")}
+        />
+      )}
+      {tutorialStep === "closing" && (
+        <TutorialClosingCard
+          emoji="👥"
+          title="気軽にご飯や集まりに誘ってみましょう!"
+          buttonLabel="はじめる"
+          onFinish={finishGatheringTutorial}
         />
       )}
     </main>

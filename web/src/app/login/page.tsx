@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { AppStoreButton } from "@/components/AppStoreButton";
+import { markEligibleForOnboardingTutorial } from "@/lib/tutorialState";
 
 type Mode = "signup" | "signin";
 
@@ -135,6 +136,7 @@ export default function LoginPage() {
       } else if (!data.session) {
         setPendingVerificationEmail(trimmedEmail);
       } else {
+        markEligibleForOnboardingTutorial();
         router.push("/");
         router.refresh();
       }
@@ -154,6 +156,7 @@ export default function LoginPage() {
     if (error) {
       setErrorMessage(t("login.otpError"));
     } else {
+      markEligibleForOnboardingTutorial();
       router.push("/");
       router.refresh();
     }

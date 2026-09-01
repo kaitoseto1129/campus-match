@@ -10,6 +10,9 @@ import { MyPageExtras } from "@/components/MyPageExtras";
 import { MyPageMenu, MyPageSupport } from "@/components/MyPageMenu";
 import { MyPageSettings } from "@/components/MyPageSettings";
 import { ProfileCompletenessCard } from "@/components/ProfileCompletenessCard";
+import { TutorialSpotlight, TutorialClosingCard } from "@/components/TutorialSpotlight";
+import { useTutorialAnchors } from "@/lib/useTutorialAnchors";
+import { isEligibleForOnboardingTutorial, hasSeenTutorial, markSeenTutorial } from "@/lib/tutorialState";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { Profile } from "@/lib/types";
 
@@ -23,6 +26,44 @@ export default function MyPageHome() {
   const [mainPhotoUrl, setMainPhotoUrl] = useState<string | undefined>(undefined);
   const [photoCount, setPhotoCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // iOS版 MyPageTutorialOverlay と同じ、サインアップ直後だけの簡易ガイド。
+  type TutorialStep = "hobbyCards" | "completeness" | "appeal" | "analytics" | "footprints" | "closing" | null;
+  const [tutorialStep, setTutorialStep] = useState<TutorialStep>(null);
+  const { rects: tutorialRects, ref: tutorialRef } = useTutorialAnchors();
+  const tutorialOrder: TutorialStep[] = ["hobbyCards", "completeness", "appeal", "analytics", "footprints", "closing"];
+
+  useEffect(() => {
+    if (isEligibleForOnboardingTutorial() && !hasSeenTutorial("MyPage")) {
+      const timer = setTimeout(() => setTutorialStep("hobbyCards"), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  function advanceTutorial() {
+    const idx = tutorialOrder.indexOf(tutorialStep);
+    setTutorialStep(tutorialOrder[idx + 1] ?? null);
+  }
+
+  function finishTutorial() {
+    setTutorialStep(null);
+    markSeenTutorial("MyPage");
+  }
+
+  const tutorialAnchorId: Record<Exclude<TutorialStep, "closing" | null>, string> = {
+    hobbyCards: "myPageHobbyCards",
+    completeness: "myPageCompleteness",
+    appeal: "myPageAppeal",
+    analytics: "myPageAnalytics",
+    footprints: "myPageFootprints",
+  };
+  const tutorialMessage: Record<Exclude<TutorialStep, "closing" | null>, string> = {
+    hobbyCards: "「趣味カードを追加する」をタップして、趣味カードを登録してみましょう。共通の趣味があるお相手に見つけてもらいやすくなります",
+    completeness: "足りない項目は「やることリスト」でひと目で分かります。「編集する」から埋めてみましょう",
+    appeal: "「アピールを使う」をタップすると、いいねを消費して1時間だけ「探す」画面のトップに表示されます",
+    analytics: "「分析」をタップすると、プロフィールの閲覧数やいいね獲得率を確認できます",
+    footprints: "「足あと」をタップすると、あなたのプロフィールを見に来たお相手が分かります",
+  };
 
   const load = useCallback(async () => {
     const {
@@ -89,14 +130,35 @@ export default function MyPageHome() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <MyPageExtras profile={profile} userId={userId} onProfileChange={setProfile} />
-          <ProfileCompletenessCard profile={profile} photoCount={photoCount} />
-          <MyPageMenu />
+          <MyPageExtras profile={profile} userId={userId} onProfileChange={setProfile} tutorialRef={tutorialRef} />
+          <div ref={tutorialRef("myPageCompleteness")}>
+            <ProfileCompletenessCard profile={profile} photoCount={photoCount} />
+          </div>
+          <MyPageMenu tutorialRef={tutorialRef} />
           <MyPageSupport />
           <MyPageSettings profile={profile} onProfileChange={setProfile} />
         </div>
       </main>
       <NavBar />
+
+      {tutorialStep && tutorialStep !== "closing" && (
+        <TutorialSpotlight
+          rect={tutorialRects[tutorialAnchorId[tutorialStep]] ?? null}
+          message={tutorialMessage[tutorialStep]}
+          onSkip={finishTutorial}
+          nextLabel="次へ"
+          onNext={advanceTutorial}
+        />
+      )}
+      {tutorialStep === "closing" && (
+        <TutorialClosingCard
+          emoji="💜"
+          title="マイページの紹介はこれで終わりです"
+          description="たくさんの出会いがあることを祈っています!"
+          buttonLabel="はじめる"
+          onFinish={finishTutorial}
+        />
+      )}
     </div>
   );
 }

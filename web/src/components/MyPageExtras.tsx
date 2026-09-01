@@ -30,10 +30,12 @@ export function MyPageExtras({
   profile,
   userId,
   onProfileChange,
+  tutorialRef,
 }: {
   profile: Profile;
   userId: string;
   onProfileChange: (profile: Profile) => void;
+  tutorialRef?: (id: string) => (el: HTMLElement | null) => void;
 }) {
   const { t } = useTranslation();
   const [isBoosting, setIsBoosting] = useState(false);
@@ -160,7 +162,11 @@ export function MyPageExtras({
         </div>
       )}
 
-      <div className="card p-4" style={{ borderColor: "color-mix(in srgb, var(--brand-orange) 45%, transparent)" }}>
+      <div
+        ref={tutorialRef?.("myPageAppeal")}
+        className="card p-4"
+        style={{ borderColor: "color-mix(in srgb, var(--brand-orange) 45%, transparent)" }}
+      >
         <p className="mb-1 text-sm font-bold text-[var(--brand-orange)]">
           ⚡ {boosted ? t("myPageExtras.boosting") : t("myPageExtras.boost")}
         </p>
@@ -221,7 +227,7 @@ export function MyPageExtras({
         )}
       </div>
 
-      <div className="card p-4">
+      <div ref={tutorialRef?.("myPageHobbyCards")} className="card p-4">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-sm font-bold">{t("myPageExtras.hobbyCards")}</p>
           <Link href="/profile/hobby-cards" className="text-xs font-bold text-[var(--brand-purple-dark)]">

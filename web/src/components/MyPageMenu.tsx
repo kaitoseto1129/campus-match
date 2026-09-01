@@ -16,16 +16,29 @@ const MAIN_ITEMS: MenuItem[] = [
   { href: "/profile/analytics", emoji: "📊", color: "#6366f1", labelKey: "myPage.analytics" },
   { href: "/profile/footprints", emoji: "👣", color: "var(--brand-orange)", labelKey: "myPage.footprints" },
   { href: "/profile/sent-likes", emoji: "👍", color: "var(--brand-purple)", labelKey: "myPage.sentLikes" },
+  { href: "/profile/identity-verification", emoji: "🪪", color: "var(--brand-orange)", labelKey: "myPage.identityVerification" },
   { href: "/profile/safety", emoji: "🛡️", color: "var(--brand-teal)", labelKey: "myPage.safetyGuide" },
   { href: "/profile/hidden", emoji: "🙈", color: "#8e8e93", labelKey: "myPage.hiddenList" },
   { href: "/profile/blocked", emoji: "🚫", color: "#1c1c1e", labelKey: "myPage.blockedList" },
 ];
 
-export function MyPageMenu() {
+export function MyPageMenu({
+  tutorialRef,
+}: {
+  tutorialRef?: (id: string) => (el: HTMLElement | null) => void;
+}) {
+  const anchorIdFor: Record<string, string> = {
+    "/profile/analytics": "myPageAnalytics",
+    "/profile/footprints": "myPageFootprints",
+  };
   return (
     <div className="card flex flex-col divide-y divide-[#f1eff9]">
       {MAIN_ITEMS.map((item) => (
-        <MenuRow key={item.href} {...item} />
+        <MenuRow
+          key={item.href}
+          {...item}
+          anchorRef={anchorIdFor[item.href] ? tutorialRef?.(anchorIdFor[item.href]) : undefined}
+        />
       ))}
     </div>
   );
@@ -77,10 +90,16 @@ export function MyPageSupport() {
   );
 }
 
-function MenuRow({ href, emoji, color, labelKey }: MenuItem) {
+function MenuRow({
+  href,
+  emoji,
+  color,
+  labelKey,
+  anchorRef,
+}: MenuItem & { anchorRef?: (el: HTMLElement | null) => void }) {
   const { t } = useTranslation();
   return (
-    <Link href={href} className="flex items-center gap-3 p-4 transition hover:bg-[#faf9fe]">
+    <Link ref={anchorRef} href={href} className="flex items-center gap-3 p-4 transition hover:bg-[#faf9fe]">
       <RowIcon emoji={emoji} color={color} />
       <span className="flex-1 text-sm text-gray-700">{t(labelKey)}</span>
       <span className="text-gray-300">›</span>

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { NavBar } from "@/components/NavBar";
 import { PageHeader } from "@/components/PageHeader";
+import { TutorialSpotlight, TutorialClosingCard } from "@/components/TutorialSpotlight";
+import { useTutorialAnchors } from "@/lib/useTutorialAnchors";
+import { isEligibleForOnboardingTutorial, hasSeenTutorial, markSeenTutorial } from "@/lib/tutorialState";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { createClient } from "@/lib/supabase/client";
 import { applyCandidateFilters, loadMainPhotoUrls } from "@/lib/discover";
@@ -57,6 +60,29 @@ export default function DiscoverPage() {
   const [filter, setFilter] = useState<DiscoverFilter>(defaultDiscoverFilter);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [draftFilter, setDraftFilter] = useState<DiscoverFilter>(defaultDiscoverFilter);
+
+  // iOS版 DiscoverTutorialOverlay と同じ、サインアップ直後だけの簡易チュートリアル。
+  // Web版には「今日のミッション」バナーがまだ無いため、絞り込み→ダミー候補の
+  // いいね体験→マイページ案内、の順に簡略化している。
+  type TutorialStep = "filter" | "candidate" | "myPageGuide" | "closing" | null;
+  const [tutorialStep, setTutorialStep] = useState<TutorialStep>(null);
+  const { rects: tutorialRects, ref: tutorialRef } = useTutorialAnchors();
+  const [showingFakeProfile, setShowingFakeProfile] = useState(false);
+  const [simulatedLiked, setSimulatedLiked] = useState(false);
+  const sampleAvatarURL =
+    "https://api.dicebear.com/9.x/adventurer/png?seed=tutorial-sample&size=400&backgroundColor=ffd5dc,ffdfbf,c0aede,d1d4f9,b6e3f4";
+
+  useEffect(() => {
+    if (isEligibleForOnboardingTutorial() && !hasSeenTutorial("Discover")) {
+      const timer = setTimeout(() => setTutorialStep("filter"), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  function finishTutorial() {
+    setTutorialStep(null);
+    markSeenTutorial("Discover");
+  }
 
   const load = useCallback(
     async (activeFilter: DiscoverFilter, page = 0) => {
@@ -200,6 +226,12 @@ export default function DiscoverPage() {
   function applyFilter() {
     setFilter(draftFilter);
     setShowFilterSheet(false);
+    if (tutorialStep === "filter") setTutorialStep("candidate");
+  }
+
+  function closeFilterSheet() {
+    setShowFilterSheet(false);
+    if (tutorialStep === "filter") setTutorialStep("candidate");
   }
 
   return (
@@ -209,6 +241,7 @@ export default function DiscoverPage() {
         title={t("discover.title")}
         action={
           <button
+            ref={tutorialRef("filter")}
             onClick={openFilterSheet}
             className={
               isDiscoverFilterActive(filter)
@@ -270,7 +303,7 @@ export default function DiscoverPage() {
         <FilterSheet
           draft={draftFilter}
           setDraft={setDraftFilter}
-          onCancel={() => setShowFilterSheet(false)}
+          onCancel={closeFilterSheet}
           onApply={applyFilter}
         />
       )}
@@ -280,6 +313,106 @@ export default function DiscoverPage() {
           myProfile={myProfile}
           celebration={celebration}
           onClose={() => setCelebration(null)}
+        />
+      )}
+
+      {tutorialStep === "filter" && !showFilterSheet && (
+        <TutorialSpotlight
+          rect={tutorialRects["filter"] ?? null}
+          message="ここから条件(年齢・国籍・専攻など)で絞り込み検索ができます。試しに開いてみましょう。"
+          onSkip={finishTutorial}
+        />
+      )}
+
+      {tutorialStep === "candidate" && !showingFakeProfile && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 bg-black/68 px-8 text-center">
+          <p className="text-sm font-bold text-white">
+            最後に、気になるお相手を見つけたときの流れを体験してみましょう
+          </p>
+          <button onClick={() => setShowingFakeProfile(true)} className="flex flex-col items-center gap-2 rounded-2xl bg-black/25 p-3">
+            <div className="h-44 w-40 overflow-hidden rounded-2xl border-2 border-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={sampleAvatarURL} alt="" className="h-full w-full object-cover" />
+            </div>
+            <p className="text-sm font-bold text-white">サンプルさん</p>
+            <p className="text-xs text-white/75">20歳・体験用のサンプルです</p>
+          </button>
+          <p className="text-xs font-bold text-white/85">↑ タップしてプロフィールを見てみましょう</p>
+          <div className="fixed top-14 right-5">
+            <button onClick={finishTutorial} className="rounded-full bg-black/35 px-3.5 py-2 text-xs font-bold text-white/90">
+              スキップ
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tutorialStep === "candidate" && showingFakeProfile && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 sm:items-center">
+          <div className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-t-3xl bg-white pb-6 sm:rounded-3xl">
+            <div className="mx-auto my-3 h-1 w-10 rounded-full bg-gray-200" />
+            <div className="h-56 w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={sampleAvatarURL} alt="" className="h-full w-full object-cover" />
+            </div>
+            <div className="px-5 pt-4">
+              <p className="text-lg font-bold text-[var(--brand-navy)]">サンプルさん・20歳</p>
+              <p className="mt-1 text-sm text-gray-500">
+                これは体験用のダミープロフィールです。実際のユーザーには、こんなふうにプロフィールが表示されます。
+              </p>
+            </div>
+            <div className="mt-6 flex gap-3 px-5">
+              <button
+                disabled={simulatedLiked}
+                onClick={() => {
+                  setSimulatedLiked(true);
+                  setTimeout(() => {
+                    setShowingFakeProfile(false);
+                    setSimulatedLiked(false);
+                    setTutorialStep("myPageGuide");
+                  }, 1100);
+                }}
+                className="btn-primary flex-1 py-3.5 disabled:opacity-70"
+              >
+                {simulatedLiked ? "送信しました!" : "👍 いいねを送る"}
+              </button>
+            </div>
+            <p className="mt-3 px-5 text-center text-xs text-gray-400">
+              {simulatedLiked
+                ? "相手も自分にいいねしていたら、その場でマッチが成立します。"
+                : "※ これは練習です。実際のいいねは送信されません。"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {tutorialStep === "myPageGuide" && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-black/75 px-8 text-center">
+          <p className="text-4xl">👤</p>
+          <p className="text-xl font-bold text-white">最後に「マイページ」もチェックしましょう</p>
+          <p className="text-sm text-white/85">
+            プロフィールの編集、いいねの購入、有料会員プランの確認、安心・安全ガイドなどはすべて画面右下の「マイページ」タブからアクセスできます
+          </p>
+          <button
+            onClick={() => {
+              finishTutorial();
+              router.push("/profile");
+            }}
+            className="brand-gradient mt-2 w-56 rounded-full py-3.5 font-bold text-white"
+          >
+            マイページを見てみる
+          </button>
+          <button onClick={() => setTutorialStep("closing")} className="text-sm text-white/80">
+            あとで見る
+          </button>
+        </div>
+      )}
+
+      {tutorialStep === "closing" && (
+        <TutorialClosingCard
+          emoji="💜"
+          title="たくさんの出会いがあることを祈っています!"
+          buttonLabel="はじめる"
+          onFinish={finishTutorial}
         />
       )}
     </main>
