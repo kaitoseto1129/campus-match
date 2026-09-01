@@ -82,7 +82,7 @@ export default function MyPageHome() {
           </div>
           <Link
             href="/profile/edit"
-            className="btn-primary mt-3 px-5 py-2.5 text-sm"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-purple)] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-purple-200/60"
           >
             ✎ {t("myPage.editProfile")}
           </Link>

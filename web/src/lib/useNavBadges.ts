@@ -9,6 +9,7 @@ import { isProfileComplete, type Profile } from "@/lib/types";
 export function useNavBadges() {
   const [chatUnread, setChatUnread] = useState(0);
   const [gatheringPending, setGatheringPending] = useState(0);
+  const [likesReceived, setLikesReceived] = useState(0);
   const [hasProfileTodo, setHasProfileTodo] = useState(false);
 
   useEffect(() => {
@@ -26,9 +27,21 @@ export function useNavBadges() {
 
       const { data: matchRows } = await supabase
         .from("matches")
-        .select("id")
+        .select("id, user_a_id, user_b_id")
         .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
       const matchIds = (matchRows ?? []).map((m) => m.id as string);
+      const matchedPartnerIds = new Set(
+        (matchRows ?? []).map((m) => (m.user_a_id === user.id ? (m.user_b_id as string) : (m.user_a_id as string)))
+      );
+
+      const { data: receivedLikeRows } = await supabase
+        .from("likes")
+        .select("from_user_id")
+        .eq("to_user_id", user.id);
+      const pendingLikes = (receivedLikeRows ?? []).filter(
+        (r) => !matchedPartnerIds.has(r.from_user_id as string)
+      );
+      if (!cancelled) setLikesReceived(pendingLikes.length);
       if (matchIds.length > 0) {
         const { count } = await supabase
           .from("messages")
@@ -63,6 +76,8 @@ export function useNavBadges() {
       .channel(`nav-badges:${Math.random()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "gathering_applications" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "likes" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, load)
       .subscribe();
 
     return () => {
@@ -71,5 +86,5 @@ export function useNavBadges() {
     };
   }, []);
 
-  return { chatUnread, gatheringPending, hasProfileTodo };
+  return { chatUnread, gatheringPending, likesReceived, hasProfileTodo };
 }

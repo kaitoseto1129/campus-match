@@ -117,6 +117,7 @@ export function MyPageExtras({
   }
 
   const boosted = isBoostActive(profile);
+  const isPaidMember = (profile.membership_tier ?? "free") !== "free";
 
   return (
     <section className="flex flex-col gap-4">
@@ -126,14 +127,40 @@ export function MyPageExtras({
         <p className="mt-2 text-xs opacity-80">{t("myPageExtras.purchaseHint")}</p>
       </div>
 
-      <div className="card flex items-center justify-between p-4">
-        <p className="text-sm font-bold text-gray-700">{t("myPageExtras.membershipStatus")}</p>
-        <span className="rounded-full bg-[#f1eff9] px-3 py-1 text-xs font-bold text-[var(--brand-purple-dark)]">
-          {t(`membershipTier.${profile.membership_tier ?? "free"}`)}
-        </span>
+      <div
+        className={`flex items-center justify-between rounded-full px-5 py-3 text-white shadow-md shadow-purple-200/60 ${
+          isPaidMember ? "brand-gradient" : "bg-[var(--brand-navy)]"
+        }`}
+      >
+        <div className="flex items-center gap-2 text-sm font-bold">
+          <span>{isPaidMember ? "👑" : "👤"}</span>
+          <span>{t("myPageExtras.membershipStatus")}</span>
+          <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-xs font-bold">
+            {t(`membershipTier.${profile.membership_tier ?? "free"}`)}
+          </span>
+        </div>
       </div>
 
-      <div className="card border-orange-100 p-4">
+      {!isPaidMember && (
+        <div className="brand-gradient rounded-2xl p-4 text-white shadow-lg shadow-purple-200">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-xl">
+              👑
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold">{t("myPageExtras.upsellTitle")}</p>
+              <ul className="mt-1 space-y-0.5 text-xs text-white/90">
+                <li>💬 {t("myPageExtras.upsellUnlimitedMessages")}</li>
+                <li>❤️ {t("myPageExtras.upsellShowLikeCount")}</li>
+                <li>🙈 {t("myPageExtras.upsellPrivateMode")}</li>
+              </ul>
+            </div>
+          </div>
+          <p className="mt-3 text-[11px] text-white/75">{t("myPageExtras.purchaseHint")}</p>
+        </div>
+      )}
+
+      <div className="card p-4" style={{ borderColor: "color-mix(in srgb, var(--brand-orange) 45%, transparent)" }}>
         <p className="mb-1 text-sm font-bold text-[var(--brand-orange)]">
           ⚡ {boosted ? t("myPageExtras.boosting") : t("myPageExtras.boost")}
         </p>
@@ -147,7 +174,7 @@ export function MyPageExtras({
         <button
           onClick={handleBoost}
           disabled={isBoosting || boosted}
-          className="w-full rounded-full bg-[var(--brand-orange)] py-2.5 text-sm font-bold text-white shadow-md shadow-orange-200 transition disabled:opacity-40 disabled:shadow-none"
+          className="w-full rounded-full border-[1.5px] border-[var(--brand-orange)] py-2.5 text-sm font-bold text-[var(--brand-orange)] transition disabled:opacity-40"
         >
           {boosted ? t("myPageExtras.boosting") : isBoosting ? t("common.processing") : t("myPageExtras.boostButton")}
         </button>

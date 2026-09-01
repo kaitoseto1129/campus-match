@@ -4,27 +4,29 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { DetailHeader } from "@/components/DetailHeader";
+import { PageHeader } from "@/components/PageHeader";
+import { NavBar } from "@/components/NavBar";
 import { loadMainPhotoUrls } from "@/lib/discover";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { ageFromBirthday, type Match, type Profile } from "@/lib/types";
 
-interface SentLikeRow {
+interface ReceivedLikeRow {
   otherUserId: string;
   likeId: string;
   createdAt: string;
   profile: Profile;
   photoUrl?: string;
-  isMatched: boolean;
 }
 
-export default function SentLikesPage() {
+export default function LikesPage() {
   const router = useRouter();
   const supabase = createClient();
   const { t } = useTranslation();
 
-  const [rows, setRows] = useState<SentLikeRow[]>([]);
+  const [myId, setMyId] = useState<string | null>(null);
+  const [rows, setRows] = useState<ReceivedLikeRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [thankedIds, setThankedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -36,12 +38,13 @@ export default function SentLikesPage() {
         router.push("/login");
         return;
       }
+      setMyId(user.id);
 
-      const [{ data: sentLikeRows }, { data: matchRows }] = await Promise.all([
+      const [{ data: receivedLikeRows }, { data: matchRows }] = await Promise.all([
         supabase
           .from("likes")
-          .select("id, to_user_id, created_at")
-          .eq("from_user_id", user.id)
+          .select("id, from_user_id, created_at")
+          .eq("to_user_id", user.id)
           .order("created_at", { ascending: false }),
         supabase.from("matches").select("*").or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`),
       ]);
@@ -52,7 +55,12 @@ export default function SentLikesPage() {
         matches.map((m) => (m.user_a_id === user.id ? m.user_b_id : m.user_a_id))
       );
 
-      const otherIds = (sentLikeRows ?? []).map((r) => r.to_user_id as string);
+      // マッチ済みの相手を除いた、まだ「ありがとう」を返せる届いたいいねだけを対象にする。
+      const pending = (receivedLikeRows ?? []).filter(
+        (r) => !matchedPartnerIds.has(r.from_user_id as string)
+      );
+
+      const otherIds = pending.map((r) => r.from_user_id as string);
       if (otherIds.length === 0) {
         setRows([]);
         setIsLoading(false);
@@ -67,20 +75,19 @@ export default function SentLikesPage() {
 
       const profilesById = new Map((profileRows ?? []).map((p) => [p.id, p as Profile]));
 
-      const result: SentLikeRow[] = (sentLikeRows ?? [])
-        .map((r): SentLikeRow | null => {
-          const profile = profilesById.get(r.to_user_id as string);
+      const result: ReceivedLikeRow[] = pending
+        .map((r): ReceivedLikeRow | null => {
+          const profile = profilesById.get(r.from_user_id as string);
           if (!profile) return null;
           return {
-            otherUserId: r.to_user_id as string,
+            otherUserId: r.from_user_id as string,
             likeId: r.id as string,
             createdAt: r.created_at as string,
             profile,
-            photoUrl: photoUrls[r.to_user_id as string],
-            isMatched: matchedPartnerIds.has(r.to_user_id as string),
+            photoUrl: photoUrls[r.from_user_id as string],
           };
         })
-        .filter((r): r is SentLikeRow => r !== null);
+        .filter((r): r is ReceivedLikeRow => r !== null);
 
       setRows(result);
       setIsLoading(false);
@@ -91,6 +98,25 @@ export default function SentLikesPage() {
     };
   }, [router, supabase]);
 
+  async function handleThanks(row: ReceivedLikeRow) {
+    if (!myId || thankedIds.has(row.likeId)) return;
+    setThankedIds((prev) => new Set(prev).add(row.likeId));
+    const [userAId, userBId] = myId < row.otherUserId ? [myId, row.otherUserId] : [row.otherUserId, myId];
+    const { error } = await supabase
+      .from("matches")
+      .insert({ like_id: row.likeId, user_a_id: userAId, user_b_id: userBId });
+    if (error) {
+      // 失敗したら再度押せるように戻す。
+      setThankedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(row.likeId);
+        return next;
+      });
+    } else {
+      setRows((prev) => prev.filter((r) => r.likeId !== row.likeId));
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center">
@@ -100,13 +126,15 @@ export default function SentLikesPage() {
   }
 
   return (
-    <div className="app-list-background min-h-screen">
-      <DetailHeader title={t("sentLikes.title")} />
-      <main className="mx-auto w-full max-w-lg px-5 py-6 sm:px-8">
+    <div className="app-list-background flex min-h-screen flex-col">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-7 sm:px-8">
+        <PageHeader title={t("likes.title")} />
+
         {rows.length === 0 ? (
           <div className="card flex flex-col items-center gap-2 py-16 text-center">
-            <p className="text-3xl">💜</p>
-            <p className="font-bold text-gray-600">{t("sentLikes.empty")}</p>
+            <p className="text-3xl">👍</p>
+            <p className="font-bold text-gray-600">{t("likes.empty")}</p>
+            <p className="px-6 text-center text-xs text-gray-400">{t("likes.emptyHint")}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -128,21 +156,20 @@ export default function SentLikesPage() {
                       </p>
                     </div>
                   </Link>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                      row.isMatched
-                        ? "bg-[var(--brand-teal)]/15 text-[var(--brand-teal)]"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+                  <button
+                    onClick={() => handleThanks(row)}
+                    disabled={thankedIds.has(row.likeId)}
+                    className="btn-primary shrink-0 px-4 py-2 text-xs disabled:opacity-50"
                   >
-                    {row.isMatched ? t("sentLikes.matched") : t("sentLikes.sentLabel")}
-                  </span>
+                    {thankedIds.has(row.likeId) ? t("likes.thanksSent") : t("likes.thanks")}
+                  </button>
                 </div>
               );
             })}
           </div>
         )}
       </main>
+      <NavBar />
     </div>
   );
 }

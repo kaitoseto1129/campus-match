@@ -148,7 +148,7 @@ export default function GatheringsPage() {
         }
       />
 
-      <div className="mb-5 flex rounded-full bg-[#f1eff9] p-1">
+      <div className="mb-5 flex rounded-full border border-black/5 bg-black/[0.05] p-1">
         <button
           onClick={() => setSegment("browse")}
           className={`flex-1 rounded-full py-2 text-sm font-bold transition ${

@@ -244,13 +244,16 @@ export default function LoginPage() {
             CM
           </div>
           <h1 className="text-xl font-bold text-[var(--brand-navy)]">{t("login.appName")}</h1>
-          <p className="mt-1 text-sm text-gray-400">{t("login.tagline")}</p>
+          <span className="mt-2 inline-block rounded-full bg-[var(--brand-purple)]/10 px-3 py-1 text-xs font-bold text-[var(--brand-purple-dark)]">
+            🎓 {t("login.audienceBadge")}
+          </span>
+          <p className="mt-2 text-sm text-gray-400">{t("login.tagline")}</p>
           <div className="mt-4">
             <AppStoreButton />
           </div>
         </div>
 
-        <div className="mb-5 flex rounded-full bg-[#f1eff9] p-1">
+        <div className="mb-5 flex rounded-full border border-black/5 bg-black/[0.05] p-1">
           <button
             onClick={() => setMode("signup")}
             className={`flex-1 rounded-full py-2 text-sm font-bold transition ${
@@ -271,14 +274,17 @@ export default function LoginPage() {
 
         <div className="flex flex-col gap-3">
           {mode === "signup" && (
-            <input
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t("login.displayName")}
-              autoComplete="name"
-              className="input"
-            />
+            <div>
+              <input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t("login.displayName")}
+                autoComplete="name"
+                className="input"
+              />
+              <p className="mt-1.5 px-1 text-xs text-gray-400">{t("login.nameHint")}</p>
+            </div>
           )}
           <div>
             <input

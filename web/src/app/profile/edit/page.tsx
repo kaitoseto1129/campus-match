@@ -31,6 +31,9 @@ export default function ProfileEditPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [showsPhotoRequiredBanner] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("required") === "photo"
+  );
 
   const MAX_TAGLINE_LENGTH = 20;
 
@@ -94,6 +97,10 @@ export default function ProfileEditPage() {
 
   async function handleSave() {
     if (!profile || !userId) return;
+    if (!photos.some((p) => p.order_number === 0)) {
+      setErrorMessage(t("profile.photoRequired"));
+      return;
+    }
     setIsSaving(true);
     setErrorMessage(null);
     const { error } = await supabase
@@ -211,9 +218,17 @@ export default function ProfileEditPage() {
       <DetailHeader title={t("profile.title")} />
       <main className="mx-auto w-full max-w-lg px-5 py-6 sm:px-8">
         {university && <p className="mb-4 text-sm text-gray-400">🎓 {university.name}</p>}
+        {showsPhotoRequiredBanner && (
+          <div className="mb-4 rounded-2xl bg-[var(--brand-purple)]/10 p-4 text-sm font-semibold text-[var(--brand-purple-dark)]">
+            📸 {t("profile.photoRequiredBanner")}
+          </div>
+        )}
       <div className="card p-5">
       <section className="mb-6">
-        <h2 className="mb-2 text-sm font-bold text-gray-500">{t("profile.photos")}</h2>
+        <h2 className="mb-2 text-sm font-bold text-gray-500">
+          {t("profile.photos")}
+          <span className="ml-1 font-normal text-gray-400">{t("profile.photosRequiredNote")}</span>
+        </h2>
         <div className="flex flex-wrap gap-3">
           {photos.map((photo, index) => (
             <div key={photo.id} className="group relative">

@@ -32,7 +32,8 @@ body {
 }
 
 @layer components {
-  /* アプリアイコンと同じ紫→ピンクのグラデーション(iOS版 Color.brandGradient と対応)。 */
+  /* マッチ演出などここぞという瞬間だけに使う(iOS版 Color.brandGradient と対応)。
+     通常のボタンや背景の既定スタイルとしては使わない。 */
   .brand-gradient {
     background-image: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));
   }
