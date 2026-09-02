@@ -3,7 +3,7 @@
 
 export const translations = {
   ja: {
-    nav: { discover: "探す", gatherings: "集まり", likes: "いいね", chat: "トーク", profile: "マイページ" },
+    nav: { discover: "探す", gatherings: "集まり", chat: "トーク", profile: "マイページ" },
     appStore: {
       button: "アプリ版はこちら",
       comingSoon: "近日公開予定です",
@@ -84,7 +84,7 @@ export const translations = {
       emptyHint: "絞り込み条件を変えてみましょう",
       likeSent: "いいね送信済み",
       like: "💜 いいね",
-      likesMe: "いいね!されています",
+      likesMe: "相手からいいね",
       loadMore: "もっと見る",
       loadingMore: "読み込み中...",
       filterTitle: "検索条件",
@@ -370,13 +370,6 @@ export const translations = {
       thanks: "ありがとう",
       thanksSent: "マッチしました!",
     },
-    likes: {
-      title: "いいね",
-      empty: "新着いいねはありません",
-      emptyHint: "プロフィールを充実させると、いいねが届きやすくなります",
-      thanks: "ありがとう",
-      thanksSent: "マッチしました!",
-    },
     moderation: {
       hiddenTitle: "非表示リスト",
       blockedTitle: "ブロックリスト",
@@ -436,7 +429,7 @@ export const translations = {
     genderOptions: { male: "男性", female: "女性", other: "その他" },
   },
   en: {
-    nav: { discover: "Discover", gatherings: "Groups", likes: "Likes", chat: "Chat", profile: "My Page" },
+    nav: { discover: "Discover", gatherings: "Groups", chat: "Chat", profile: "My Page" },
     appStore: {
       button: "Get the app",
       comingSoon: "Coming soon",
@@ -783,13 +776,6 @@ export const translations = {
       receivedEmpty: "No likes received yet",
       matched: "Matched",
       sentLabel: "Like sent",
-      thanks: "Thanks",
-      thanksSent: "It's a match!",
-    },
-    likes: {
-      title: "Likes",
-      empty: "No new likes yet",
-      emptyHint: "Complete your profile to get more likes",
       thanks: "Thanks",
       thanksSent: "It's a match!",
     },

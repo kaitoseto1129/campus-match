@@ -450,7 +450,7 @@ function CandidateCard({ candidate, alreadyLiked }: { candidate: Candidate; alre
         )}
         {candidate.likedMe && (
           <span className="absolute top-2 left-2 rounded-full bg-[var(--brand-pink)] px-2 py-0.5 text-[10px] font-bold text-white shadow">
-            💗 {t("discover.likesMe")}
+            ♥ {t("discover.likesMe")}
           </span>
         )}
         {alreadyLiked && (
