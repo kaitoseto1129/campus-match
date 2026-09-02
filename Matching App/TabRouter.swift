@@ -7,7 +7,7 @@ import Foundation
 import Combine
 
 enum AppTab {
-    case discover, gatherings, likes, chat, myPage
+    case discover, gatherings, chat, myPage
 }
 
 /// プッシュ通知のペイロードに含める種別。通知をタップした時、どのタブへ連れて行くべきかの
@@ -17,7 +17,9 @@ enum PushNotificationType: String, Codable {
 
     var destinationTab: AppTab {
         switch self {
-        case .like: return .likes
+        // いいねタブを廃止したため、いいね通知は「探す」に遷移させる
+        // (相手からのいいねはDiscoverのカードにバッジで表示される)。
+        case .like: return .discover
         case .match, .message: return .chat
         case .gathering: return .gatherings
         }

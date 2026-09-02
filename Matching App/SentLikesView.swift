@@ -5,80 +5,36 @@
 
 import SwiftUI
 
-private enum LikeHistoryTab: String, CaseIterable {
-    case received = "相手から"
-    case sent = "自分から"
-}
-
+/// 送ったいいねの一覧。以前は「相手から/自分から」の切り替えがあったが、
+/// 相手から届いたいいねはDiscoverのカードにバッジ表示する方式に一本化したため、
+/// このビューは自分が送ったいいねだけを表示する(Web版の/profile/sent-likesと同じ整理)。
 struct SentLikesView: View {
-    @StateObject private var likesManager = LikesManager()
     @StateObject private var sentLikesManager = SentLikesManager()
-    @EnvironmentObject private var matchManager: MatchManager
-    @State private var selectedTab: LikeHistoryTab = .received
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                LinearGradient(
-                    colors: [Color.brandPurple.opacity(0.16), Color.brandPink.opacity(0.1)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                tabPicker
-            }
-
-            ScrollView {
-                switch selectedTab {
-                case .received:
-                    if likesManager.received.isEmpty && !likesManager.isLoading {
-                        emptyState(message: "まだ届いたいいねはありません", error: likesManager.errorMessage) {
-                            Task { await likesManager.load() }
-                        }
-                    } else {
-                        LazyVStack(spacing: 12) {
-                            ForEach(Array(likesManager.received.enumerated()), id: \.element.id) { index, received in
-                                receivedCard(received, index: index)
-                            }
-                        }
-                        .padding()
-                    }
-                case .sent:
-                    if sentLikesManager.sent.isEmpty && !sentLikesManager.isLoading {
-                        emptyState(message: "まだ誰にもいいねしていません", error: sentLikesManager.errorMessage) {
-                            Task { await sentLikesManager.load() }
-                        }
-                    } else {
-                        LazyVStack(spacing: 12) {
-                            ForEach(Array(sentLikesManager.sent.enumerated()), id: \.element.id) { index, sentLike in
-                                sentCard(sentLike, index: index)
-                            }
-                        }
-                        .padding()
+        ScrollView {
+            if sentLikesManager.sent.isEmpty && !sentLikesManager.isLoading {
+                emptyState(message: "まだ誰にもいいねしていません", error: sentLikesManager.errorMessage) {
+                    Task { await sentLikesManager.load() }
+                }
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(Array(sentLikesManager.sent.enumerated()), id: \.element.id) { index, sentLike in
+                        sentCard(sentLike, index: index)
                     }
                 }
+                .padding()
             }
         }
         .background(Color.appListBackground.ignoresSafeArea())
-        .navigationTitle("いいね!履歴")
+        .navigationTitle("送ったいいね")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await likesManager.load()
             await sentLikesManager.load()
         }
         .refreshable {
-            await likesManager.load()
             await sentLikesManager.load()
         }
-    }
-
-    private var tabPicker: some View {
-        Picker("", selection: $selectedTab) {
-            ForEach(LikeHistoryTab.allCases, id: \.self) { tab in
-                Text(tab.rawValue).tag(tab)
-            }
-        }
-        .pickerStyle(.segmented)
-        .padding()
     }
 
     /// errorがある場合は「0件」ではなく読み込みエラーだと分かるようにし、再読み込みできるようにする。
@@ -94,26 +50,6 @@ struct SentLikesView: View {
             }
         }
         .padding(.top, 60)
-    }
-
-    @ViewBuilder
-    private func receivedCard(_ received: ReceivedLike, index: Int) -> some View {
-        LikeHistoryCardView(
-            profile: received.profile,
-            photoURL: received.photoURL,
-            photoCount: received.photoCount,
-            isOnline: received.isOnline,
-            commonPoints: received.commonPoints,
-            ribbonLabel: received.profile.joinBadgeLabel,
-            ribbonColor: Color.brandOrange,
-            destination: AnyView(
-                SwipeableProfileView(profiles: likesManager.received.map(\.profile), startIndex: index) { profile in
-                    ThanksButton(likesManager: likesManager, profile: profile)
-                }
-            )
-        ) {
-            ThanksActionButton(likesManager: likesManager, received: received)
-        }
     }
 
     @ViewBuilder
@@ -234,35 +170,6 @@ private struct LikeHistoryCardView<Action: View>: View {
                 .stroke(Color.pastelAccent(for: profile.id).opacity(0.4), lineWidth: 1.5)
         }
         .shadow(color: Color.pastelAccent(for: profile.id).opacity(0.18), radius: 8, y: 3)
-    }
-}
-
-private struct ThanksActionButton: View {
-    @ObservedObject var likesManager: LikesManager
-    let received: ReceivedLike
-    @EnvironmentObject private var matchManager: MatchManager
-    @State private var isSending = false
-
-    var body: some View {
-        Button {
-            guard !isSending else { return }
-            isSending = true
-            Task {
-                if let match = await likesManager.sendThanks(for: received.like) {
-                    matchManager.presentCelebrationImmediately(match: match, profile: received.profile, photoURL: received.photoURL)
-                }
-                isSending = false
-            }
-        } label: {
-            Text("ありがとう")
-                .bold()
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(Color.brandPurple)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 22))
-        }
-        .disabled(isSending)
     }
 }
 

@@ -331,7 +331,12 @@ struct DiscoverView: View {
                 DiscoverLikeButton(discoverManager: discoverManager, candidate: profile, onHidden: advance)
             }
         } label: {
-            DiscoverCardView(profile: candidate, photoURL: discoverManager.candidatePhotoURLs[candidate.id], photoHeight: height)
+            DiscoverCardView(
+                profile: candidate,
+                photoURL: discoverManager.candidatePhotoURLs[candidate.id],
+                photoHeight: height,
+                likedMe: discoverManager.receivedLikeIds.contains(candidate.id)
+            )
                 .frame(width: width)
         }
         .buttonStyle(.plain)
@@ -346,6 +351,7 @@ private struct DiscoverCardView: View {
     let profile: Profile
     let photoURL: URL?
     var photoHeight: CGFloat = 180
+    var likedMe: Bool = false
 
     /// カードごとに一貫した淡い差し色をつけて、グリッド全体の色みを増やす。
     private var accent: Color { Color.pastelAccent(for: profile.id) }
@@ -367,6 +373,9 @@ private struct DiscoverCardView: View {
 
                 if profile.isBoosted {
                     RibbonBadge(text: "アピール中", color: Color.brandOrange)
+                        .padding(.top, 10)
+                } else if likedMe {
+                    RibbonBadge(text: "♥ 相手からいいね", color: Color.brandPink)
                         .padding(.top, 10)
                 } else if let badge = profile.joinBadgeLabel {
                     RibbonBadge(text: badge, color: Color.brandPurple)
@@ -393,7 +402,7 @@ private struct DiscoverCardView: View {
                     .padding(.vertical, 3)
                     .background(accent, in: Capsule())
                 if let major = profile.major, !major.isEmpty {
-                    Text(major)
+                    Text(LocalizedStringKey(major))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
