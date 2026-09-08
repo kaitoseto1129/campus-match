@@ -7,7 +7,7 @@ import SwiftUI
 
 /// 全画面を覆わず、プロフィール画面の上に軽く重ねて出す送信完了トースト。
 struct SentConfirmationOverlay: View {
-    var message: String = "いいねを送りました"
+    var message: String = "送信しました"
     var icon: String = "hand.thumbsup.fill"
 
     var body: some View {
@@ -35,7 +35,7 @@ extension View {
                 .background(Color.clear)
                 .presentationBackground(.clear)
         }
-        // いいね送信・購入完了など、このトーストが出る操作すべてに軽い触覚フィードバックを添える。
+        // このトーストが出る操作すべてに軽い触覚フィードバックを添える。
         // 表示された時だけ鳴らし、閉じる時には鳴らさない。
         .sensoryFeedback(.success, trigger: isPresented.wrappedValue) { oldValue, newValue in
             newValue && !oldValue

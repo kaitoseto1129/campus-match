@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/LanguageToggle";
 
-// 4つの主要画面(探す・集まり・トーク・マイページ)で共通のヘッダー。
+// 主要画面(集まり・マイページ)で共通のヘッダー。
 // 左に画面タイトル、右に画面固有のアクション、中央にはどの画面でも
 // 常にアプリアイコンを置く(ブランドの一貫性のため、ログイン画面と同じCMアイコン)。
 export function PageHeader({
@@ -24,7 +24,7 @@ export function PageHeader({
       </div>
 
       <Link
-        href="/discover"
+        href="/gatherings"
         aria-label="キャンマッチ"
         className="absolute top-1/2 left-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl brand-gradient text-xs font-extrabold text-white shadow-md shadow-purple-200"
       >

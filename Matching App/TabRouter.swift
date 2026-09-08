@@ -7,20 +7,16 @@ import Foundation
 import Combine
 
 enum AppTab {
-    case discover, gatherings, chat, myPage
+    case gatherings, myPage
 }
 
 /// プッシュ通知のペイロードに含める種別。通知をタップした時、どのタブへ連れて行くべきかの
 /// 判断に使う(以前は通知をタップしても最後に開いていたタブのままで、何も起きなかった)。
 enum PushNotificationType: String, Codable {
-    case like, match, message, gathering
+    case gathering
 
     var destinationTab: AppTab {
         switch self {
-        // いいねタブを廃止したため、いいね通知は「探す」に遷移させる
-        // (相手からのいいねはDiscoverのカードにバッジで表示される)。
-        case .like: return .discover
-        case .match, .message: return .chat
         case .gathering: return .gatherings
         }
     }
@@ -39,10 +35,10 @@ final class NotificationRouter: ObservableObject {
 
 @MainActor
 final class TabRouter: ObservableObject {
-    @Published var selectedTab: AppTab = .discover
-    /// プッシュされた詳細画面(プロフィール・チャット等)を表示中はtrueにして、
-    /// カスタムタブバーがそれらの下部コンテンツ(いいねボタン・入力欄)を隠さないようにする。
-    /// 複数の詳細画面が同時にマウントされるケース(スワイプ式プロフィール等)に対応するため、
+    @Published var selectedTab: AppTab = .gatherings
+    /// プッシュされた詳細画面(集まりの詳細・グループトーク等)を表示中はtrueにして、
+    /// カスタムタブバーがそれらの下部コンテンツ(入力欄など)を隠さないようにする。
+    /// 複数の詳細画面が同時にマウントされるケースに対応するため、
     /// 単純なBoolではなくカウンタで管理する。
     @Published private(set) var isTabBarHidden = false
     private var hideRequestCount = 0

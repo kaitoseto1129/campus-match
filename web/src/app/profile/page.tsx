@@ -28,10 +28,10 @@ export default function MyPageHome() {
   const [isLoading, setIsLoading] = useState(true);
 
   // iOS版 MyPageTutorialOverlay と同じ、サインアップ直後だけの簡易ガイド。
-  type TutorialStep = "hobbyCards" | "completeness" | "appeal" | "analytics" | "footprints" | "closing" | null;
+  type TutorialStep = "hobbyCards" | "completeness" | "closing" | null;
   const [tutorialStep, setTutorialStep] = useState<TutorialStep>(null);
   const { rects: tutorialRects, ref: tutorialRef } = useTutorialAnchors();
-  const tutorialOrder: TutorialStep[] = ["hobbyCards", "completeness", "appeal", "analytics", "footprints", "closing"];
+  const tutorialOrder: TutorialStep[] = ["hobbyCards", "completeness", "closing"];
 
   useEffect(() => {
     if (isEligibleForOnboardingTutorial() && !hasSeenTutorial("MyPage")) {
@@ -53,16 +53,10 @@ export default function MyPageHome() {
   const tutorialAnchorId: Record<Exclude<TutorialStep, "closing" | null>, string> = {
     hobbyCards: "myPageHobbyCards",
     completeness: "myPageCompleteness",
-    appeal: "myPageAppeal",
-    analytics: "myPageAnalytics",
-    footprints: "myPageFootprints",
   };
   const tutorialMessage: Record<Exclude<TutorialStep, "closing" | null>, string> = {
-    hobbyCards: "「趣味カードを追加する」をタップして、趣味カードを登録してみましょう。共通の趣味があるお相手に見つけてもらいやすくなります",
+    hobbyCards: "「趣味カードを追加する」をタップして、趣味カードを登録してみましょう。集まりで話のきっかけになります",
     completeness: "足りない項目は「やることリスト」でひと目で分かります。「編集する」から埋めてみましょう",
-    appeal: "「アピールを使う」をタップすると、いいねを消費して1時間だけ「探す」画面のトップに表示されます",
-    analytics: "「分析」をタップすると、プロフィールの閲覧数やいいね獲得率を確認できます",
-    footprints: "「足あと」をタップすると、あなたのプロフィールを見に来たお相手が分かります",
   };
 
   const load = useCallback(async () => {
@@ -130,7 +124,7 @@ export default function MyPageHome() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <MyPageExtras profile={profile} userId={userId} onProfileChange={setProfile} tutorialRef={tutorialRef} />
+          <MyPageExtras profile={profile} tutorialRef={tutorialRef} />
           <div ref={tutorialRef("myPageCompleteness")}>
             <ProfileCompletenessCard profile={profile} photoCount={photoCount} />
           </div>
@@ -154,7 +148,7 @@ export default function MyPageHome() {
         <TutorialClosingCard
           emoji="💜"
           title="マイページの紹介はこれで終わりです"
-          description="たくさんの出会いがあることを祈っています!"
+          description="気になる集まりに参加して、学生生活を広げてみてください!"
           buttonLabel="はじめる"
           onFinish={finishTutorial}
         />

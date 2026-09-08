@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 // マイページのプッシュ画面(プロフィール編集・分析・足あと等)で共通の、
-// 戻るボタン+タイトルのヘッダー。/discover/[id] と同じパターン。
+// 戻るボタン+タイトルのヘッダー。
 export function DetailHeader({ title, action }: { title: string; action?: ReactNode }) {
   const router = useRouter();
   return (

@@ -12,7 +12,6 @@ struct Profile: Codable, Identifiable {
     let name: String
     /// サインアップ直後はまだ入力されていないため、DB上はNULL許容。
     let description: String?
-    let gender: Gender?
     let birthday: Date?
     var age: Int? {
         guard let birthday else { return nil }
@@ -22,10 +21,14 @@ struct Profile: Codable, Identifiable {
         guard let age else { return "-" }
         return String.appLocalized("%lld歳", age)
     }
-    /// gender・birthday・description・写真などプロフィールの必須項目が揃っているか。
+    /// birthday・description・写真などプロフィールの必須項目が揃っているか。
     /// これが揃うまではオンボーディング(プロフィール編集の強制)を表示する。
+    ///
+    /// 性別(profiles.gender)はDBには残っているが、アプリからは読み書きしない。
+    /// 性別を出したり性別で相手を絞り込めたりすると「異性紹介」の性格を帯びるため、
+    /// 本アプリでは扱わない方針(利用規約の「異性交際目的の利用禁止」と対になっている)。
     var isProfileComplete: Bool {
-        gender != nil && birthday != nil && !(description ?? "").isEmpty
+        birthday != nil && !(description ?? "").isEmpty
     }
 
     let profileImageUrlString: String?
@@ -56,30 +59,14 @@ struct Profile: Codable, Identifiable {
     /// 複数国籍を持つユーザーにも対応した、国籍の複数選択。
     let nationalities: [String]
     let tagline: String?
-    let showLikeCount: Bool
-    let remainingLikes: Int
-    let privateMode: Bool
     let showOnlineStatus: Bool
-    let shareBonusClaimed: Bool
     let isAdmin: Bool
     let drinking: String?
     let smoking: String?
     let bodyType: String?
     let languages: [String]
-    /// 会員ステータス(無料 / 有料 / VIP)。古いレコードや読み込み失敗時は無料会員として扱う。
-    let membershipTier: MembershipTier?
-    var membership: MembershipTier { membershipTier ?? .free }
     /// 選択した趣味カードのID一覧。
     let hobbyCards: [String]
-    let boostExpiresAtString: String?
-    var boostExpiresAt: Date? {
-        guard let boostExpiresAtString else { return nil }
-        return ISO8601DateFormatter.matchingApp.date(from: boostExpiresAtString)
-    }
-    var isBoosted: Bool {
-        guard let boostExpiresAt else { return false }
-        return boostExpiresAt > Date()
-    }
     let createdAtString: String?
     var joinBadgeLabel: String? {
         guard let createdAtString,
@@ -91,67 +78,17 @@ struct Profile: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, description, gender, birthday, area, city, height, major, nationality, nationalities, tagline
+        case id, name, description, birthday, area, city, height, major, nationality, nationalities, tagline
         case profileImageUrlString = "profile_image_url"
         case universityId = "university_id"
-        case showLikeCount = "show_like_count"
-        case remainingLikes = "remaining_likes"
-        case privateMode = "private_mode"
         case showOnlineStatus = "show_online_status"
-        case shareBonusClaimed = "share_bonus_claimed"
         case isAdmin = "is_admin"
         case drinking, smoking
         case bodyType = "body_type"
         case languages
-        case membershipTier = "membership_tier"
         case hobbyCards = "hobby_cards"
-        case boostExpiresAtString = "boost_expires_at"
         case createdAtString = "created_at"
     }
-}
-
-/// 会員ステータス。上位プランは下位プランの特典をすべて含む。
-enum MembershipTier: String, Codable, CaseIterable {
-    case free
-    case premium
-    case vip
-
-    var label: String {
-        switch self {
-        case .free: return String.appLocalized("無料会員")
-        // premium/vipはUI上は「有料会員」1プランに統合しているため、同じラベルを返す。
-        case .premium, .vip: return String.appLocalized("有料会員")
-        }
-    }
-
-    /// 月額料金(円)。無料会員は0円。
-    var monthlyPriceYen: Int {
-        switch self {
-        case .free: return 0
-        case .premium, .vip: return 2000
-        }
-    }
-
-    /// free < premium < vip の順序。特典判定はこのランクの比較で行う。
-    var rank: Int {
-        switch self {
-        case .free: return 0
-        case .premium: return 1
-        case .vip: return 2
-        }
-    }
-
-    /// 1日に新しくメッセージを送れる相手の人数(無料会員のみ制限、有料会員は無制限)。
-    /// 無料会員でもメッセージ自体は送れるが、1日に会話できる人数に上限を設けている。
-    static let freeDailyMessagePartnerLimit = 3
-    /// 1日にメッセージできる相手の人数に制限があるか。
-    var hasDailyMessagePartnerLimit: Bool { rank < MembershipTier.premium.rank }
-    /// 相手プロフィールで受け取ったいいね数を見られるか。
-    var canSeeLikeCount: Bool { rank >= MembershipTier.premium.rank }
-    /// 身バレ防止のプライベートモードを使えるか。
-    var canUsePrivateMode: Bool { rank >= MembershipTier.vip.rank }
-    /// トークで相手の既読が分かるか。
-    var canSeeReadReceipts: Bool { rank >= MembershipTier.vip.rank }
 }
 
 struct ProfileCompleteness {
@@ -197,18 +134,6 @@ extension Profile {
         return ProfileCompleteness(percent: percent, missingItems: missing)
     }
 
-    /// 相手との共通点の数を簡易的に算出する(居住地・国籍・お酒・タバコ・体型・話せる言語)。
-    /// いいね履歴画面の「共通点N」バッジ表示に使う。
-    func commonPointsCount(with other: Profile) -> Int {
-        var count = 0
-        if area == other.area { count += 1 }
-        if !Set(nationalities).isDisjoint(with: Set(other.nationalities)) { count += 1 }
-        if let drinking, drinking == other.drinking { count += 1 }
-        if let smoking, smoking == other.smoking { count += 1 }
-        if let bodyType, bodyType == other.bodyType { count += 1 }
-        if !Set(languages).isDisjoint(with: Set(other.languages)) { count += 1 }
-        return count
-    }
 }
 
 extension ISO8601DateFormatter {
@@ -243,15 +168,6 @@ struct University: Codable, Identifiable {
     let country: String
     /// 都道府県(日本)または州(アメリカ)。データが無い大学ではnil。
     let prefecture: String?
-}
-enum Gender: String, Codable {
-    case male, female
-    var label: String {
-        switch self {
-        case .male: return "男性"
-        case .female: return "女性"
-        }
-    }
 }
 
 let prefectures: [String] = [

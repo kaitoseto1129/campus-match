@@ -29,7 +29,7 @@ extension Color {
         endPoint: .bottom
     )
 
-    /// 探す画面のカードなどに使う、ユーザーIDから決まる一貫したパステルカラー。
+    /// ユーザーIDから決まる一貫したパステルカラー。
     /// 彩度・明度を抑えめにして「カラフルだけど派手すぎない」バリエーションを出す。
     static func pastelAccent(for id: UUID) -> Color {
         var hasher = Hasher()

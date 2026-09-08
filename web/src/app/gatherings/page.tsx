@@ -10,7 +10,7 @@ import { TutorialSpotlight, TutorialClosingCard } from "@/components/TutorialSpo
 import { useTutorialAnchors } from "@/lib/useTutorialAnchors";
 import { isEligibleForOnboardingTutorial, hasSeenTutorial, markSeenTutorial } from "@/lib/tutorialState";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
-import { loadMainPhotoUrls } from "@/lib/discover";
+import { loadMainPhotoUrls } from "@/lib/photos";
 import { gatheringCategoryOptions } from "@/lib/constants";
 import type { Gathering, GatheringApplication, Profile } from "@/lib/types";
 

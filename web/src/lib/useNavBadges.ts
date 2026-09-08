@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { isProfileComplete, type Profile } from "@/lib/types";
 
-// iOS版 NotificationCenterManager と同じ考え方: タブバーに出す3種類のバッジ
-// (トークの未読数・集まりの承認待ち件数・マイページのやることリストの有無)をまとめて取得する。
+// iOS版 NotificationCenterManager と同じ考え方: タブバーに出す2種類のバッジ
+// (集まりの承認待ち件数・マイページのやることリストの有無)をまとめて取得する。
 export function useNavBadges() {
-  const [chatUnread, setChatUnread] = useState(0);
   const [gatheringPending, setGatheringPending] = useState(0);
   const [hasProfileTodo, setHasProfileTodo] = useState(false);
 
@@ -23,22 +22,6 @@ export function useNavBadges() {
 
       const { data: profileRow } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (!cancelled && profileRow) setHasProfileTodo(!isProfileComplete(profileRow as Profile));
-
-      const { data: matchRows } = await supabase
-        .from("matches")
-        .select("id")
-        .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
-      const matchIds = (matchRows ?? []).map((m) => m.id as string);
-      if (matchIds.length > 0) {
-        const { count } = await supabase
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .in("match_id", matchIds)
-          .neq("sender_id", user.id)
-          .is("read_at", null)
-          .is("deleted_at", null);
-        if (!cancelled) setChatUnread(count ?? 0);
-      }
 
       const { data: hostedGatherings } = await supabase
         .from("gatherings")
@@ -58,12 +41,10 @@ export function useNavBadges() {
 
     load();
 
-    // メッセージ・応募のいずれかが変化したら、そのつどバッジ数を数え直す。
+    // 応募が変化したら、そのつどバッジ数を数え直す。
     const channel = supabase
       .channel(`nav-badges:${Math.random()}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "gathering_applications" }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, load)
       .subscribe();
 
     return () => {
@@ -72,5 +53,5 @@ export function useNavBadges() {
     };
   }, []);
 
-  return { chatUnread, gatheringPending, hasProfileTodo };
+  return { gatheringPending, hasProfileTodo };
 }

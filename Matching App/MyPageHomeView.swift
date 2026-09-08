@@ -16,18 +16,11 @@ struct MyPageHomeView: View {
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
     @State private var showingWithdrawFailedAlert = false
     @State private var isWithdrawing = false
-    @State private var showingShareBonusToast = false
-    @State private var isBoosting = false
-    @State private var showingBoostFailedAlert = false
-    @State private var showingBoostConfirm = false
-    @State private var isCancelingBoost = false
-    @State private var showingCancelBoostConfirm = false
-    @State private var showingPurchaseSheet = false
     @State private var showingHobbyCardPicker = false
     @State private var showingShareSheet = false
     /// マイページを初めて開いた時だけ、主要機能を簡単に紹介するガイドを一度出す。
     /// 画面中央に説明カードを出すだけでなく、実際のセクションをスポットライトで指し示し、
-    /// 実際にタップ・操作してもらいながら紹介する(探す画面のチュートリアルと同じ考え方)。
+    /// 実際にタップ・操作してもらいながら紹介する。
     @AppStorage("hasSeenMyPageTutorial") private var hasSeenMyPageTutorial = false
     @State private var myPageTutorialStep: MyPageTutorialStep? = nil
     @State private var myPageTutorialAnchors: [String: Anchor<CGRect>] = [:]
@@ -71,33 +64,11 @@ struct MyPageHomeView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         header
-                        // 残いいねは最も確認する頻度が高いので、プロフィール直下に大きく置く。
-                        remainingLikesCard
-                        if (profileManager.profile?.membership ?? .free) == .free {
-                            membershipUpsellBanner
-                        }
                         profileCompletenessCard
-                        boostButton
                         shareAppButton
                         // 趣味カードは「後からゆっくり整える」項目なので、下のほうに置く。
                         hobbyCardsCard
                         VStack(spacing: 0) {
-                            menuRow(icon: "chart.bar.fill", iconColor: .indigo, title: "分析", anchorId: "myPageAnalytics", onTap: {
-                                if myPageTutorialStep == .analytics { advanceMyPageTutorial(from: .analytics) }
-                            }) {
-                                ProfileAnalyticsView()
-                            }
-                            Divider().padding(.leading, 66)
-                            menuRow(icon: "shoeprints.fill", iconColor: Color.brandOrange, title: "足あと", badgeCount: notificationManager.footprintsCount, anchorId: "myPageFootprints", onTap: {
-                                if myPageTutorialStep == .footprints { advanceMyPageTutorial(from: .footprints) }
-                            }) {
-                                FootprintsView()
-                            }
-                            Divider().padding(.leading, 66)
-                            menuRow(icon: "hand.thumbsup.fill", iconColor: Color.brandPurple, title: "いいね!履歴") {
-                                SentLikesView()
-                            }
-                            Divider().padding(.leading, 66)
                             menuRow(icon: "checkmark.shield.fill", iconColor: Color.brandTeal, title: "安心・安全ガイド") {
                                 SafetyGuideView()
                             }
@@ -140,17 +111,7 @@ struct MyPageHomeView: View {
                     .zIndex(1)
                 }
 
-                // confirmationDialog自体の暗転だけでは背景が透けて読みづらいという声があったため、
-                // ダイアログ表示中は下地をしっかり暗くする(探す画面のアピール確認と同じ対応)。
-                if showingBoostConfirm || showingCancelBoostConfirm {
-                    Color.black.opacity(0.4)
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-                        .allowsHitTesting(false)
-                }
             }
-            .animation(.easeInOut(duration: 0.2), value: showingBoostConfirm)
-            .animation(.easeInOut(duration: 0.2), value: showingCancelBoostConfirm)
             .onPreferenceChange(TutorialAnchorKey.self) { myPageTutorialAnchors = $0 }
             .navigationTitle("マイページ")
             .navigationBarTitleDisplayMode(.inline)
@@ -173,12 +134,6 @@ struct MyPageHomeView: View {
                     advanceMyPageTutorial(from: .hobbyCards)
                 }
             }
-            // アピールの確認ダイアログを実際に開いて閉じたら(利用してもキャンセルしても)次へ進める。
-            .onChange(of: showingBoostConfirm) { wasShowing, isShowing in
-                if !isShowing, myPageTutorialStep == .appeal {
-                    advanceMyPageTutorial(from: .appeal)
-                }
-            }
             .confirmationDialog(
                 "本当に退会しますか?",
                 isPresented: $showingWithdrawConfirm,
@@ -196,7 +151,7 @@ struct MyPageHomeView: View {
                 }
                 Button("キャンセル", role: .cancel) {}
             } message: {
-                Text("プロフィール、いいね、マッチ、トーク履歴などすべてのデータが削除され、元に戻せません。")
+                Text("プロフィール、参加した集まり、グループトークの履歴などすべてのデータが削除され、元に戻せません。")
             }
             .alert("退会処理に失敗しました", isPresented: $showingWithdrawFailedAlert) {
                 Button("OK", role: .cancel) {}
@@ -228,86 +183,7 @@ struct MyPageHomeView: View {
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
             }
-            membershipButton
         }
-    }
-
-    /// 現在の会員ステータスを表示しつつ、会員ステータス画面へ入る導線。
-    private var membershipButton: some View {
-        let tier = profileManager.profile?.membership ?? .free
-        return NavigationLink {
-            MembershipStatusView(profileManager: profileManager)
-        } label: {
-            HStack {
-                Image(systemName: tier == .free ? "person.fill" : "crown.fill")
-                Text("会員ステータス")
-                    .bold()
-                Text(tier.label)
-                    .font(.caption.bold())
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 3)
-                    .background(.white.opacity(0.25), in: Capsule())
-                Image(systemName: "chevron.right")
-                    .font(.caption2)
-            }
-            .font(.subheadline)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(tier == .free ? AnyShapeStyle(Color.brandNavy) : AnyShapeStyle(Color.brandGradient))
-            .foregroundStyle(.white)
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
-        }
-    }
-
-    /// 無料会員だけに表示する、有料会員の存在を知らせる目立つ案内。
-    /// 以前はヘッダーの「会員ステータス」ボタンをタップして初めて有料プランの存在に
-    /// 気づく形だったため、押さなくても目に入る位置・デザインで案内するようにした。
-    private var membershipUpsellBanner: some View {
-        NavigationLink {
-            MembershipStatusView(profileManager: profileManager)
-        } label: {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(.white.opacity(0.2))
-                        .frame(width: 46, height: 46)
-                    Image(systemName: "crown.fill")
-                        .font(.title3)
-                        .foregroundStyle(.white)
-                }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("有料会員でもっと出会いを広げよう")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.white)
-                    VStack(alignment: .leading, spacing: 3) {
-                        membershipBenefitRow(icon: "bubble.left.and.bubble.right.fill", text: "メッセージし放題")
-                        membershipBenefitRow(icon: "heart.fill", text: "いいね数表示")
-                        membershipBenefitRow(icon: "eye.slash.fill", text: "プライベートモード")
-                    }
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption.bold())
-                    .foregroundStyle(.white.opacity(0.85))
-            }
-            .padding()
-            .background(Color.brandGradient, in: RoundedRectangle(cornerRadius: 18))
-            .shadow(color: Color.brandPurple.opacity(0.25), radius: 10, y: 4)
-            .padding(.horizontal)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func membershipBenefitRow(icon: String, text: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption2)
-                .frame(width: 14)
-            Text(LocalizedStringKey(text))
-                .font(.caption2.bold())
-        }
-        .foregroundStyle(.white.opacity(0.9))
     }
 
     /// 登録済みの趣味カードの一覧と、追加・編集の導線。
@@ -326,7 +202,7 @@ struct MyPageHomeView: View {
             }
 
             if cards.isEmpty {
-                Text("趣味カードを登録すると、共通の話題があるお相手に見つけてもらいやすくなります")
+                Text("趣味カードを登録すると、集まりで話のきっかけになります")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
@@ -436,178 +312,14 @@ struct MyPageHomeView: View {
         }
     }
 
-    private var boostButton: some View {
-        Group {
-            if let expiresAt = profileManager.profile?.boostExpiresAt, expiresAt > Date() {
-                HStack {
-                    Image(systemName: "bolt.fill")
-                        .foregroundStyle(Color.brandOrange)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("アピール中")
-                            .font(.subheadline.bold())
-                        Text("\(expiresAt, style: .relative)後に終了")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button {
-                        showingCancelBoostConfirm = true
-                    } label: {
-                        if isCancelingBoost {
-                            ProgressView()
-                        } else {
-                            Text("終了する")
-                                .font(.caption.bold())
-                                .foregroundStyle(Color.brandOrange)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.brandOrange.opacity(0.15), in: Capsule())
-                        }
-                    }
-                    .disabled(isCancelingBoost)
-                }
-                .padding()
-                .background(Color.brandOrange.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(Color.brandOrange, lineWidth: 1.5)
-                }
-                .padding(.horizontal)
-                .confirmationDialog(
-                    "アピールを終了しますか?",
-                    isPresented: $showingCancelBoostConfirm,
-                    titleVisibility: .visible
-                ) {
-                    Button("終了する", role: .destructive) {
-                        guard !isCancelingBoost else { return }
-                        isCancelingBoost = true
-                        Task {
-                            await profileManager.cancelBoost()
-                            isCancelingBoost = false
-                        }
-                    }
-                    Button("キャンセル", role: .cancel) {}
-                } message: {
-                    Text("消費したいいねは戻ってきません。それでも終了しますか?")
-                }
-            } else {
-                Button {
-                    showingBoostConfirm = true
-                } label: {
-                    HStack {
-                        Image(systemName: "bolt.fill")
-                            .foregroundStyle(Color.brandOrange)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("アピールを使う")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(Color.brandOrange)
-                            Text("10いいねで1時間、探す画面のトップに表示!")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 18)
-                            .stroke(Color.brandOrange, lineWidth: 1.5)
-                    }
-                }
-                .disabled(isBoosting)
-                .padding(.horizontal)
-            }
-        }
-        .tutorialAnchor("myPageAppeal")
-        .confirmationDialog(
-            "アピールしますか?",
-            isPresented: $showingBoostConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("アピールする(10いいね消費)") {
-                Task {
-                    isBoosting = true
-                    let success = await profileManager.activateBoost()
-                    isBoosting = false
-                    if !success { showingBoostFailedAlert = true }
-                }
-            }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            Text("残いいねを10消費して、1時間だけ探す画面のトップに表示されるようになります。")
-        }
-        .alert("アピールを利用できませんでした", isPresented: $showingBoostFailedAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("残いいねが10未満の可能性があります。")
-        }
-    }
-
-    private var remainingLikesCard: some View {
-        VStack(spacing: 14) {
-            VStack(spacing: 6) {
-                HStack(spacing: 6) {
-                    Image(systemName: "hand.thumbsup.fill")
-                        .font(.caption)
-                    Text("残いいね!")
-                        .font(.caption.bold())
-                }
-                .foregroundStyle(.white.opacity(0.9))
-
-                Text("\(profileManager.profile?.remainingLikes ?? 0)")
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .contentTransition(.numericText())
-                    .animation(.snappy, value: profileManager.profile?.remainingLikes)
-            }
-
-            // 残いいねを見てすぐ購入導線に進めるよう、同じカード内にボタンを置いている
-            // (以前は数枚下にしかなく、購入ボタンが見当たらないという声があった)。
-            Button {
-                showingPurchaseSheet = true
-            } label: {
-                HStack {
-                    Image(systemName: "cart.fill")
-                    Text("いいねを購入する")
-                        .font(.subheadline.bold())
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(.white.opacity(0.2))
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 22))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 22)
-                        .stroke(.white.opacity(0.5), lineWidth: 1)
-                }
-            }
-            .padding(.horizontal, 20)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
-        .background(Color.brandGradient)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.brandPurple.opacity(0.3), radius: 10, y: 5)
-        .padding(.horizontal)
-        .fullScreenCover(isPresented: $showingPurchaseSheet) {
-            LikesPurchaseSheet(profileManager: profileManager)
-        }
-    }
-
     /// アプリの紹介。
-    /// 以前は共有シートを開いた時点(ボタンを押しただけ)でボーナスを付与していたため、
-    /// 実際には誰にも共有していなくてもいいねがもらえてしまっていた。
-    /// ShareLinkの完了ハンドラを使い、共有が完了した時だけ付与するようにしている。
     private var shareAppButton: some View {
-        let alreadyClaimed = profileManager.profile?.shareBonusClaimed == true
-        return Button {
+        Button {
             showingShareSheet = true
         } label: {
             HStack {
                 Image(systemName: "square.and.arrow.up")
-                Text(alreadyClaimed ? "アプリを紹介する(特典は受け取り済み)" : "アプリを紹介して50いいねゲット")
+                Text("アプリを紹介する")
                     .font(.subheadline.bold())
             }
             .frame(maxWidth: .infinity)
@@ -619,24 +331,13 @@ struct MyPageHomeView: View {
         .padding(.horizontal)
         .padding(.top, 8)
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: [Self.shareMessage]) { completed in
+            ShareSheet(items: [Self.shareMessage]) { _ in
                 showingShareSheet = false
-                // 共有をキャンセルした場合は付与しない。
-                guard completed, !alreadyClaimed else { return }
-                Task {
-                    let success = await profileManager.claimShareBonus()
-                    if success {
-                        showingShareBonusToast = true
-                        try? await Task.sleep(nanoseconds: 900_000_000)
-                        showingShareBonusToast = false
-                    }
-                }
             }
         }
-        .sentConfirmationCover(isPresented: $showingShareBonusToast, message: "50いいねを獲得しました!", icon: "gift.fill")
     }
 
-    private static let shareMessage = "キャンマッチ、使ってみて!学生限定のマッチングアプリです。"
+    private static let shareMessage = "キャンマッチ、使ってみて!大学の友達と集まりを立てられる、学生限定のアプリです。"
 
     /// お問い合わせ・利用規約・プライバシーポリシーへの導線。App Storeの審査要件として、
     /// ユーザーが運営への連絡手段や規約を確認できるようにしている。

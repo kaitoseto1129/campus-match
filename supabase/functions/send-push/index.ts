@@ -22,7 +22,6 @@ const APNS_HOST = "https://api.push.apple.com";
 const BUNDLE_ID = "com.cammatch.app";
 
 /// 「集まり」機能での関係(応募した/された、または同じ集まりの主催者・承認済みメンバー同士)を確認する。
-/// likes/matchesの関係が無い場合の追加チェックとしてのみ呼ばれる。
 async function hasGatheringRelation(
   // deno-lint-ignore no-explicit-any
   supabase: any,
@@ -145,33 +144,10 @@ Deno.serve(async (req: Request) => {
 
     // verify_jwtは「ログイン済みユーザーであること」しか保証しないため、これがないと
     // ログイン済みの誰もが任意のuserIdへ任意のtitle/bodyでプッシュ通知をなりすまし送信できてしまう。
-    // 実際にこの関数を呼ぶのは「いいねを送った」「マッチした」「メッセージを送った」時だけなので、
-    // 呼び出し元と対象ユーザーの間にlikesまたはmatchesの実際の関係があることを確認する。
+    // 実際にこの関数を呼ぶのは集まりへの応募・承認・グループトークの送信時だけなので、
+    // 呼び出し元と対象ユーザーの間に集まりを介した実際の関係があることを確認する。
     if (callerId !== userId) {
-      const { data: relation, error: relationError } = await supabase
-        .from("likes")
-        .select("from_user_id")
-        .eq("from_user_id", callerId)
-        .eq("to_user_id", userId)
-        .limit(1);
-      if (relationError) throw relationError;
-
-      let hasRelation = (relation?.length ?? 0) > 0;
-      if (!hasRelation) {
-        const { data: matchRows, error: matchError } = await supabase
-          .from("matches")
-          .select("id")
-          .or(
-            `and(user_a_id.eq.${callerId},user_b_id.eq.${userId}),and(user_a_id.eq.${userId},user_b_id.eq.${callerId})`,
-          )
-          .limit(1);
-        if (matchError) throw matchError;
-        hasRelation = (matchRows?.length ?? 0) > 0;
-      }
-      if (!hasRelation) {
-        hasRelation = await hasGatheringRelation(supabase, callerId, userId);
-      }
-
+      const hasRelation = await hasGatheringRelation(supabase, callerId, userId);
       if (!hasRelation) {
         return json({ success: false, error: "no relation to target user" }, 403);
       }

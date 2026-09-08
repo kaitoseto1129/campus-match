@@ -7,39 +7,22 @@ import SwiftUI
 
 struct MainTabView: View {
     @StateObject private var tabRouter = TabRouter()
-    @StateObject private var matchManager = MatchManager()
     @StateObject private var notificationManager = NotificationCenterManager()
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Group {
-                switch tabRouter.selectedTab {
-                case .discover:
-                    DiscoverView()
-                case .gatherings:
-                    GatheringListView()
-                case .chat:
-                    ChatListView()
-                case .myPage:
-                    MyPageHomeView()
-                }
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !tabRouter.isTabBarHidden {
-                    customTabBar
-                }
-            }
-
-            if let toast = notificationManager.activeToast {
-                MessageToastView(toast: toast) {
-                    notificationManager.activeToast = nil
-                }
-                .padding(.top, 8)
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .zIndex(1)
+        Group {
+            switch tabRouter.selectedTab {
+            case .gatherings:
+                GatheringListView()
+            case .myPage:
+                MyPageHomeView()
             }
         }
-        .animation(.spring(response: 0.35), value: notificationManager.activeToast?.id)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !tabRouter.isTabBarHidden {
+                customTabBar
+            }
+        }
         .task {
             // 通知タップでアプリがコールド起動された場合、AppDelegateがpendingTabを
             // セットするのはMainTabViewがまだマウントされる前のことがある。
@@ -48,27 +31,15 @@ struct MainTabView: View {
                 tabRouter.selectTab(tab)
                 NotificationRouter.shared.pendingTab = nil
             }
-            await matchManager.start()
             await notificationManager.start()
         }
         .onDisappear {
             Task {
-                await matchManager.stop()
                 await notificationManager.stop()
             }
         }
-        .fullScreenCover(item: $matchManager.celebratingMatch) { celebration in
-            MatchCelebrationView(
-                myPhotoURL: matchManager.myPhotoURL,
-                myName: matchManager.myName,
-                otherProfile: celebration.profile,
-                otherPhotoURL: celebration.photoURL,
-                matchId: celebration.match.id
-            )
-        }
         .environmentObject(notificationManager)
         .environmentObject(tabRouter)
-        .environmentObject(matchManager)
         // 通知をタップした時、AppDelegate(UNUserNotificationCenterDelegate)が
         // NotificationRouter.shared.pendingTabに行き先タブをセットする。
         // AppDelegateからはTabRouterの実体(このViewの@StateObject)に直接触れないため、
@@ -84,9 +55,7 @@ struct MainTabView: View {
         VStack(spacing: 0) {
             Divider()
             HStack(spacing: 0) {
-                tabButton(.discover, icon: "magnifyingglass", label: "探す")
                 tabButton(.gatherings, icon: "person.3.fill", label: "集まり", badge: notificationManager.gatheringsActionCount)
-                tabButton(.chat, icon: "message.fill", label: "トーク", badge: notificationManager.unreadCount)
                 tabButton(.myPage, icon: "person.fill", label: "マイページ", showDot: notificationManager.hasMyPageTodo, highlightWhenDot: true)
             }
             .padding(.top, 8)
@@ -96,7 +65,7 @@ struct MainTabView: View {
     }
 
     /// highlightWhenDot: showDotが立っている間、アイコンをテーマカラーの丸バッジに乗せて目立たせる
-    /// (足あとの新着や、プロフィールのやることリストが残っている時のマイページタブなど)。
+    /// (プロフィールのやることリストが残っている時のマイページタブなど)。
     private func tabButton(_ tab: AppTab, icon: String, label: String, badge: Int = 0, showDot: Bool = false, highlightWhenDot: Bool = false) -> some View {
         let isHighlighted = showDot && highlightWhenDot
         return Button {

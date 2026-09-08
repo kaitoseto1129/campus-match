@@ -20,9 +20,7 @@ export function MyPageSettings({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const canUsePrivateMode = profile.membership_tier === "vip";
-
-  async function updateToggle(column: "show_like_count" | "private_mode" | "show_online_status", value: boolean) {
+  async function updateToggle(column: "show_online_status", value: boolean) {
     onProfileChange({ ...profile, [column]: value });
     await supabase.from("profiles").update({ [column]: value }).eq("id", profile.id);
   }
@@ -62,18 +60,6 @@ export function MyPageSettings({
       <p className="mb-2 px-1 text-sm font-bold text-gray-500">{t("myPage.settings")}</p>
 
       <div className="card mb-3 flex flex-col divide-y divide-[#f1eff9]">
-        <ToggleRow
-          label={t("privacySettings.showLikeCount")}
-          checked={profile.show_like_count}
-          onChange={(v) => updateToggle("show_like_count", v)}
-        />
-        <ToggleRow
-          label={t("privacySettings.privateMode")}
-          checked={profile.private_mode}
-          disabled={!canUsePrivateMode}
-          lockedLabel={!canUsePrivateMode ? t("privacySettings.privateModeLocked") : undefined}
-          onChange={(v) => updateToggle("private_mode", v)}
-        />
         <ToggleRow
           label={t("privacySettings.showOnlineStatus")}
           checked={profile.show_online_status}

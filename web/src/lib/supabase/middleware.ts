@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// ログイン必須ページ(/discover, /profile 等)は /login へリダイレクトする。
+// ログイン必須ページ(/gatherings, /profile 等)は /login へリダイレクトする。
 // 未ログインでもアクセスしてよいページはここに列挙する。
 // "/" はpage.tsx側で未ログイン時に/loginへリダイレクトするだけなので、
 // ミドルウェアでも先に/loginへ流してしまって問題ない。

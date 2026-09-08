@@ -12,7 +12,7 @@ enum GatheringTutorialStep: Equatable {
 }
 
 /// 背景を暗転させつつ、対象の四角形だけくり抜いて実際のUIをそのまま操作できるようにするScrim。
-/// (DiscoverTutorialOverlay/MyPageTutorialOverlayにも同じ形のものがあるが、
+/// (MyPageTutorialOverlayにも同じ形のものがあるが、
 /// private宣言のため共有できず、それぞれのファイルで個別に持っている)
 private struct SpotlightScrimShape: Shape {
     let holeRect: CGRect
@@ -29,7 +29,7 @@ private struct SpotlightScrimShape: Shape {
 
 /// 「集まり」タブを初めて開いたユーザー向けの簡易チュートリアル。
 /// タブ切り替え(みんなの募集/自分が主催)→ 募集ボタン、の順に実際のUIをそのままスポットライトで案内する。
-/// (探す画面のDiscoverTutorialOverlayと同じ、実UIを操作させる方式に合わせている)
+/// (マイページのチュートリアルと同じ、実UIを操作させる方式に合わせている)
 struct GatheringTutorialOverlay: View {
     @Binding var step: GatheringTutorialStep?
     let anchors: [String: Anchor<CGRect>]

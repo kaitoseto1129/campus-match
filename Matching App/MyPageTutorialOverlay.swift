@@ -5,13 +5,11 @@
 
 import SwiftUI
 
-/// マイページを初めて開いたユーザー向けの簡易ガイド。探す画面のチュートリアルから
-/// 「マイページを見てみる」で来た場合はもちろん、マイページに直接たどり着いた場合も
-/// 一度だけ表示する。画面中央にカードを出すだけでなく、実際のセクションをスポットライトで
-/// 指し示し、実際にタップ・操作してもらいながら趣味カード→プロフィール充実度→アピール→
-/// 分析→足あと→締め、の順に紹介する。
+/// マイページを初めて開いたユーザー向けの簡易ガイド。画面中央にカードを出すだけでなく、
+/// 実際のセクションをスポットライトで指し示し、実際にタップ・操作してもらいながら
+/// 趣味カード→プロフィール充実度→締め、の順に紹介する。
 enum MyPageTutorialStep: CaseIterable {
-    case hobbyCards, completeness, appeal, analytics, footprints, closing
+    case hobbyCards, completeness, closing
 }
 
 private struct StepContent {
@@ -30,15 +28,9 @@ struct MyPageTutorialOverlay: View {
     private var content: StepContent {
         switch step {
         case .hobbyCards:
-            return StepContent(anchorId: "myPageHobbyCards", message: "「趣味カードを追加する」をタップして、趣味カードを登録してみましょう。共通の趣味があるお相手に見つけてもらいやすくなります")
+            return StepContent(anchorId: "myPageHobbyCards", message: "「趣味カードを追加する」をタップして、趣味カードを登録してみましょう。集まりで話のきっかけになります")
         case .completeness:
             return StepContent(anchorId: "myPageCompleteness", message: "足りない項目は「やることリスト」でひと目で分かります。「編集する」から埋めてみましょう")
-        case .appeal:
-            return StepContent(anchorId: "myPageAppeal", message: "「アピールを使う」をタップすると、いいねを消費して1時間だけ「探す」画面のトップに表示されます")
-        case .analytics:
-            return StepContent(anchorId: "myPageAnalytics", message: "「分析」をタップすると、プロフィールの閲覧数やいいね獲得率を確認できます")
-        case .footprints:
-            return StepContent(anchorId: "myPageFootprints", message: "「足あと」をタップすると、あなたのプロフィールを見に来たお相手が分かります")
         case .closing:
             return StepContent(anchorId: nil, message: "")
         }
@@ -63,7 +55,7 @@ struct MyPageTutorialOverlay: View {
             // 以前は背景タップでも次へ進めるようonTapGestureを付けていたが、
             // 画面全体を覆うShapeのタップ判定が右上の「スキップ」ボタンのタップと競合し、
             // ボタンが反応しないことがあるバグの原因になっていたため削除した
-            // (暗くなっている部分自体は、探す画面のチュートリアルと同じく、そのままタップを
+            // (暗くなっている部分自体は、そのままタップを
             // 吸収して奥の実UIへ誤って伝わらないようにする役割だけを持たせる)。
             SpotlightScrimShape(holeRect: rect)
                 .fill(Color.black.opacity(0.68), style: FillStyle(eoFill: true))
@@ -149,15 +141,15 @@ struct MyPageTutorialOverlay: View {
         ZStack {
             Color.black.opacity(0.78).ignoresSafeArea()
             VStack(spacing: 16) {
-                Image(systemName: "heart.fill")
+                Image(systemName: "person.3.fill")
                     .font(.system(size: 46))
-                    .foregroundStyle(Color.brandPink)
+                    .foregroundStyle(Color.brandPurple)
                 Text("マイページの紹介はこれで終わりです")
                     .font(.title3.bold())
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
-                Text("たくさんの出会いがあることを祈っています!")
+                Text("気になる集まりに参加して、学生生活を広げてみてください!")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.85))
                     .multilineTextAlignment(.center)
@@ -179,7 +171,7 @@ struct MyPageTutorialOverlay: View {
 }
 
 /// 背景を暗転させつつ、対象の四角形だけくり抜いて実際のUIをそのまま操作できるようにするScrim。
-/// (DiscoverTutorialOverlay.swiftの同名シェイプと同じ考え方だが、マイページのスクロール位置に
+/// (マイページのスクロール位置に
 /// 応じてアンカーの矩形が変わるためこちらでも独立して持っている)
 private struct SpotlightScrimShape: Shape {
     let holeRect: CGRect

@@ -80,7 +80,7 @@ enum UserModeration {
     }
 
     /// 相手を通報する。
-    /// 通報した相手がその後も「探す」に出てくると、嫌な相手を見続けることになってしまうため、
+    /// 通報した相手がその後も集まりの一覧に出てくると、嫌な相手を見続けることになってしまうため、
     /// 通報と同時に非表示にして自分の画面から消す。
     @discardableResult
     static func report(userId: UUID, reason: String) async -> Bool {

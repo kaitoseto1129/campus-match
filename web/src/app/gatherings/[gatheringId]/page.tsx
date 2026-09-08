@@ -4,7 +4,7 @@ import { startTransition, use, useCallback, useEffect, useMemo, useRef, useState
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { loadMainPhotoUrls } from "@/lib/discover";
+import { loadMainPhotoUrls } from "@/lib/photos";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import { isGatheringPastDeadline, type Gathering, type GatheringApplication, type GatheringMessage, type Profile } from "@/lib/types";
 

@@ -16,7 +16,7 @@ private let guideItems: [GuideItem] = [
     GuideItem(icon: "lock.fill", title: "個人情報を守る", body: "電話番号や住所などの個人情報は、信頼できる相手だと確認できるまで教えないようにしましょう。"),
     GuideItem(icon: "person.crop.circle.badge.exclamationmark", title: "不審なユーザーを報告", body: "不快な言動をするユーザーを見つけたら、ブロック・報告機能をご利用ください。"),
     GuideItem(icon: "cup.and.saucer.fill", title: "初めて会うときは", body: "初対面は人目のある場所で、日中に会うことをおすすめします。"),
-    GuideItem(icon: "creditcard.trianglebadge.exclamationmark", title: "金銭のやり取りに注意", body: "マッチした相手からの金銭要求には応じず、運営までご連絡ください。"),
+    GuideItem(icon: "creditcard.trianglebadge.exclamationmark", title: "金銭のやり取りに注意", body: "集まりで知り合った相手からの金銭要求には応じず、運営までご連絡ください。"),
 ]
 
 struct SafetyGuideView: View {

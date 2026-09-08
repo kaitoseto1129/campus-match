@@ -13,9 +13,6 @@ export interface MenuItem {
 }
 
 const MAIN_ITEMS: MenuItem[] = [
-  { href: "/profile/analytics", emoji: "📊", color: "#6366f1", labelKey: "myPage.analytics" },
-  { href: "/profile/footprints", emoji: "👣", color: "var(--brand-orange)", labelKey: "myPage.footprints" },
-  { href: "/profile/sent-likes", emoji: "👍", color: "var(--brand-purple)", labelKey: "myPage.sentLikes" },
   { href: "/profile/identity-verification", emoji: "🪪", color: "var(--brand-orange)", labelKey: "myPage.identityVerification" },
   { href: "/profile/safety", emoji: "🛡️", color: "var(--brand-teal)", labelKey: "myPage.safetyGuide" },
   { href: "/profile/hidden", emoji: "🙈", color: "#8e8e93", labelKey: "myPage.hiddenList" },
@@ -27,10 +24,7 @@ export function MyPageMenu({
 }: {
   tutorialRef?: (id: string) => (el: HTMLElement | null) => void;
 }) {
-  const anchorIdFor: Record<string, string> = {
-    "/profile/analytics": "myPageAnalytics",
-    "/profile/footprints": "myPageFootprints",
-  };
+  const anchorIdFor: Record<string, string> = {};
   return (
     <div className="card flex flex-col divide-y divide-[#f1eff9]">
       {MAIN_ITEMS.map((item) => (

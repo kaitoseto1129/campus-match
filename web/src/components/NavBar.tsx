@@ -7,22 +7,18 @@ import { useTouchLastActive } from "@/lib/useTouchLastActive";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
 const TABS = [
-  { href: "/discover", labelKey: "nav.discover", icon: SearchIcon },
   { href: "/gatherings", labelKey: "nav.gatherings", icon: PeopleIcon },
-  { href: "/chat", labelKey: "nav.chat", icon: ChatIcon },
   { href: "/profile", labelKey: "nav.profile", icon: PersonIcon },
 ] as const;
 
 export function NavBar() {
   const pathname = usePathname();
-  const { chatUnread, gatheringPending, hasProfileTodo } = useNavBadges();
+  const { gatheringPending, hasProfileTodo } = useNavBadges();
   const { t } = useTranslation();
   useTouchLastActive();
 
   const badgeFor: Record<(typeof TABS)[number]["href"], number> = {
-    "/discover": 0,
     "/gatherings": gatheringPending,
-    "/chat": chatUnread,
     "/profile": 0,
   };
 
@@ -85,14 +81,6 @@ function iconProps(bold?: boolean) {
   };
 }
 
-function SearchIcon({ bold }: IconProps) {
-  return (
-    <svg {...iconProps(bold)}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.3-4.3" />
-    </svg>
-  );
-}
 
 function PeopleIcon({ bold }: IconProps) {
   return (
@@ -105,13 +93,6 @@ function PeopleIcon({ bold }: IconProps) {
   );
 }
 
-function ChatIcon({ bold }: IconProps) {
-  return (
-    <svg {...iconProps(bold)}>
-      <path d="M21 12a8 8 0 0 1-8 8H6l-3 3v-4.5A8 8 0 1 1 21 12Z" />
-    </svg>
-  );
-}
 
 function PersonIcon({ bold }: IconProps) {
   return (

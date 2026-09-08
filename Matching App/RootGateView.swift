@@ -6,11 +6,10 @@
 import SwiftUI
 import Supabase
 
-/// ログイン後、プロフィールの必須項目(性別・生年月日・自己紹介・写真)が
+/// ログイン後、プロフィールの必須項目(生年月日・自己紹介・写真)が
 /// 揃っているかを確認し、揃っていなければ先にプロフィール編集を完了してもらう。
 struct RootGateView: View {
     @StateObject private var profileManager = ProfileManager()
-    @StateObject private var store = StoreManager()
     @State private var hasLoaded = false
     /// プロフィール完成後、初回だけプッシュ通知の許可案内を挟むためのフラグ。
     /// 端末単位ではなくユーザーIDごとに持たせる(キーに埋め込む)。以前は端末単位の
@@ -60,9 +59,6 @@ struct RootGateView: View {
             showingOnboarding = !isComplete
             hasLoaded = true
 
-            // サブスクの解約・失効は通常Appleからの通知(apple-notifications)で反映されるが、
-            // 通知の遅延・失敗に備えて、起動時にも端末が持つ購入状態と突き合わせておく。
-            await store.syncMembershipEntitlement()
 
             // 既に通知許可が下りている端末(再インストール後の再ログインなど)では、
             // 案内画面を経由しないためデバイストークンが再取得されない。起動のたびに確認しておく。

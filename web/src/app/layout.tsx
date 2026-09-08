@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "キャンマッチ",
-  description: "大学メールアドレスで登録する、学生限定のマッチングアプリ",
+  description: "大学メールアドレスで登録する、学生限定の集まりアプリ",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -24,7 +24,6 @@ struct ProfileEditView: View {
     @State private var originalName: String = ""
     @State private var originalDescription: String = ""
     @State private var showingDiscardConfirm = false
-    @State var gender: Gender? = nil
     @State var birthday: Date = Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date()
     /// 誕生日は日付型の性質上「未入力」を表現できないため、実際に選んだかどうかを別に持つ。
     /// これがないと初期値(20歳)が入力済みに見えてしまう。
@@ -60,7 +59,6 @@ struct ProfileEditView: View {
     @State var showingLanguagePicker: Bool = false
     @State var showingNationalityPicker: Bool = false
     @State var showingAreaPicker: Bool = false
-    @State var showingGenderPicker: Bool = false
     @State var showingHeightPicker: Bool = false
     @State var showingUniversityPicker: Bool = false
     @State var showingChangePhotoPicker: Bool = false
@@ -322,7 +320,6 @@ struct ProfileEditView: View {
                     .foregroundStyle(.secondary)
             }
             requiredRow(title: "誕生日", value: hasChosenBirthday ? birthdayLabel : nil) { showingBirthdayPicker = true }
-            requiredRow(title: "性別", value: gender?.label) { showingGenderPicker = true }
             requiredRow(title: "居住地", value: area.isEmpty ? nil : areaLabel) { showingAreaPicker = true }
             requiredRow(title: "大学", value: universityName.isEmpty ? nil : universityName) {
                 showingUniversityPicker = true
@@ -399,7 +396,6 @@ struct ProfileEditView: View {
             ("メイン写真", photo(forSlot: 0) != nil),
             ("ニックネーム", !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty),
             ("誕生日", hasChosenBirthday),
-            ("性別", gender != nil),
             ("居住地", !area.isEmpty),
             ("大学", universityId != nil),
             ("自己紹介", description.count >= Self.minDescriptionLength)
@@ -514,7 +510,6 @@ struct ProfileEditView: View {
                 self.description = profile.description ?? ""
                 self.originalName = profile.name
                 self.originalDescription = profile.description ?? ""
-                self.gender = profile.gender
                 self.hasChosenBirthday = profile.birthday != nil
                 self.birthday = profile.birthday ?? (Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date())
                 self.area = profile.area ?? ""
@@ -621,11 +616,6 @@ struct ProfileEditView: View {
         .sheet(isPresented: $showingAreaPicker) {
             ResidencePickerView(area: $area, city: $city)
         }
-        .confirmationDialog("性別", isPresented: $showingGenderPicker, titleVisibility: .visible) {
-            Button(LocalizedStringKey(Gender.male.label)) { gender = .male }
-            Button(LocalizedStringKey(Gender.female.label)) { gender = .female }
-            Button("キャンセル", role: .cancel) {}
-        }
         .sheet(isPresented: $showingHeightPicker) {
             HeightPickerView(height: $height)
         }
@@ -720,7 +710,6 @@ struct ProfileEditView: View {
             universityId: universityId ?? base?.universityId ?? UUID(),
             name: name,
             description: description,
-            gender: gender,
             birthday: birthday,
             profileImageUrlString: base?.profileImageUrlString,
             area: area,
@@ -730,24 +719,18 @@ struct ProfileEditView: View {
             nationality: nationalities.first,
             nationalities: Array(nationalities),
             tagline: tagline,
-            showLikeCount: base?.showLikeCount ?? true,
-            remainingLikes: base?.remainingLikes ?? 0,
-            privateMode: base?.privateMode ?? false,
             showOnlineStatus: base?.showOnlineStatus ?? true,
-            shareBonusClaimed: base?.shareBonusClaimed ?? false,
             isAdmin: base?.isAdmin ?? false,
             drinking: drinking,
             smoking: smoking,
             bodyType: bodyType,
             languages: Array(languages),
-            membershipTier: base?.membershipTier,
             hobbyCards: base?.hobbyCards ?? [],
-            boostExpiresAtString: base?.boostExpiresAtString,
             createdAtString: base?.createdAtString
         )
     }
 
-    /// マッチングアプリとしてApp Storeの審査要件(17+の年齢制限カテゴリ)を満たすため、
+    /// 大学生向けサービスとして、また青少年保護の観点から、
     /// 18歳未満のユーザーはプロフィールを完成させられないようにする。
     static let minimumAge = 18
 
@@ -783,11 +766,6 @@ struct ProfileEditView: View {
             showingValidationAlert = true
             return
         }
-        guard let gender else {
-            validationMessage = "性別を選択してください"
-            showingValidationAlert = true
-            return
-        }
         guard !area.isEmpty else {
             validationMessage = "居住地を選択してください"
             showingValidationAlert = true
@@ -801,7 +779,7 @@ struct ProfileEditView: View {
         guard !isSaving else { return }
         isSaving = true
         Task {
-            let suceeded = await profileManager.save(name: name, description: description, gender: gender, birthday: birthday, area: area, city: city.isEmpty ? nil : city, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), universityId: universityId)
+            let suceeded = await profileManager.save(name: name, description: description, birthday: birthday, area: area, city: city.isEmpty ? nil : city, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), universityId: universityId)
             isSaving = false
             if suceeded {
                 dismiss()

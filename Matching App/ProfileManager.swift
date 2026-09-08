@@ -108,34 +108,6 @@ class ProfileManager: ObservableObject {
         guard let newestPhoto = photos.max(by: { $0.orderNumber < $1.orderNumber }) else { return }
         await makeMain(photo: newestPhoto)
     }
-    func updateShowLikeCount(_ show: Bool) async {
-        guard let uid = supabase().auth.currentUser?.id else { return }
-        do {
-            try await supabase()
-                .from("profiles")
-                .update(["show_like_count": show])
-                .eq("id", value: uid)
-                .execute()
-            await load()
-        } catch {
-            errorMessage = "設定の保存に失敗しました"
-            print("update show_like_count error: \(error)")
-        }
-    }
-    func updatePrivateMode(_ isPrivate: Bool) async {
-        guard let uid = supabase().auth.currentUser?.id else { return }
-        do {
-            try await supabase()
-                .from("profiles")
-                .update(["private_mode": isPrivate])
-                .eq("id", value: uid)
-                .execute()
-            await load()
-        } catch {
-            errorMessage = "設定の保存に失敗しました"
-            print("update private_mode error: \(error)")
-        }
-    }
     func updateShowOnlineStatus(_ show: Bool) async {
         guard let uid = supabase().auth.currentUser?.id else { return }
         do {
@@ -150,19 +122,6 @@ class ProfileManager: ObservableObject {
             print("update show_online_status error: \(error)")
         }
     }
-    /// 成功したらtrueを返す(いいねが足りない場合はfalse)。
-    @discardableResult
-    func claimShareBonus() async -> Bool {
-        do {
-            try await supabase().rpc("claim_share_bonus").execute()
-            await load()
-            return true
-        } catch {
-            print("claim share bonus error: \(error)")
-            return false
-        }
-    }
-
     /// 選択した趣味カードを保存する。
     @discardableResult
     func saveHobbyCards(_ cards: [String]) async -> Bool {
@@ -182,38 +141,6 @@ class ProfileManager: ObservableObject {
         }
     }
 
-    @discardableResult
-    func activateBoost() async -> Bool {
-        do {
-            try await supabase().rpc("activate_boost").execute()
-            await load()
-            return true
-        } catch {
-            errorMessage = "アピールの利用に失敗しました(残いいねが足りない可能性があります)"
-            print("activate boost error: \(error)")
-            return false
-        }
-    }
-
-    /// アピールを時間経過を待たずに終了する。消費したいいねは返却されない
-    /// (時間より前に自分の意志で切り上げるだけの操作なので)。
-    @discardableResult
-    func cancelBoost() async -> Bool {
-        guard let uid = supabase().auth.currentUser?.id else { return false }
-        do {
-            try await supabase()
-                .from("profiles")
-                .update(["boost_expires_at": ISO8601DateFormatter.matchingApp.string(from: Date())])
-                .eq("id", value: uid)
-                .execute()
-            await load()
-            return true
-        } catch {
-            errorMessage = "アピールの終了に失敗しました"
-            print("cancel boost error: \(error)")
-            return false
-        }
-    }
     func loadPhotos() async {
         do {
             guard let uid = supabase().auth.currentUser?.id else {return}
@@ -232,7 +159,7 @@ class ProfileManager: ObservableObject {
             print("university load error: \(error)")
         }
     }
-    func save(name: String, description: String, gender: Gender, birthday: Date, area: String, city: String?, height: Int?, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
+    func save(name: String, description: String, birthday: Date, area: String, city: String?, height: Int?, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
         guard let uid = supabase().auth.currentUser?.id else { return false}
         isLoading = true
         defer { isLoading = false }
@@ -241,7 +168,6 @@ class ProfileManager: ObservableObject {
         struct Payload: Encodable {
             let name: String
             let description: String
-            let gender: Gender
             let birthday: String   // ← String に変更
             let area: String
             let city: String?
@@ -257,7 +183,7 @@ class ProfileManager: ObservableObject {
             let languages: [String]
             let universityId: UUID
             enum CodingKeys: String, CodingKey {
-                case name, description, gender, birthday, area, city, height, major, nationality, nationalities, tagline, drinking, smoking, languages
+                case name, description, birthday, area, city, height, major, nationality, nationalities, tagline, drinking, smoking, languages
                 case bodyType = "body_type"
                 case universityId = "university_id"
             }
@@ -272,7 +198,6 @@ class ProfileManager: ObservableObject {
         let payload = Payload(
             name: name,
             description: description,
-            gender: gender,
             birthday: formatter.string(from: birthday),
             area: area,
             city: city,
@@ -342,7 +267,7 @@ class ProfileManager: ObservableObject {
     static var preview: ProfileManager {
         let manager = ProfileManager()
         let uid = UUID()
-        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", gender: .male, birthday: Date(), profileImageUrlString: nil, area: "sample", city: nil, height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showLikeCount: true, remainingLikes: 100, privateMode: false, showOnlineStatus: true, shareBonusClaimed: false, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], membershipTier: .free, hobbyCards: ["movie", "cafe", "music"], boostExpiresAtString: nil, createdAtString: nil)
+        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", birthday: Date(), profileImageUrlString: nil, area: "sample", city: nil, height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showOnlineStatus: true, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], hobbyCards: ["movie", "cafe", "music"], createdAtString: nil)
         manager.university = University(id: UUID(), name: "サンプル大学", domain: "example.ac.jp", country: "日本", prefecture: "東京都")
 
             manager.photos = [

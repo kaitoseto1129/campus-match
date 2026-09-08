@@ -29,7 +29,7 @@ struct NotificationPermissionView: View {
                 }
                 Text("通知を有効にしよう")
                     .font(.title2.bold())
-                Text("いいねやマッチ、メッセージが届いた時に\nすぐに気付けるようになります")
+                Text("集まりへの応募や承認、グループトークの\nメッセージにすぐ気付けるようになります")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

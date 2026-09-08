@@ -7,7 +7,6 @@ import { DetailHeader } from "@/components/DetailHeader";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import {
   drinkingOptions,
-  genderOptions,
   languageOptions,
   majorOptions,
   nationalities as nationalityOptions,
@@ -15,7 +14,7 @@ import {
   smokingOptions,
   UNSELECTED_OPTION,
 } from "@/lib/constants";
-import type { Gender, Profile, ProfilePhoto, University } from "@/lib/types";
+import type { Profile, ProfilePhoto, University } from "@/lib/types";
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -108,7 +107,6 @@ export default function ProfileEditPage() {
       .update({
         name: profile.name,
         description: profile.description,
-        gender: profile.gender,
         birthday: profile.birthday,
         area: profile.area,
         city: profile.city,
@@ -315,23 +313,6 @@ export default function ProfileEditPage() {
           rows={4}
           className="input"
         />
-      </Field>
-
-      <Field label={t("profile.gender")}>
-        <select
-          value={profile.gender ?? ""}
-          onChange={(e) => update("gender", e.target.value as Gender)}
-          className="input"
-        >
-          <option value="" disabled>
-            {t("profile.genderPlaceholder")}
-          </option>
-          {genderOptions.map((g) => (
-            <option key={g.value} value={g.value}>
-              {g.label}
-            </option>
-          ))}
-        </select>
       </Field>
 
       <Field label={t("profile.birthday")}>

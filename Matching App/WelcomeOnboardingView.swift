@@ -30,7 +30,7 @@ struct WelcomeOnboardingView: View {
                     welcomePage(
                         showsAppIcon: true,
                         title: "キャンマッチへようこそ",
-                        message: "キャンマッチは大学生専用の\nマッチングアプリです"
+                        message: "キャンマッチは大学生専用の\n集まりアプリです"
                     )
                     .tag(0)
 
@@ -38,7 +38,7 @@ struct WelcomeOnboardingView: View {
                         showsAppIcon: false,
                         icon: "sparkles",
                         title: "使い方はかんたん",
-                        message: "「探す」で気になる人にいいね、\nマッチしたら「トーク」でお話ししましょう"
+                        message: "気になる集まりに応募して、\n参加が決まったらグループトークで待ち合わせ"
                     )
                     .tag(1)
                 }

@@ -11,15 +11,8 @@ struct ProfileDisplayView<ActionContent: View>: View {
     let university: University?
     let photos: [ProfilePhoto]
     var showsPhotoEditHint: Bool = false
-    var likeCount: Int? = nil
     var isOnline: Bool? = nil
-    var otherProfiles: [Profile] = []
-    var otherProfilePhotoURLs: [UUID: URL] = [:]
     var onTapMainPhoto: (() -> Void)? = nil
-    /// 閲覧トラッキング用: セクションが画面に現れた時に呼ばれる(自分のプロフィール表示時はnilのまま)。
-    var onSectionAppear: ((ProfileSection) -> Void)? = nil
-    /// 閲覧トラッキング用: 写真が画面に現れた時に呼ばれる。
-    var onPhotoAppear: ((UUID) -> Void)? = nil
     @ViewBuilder var actionContent: () -> ActionContent
     @State private var zoomedPhotoURL: URL?
 
@@ -38,10 +31,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
                     if let url = mainPhoto?.url {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) { zoomedPhotoURL = url }
                     }
-                }
-                .onAppear {
-                    onSectionAppear?(.header)
-                    if let id = mainPhoto?.id { onPhotoAppear?(id) }
                 }
             if showsPhotoEditHint {
                 Button {
@@ -71,7 +60,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
                     .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
                     .padding(.horizontal)
                     .padding(.top, 12)
-                    .onAppear { onSectionAppear?(.tagline) }
             }
         }
     }
@@ -90,13 +78,11 @@ struct ProfileDisplayView<ActionContent: View>: View {
                                         withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) { zoomedPhotoURL = url }
                                     }
                                 }
-                                .onAppear { onPhotoAppear?(photo.id) }
                         }
                     }
                     .padding(.horizontal)
                 }
                 .padding(.top, 16)
-                .onAppear { onSectionAppear?(.subPhotos) }
             }
         }
     }
@@ -113,17 +99,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
-                if let likeCount {
-                    HStack(spacing: 4) {
-                        Image(systemName: "hand.thumbsup.fill")
-                        Text(likeCount <= 5 ? "〜5" : "\(likeCount)")
-                    }
-                    .font(.caption.bold())
-                    .foregroundStyle(Color.brandPurple)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color.brandPurple.opacity(0.12), in: Capsule())
-                }
             }
             if let isOnline {
                 HStack(spacing: 4) {
@@ -139,7 +114,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
         }
         .padding(.horizontal)
         .padding(.top, 16)
-        .onAppear { onSectionAppear?(.nameAgeArea) }
     }
 
     var aboutSection: some View {
@@ -150,7 +124,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .onAppear { onSectionAppear?(.about) }
     }
 
     var basicInfoSection: some View {
@@ -170,7 +143,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
             Divider()
             infoRow(label: "国籍", value: (profile?.nationalities.isEmpty ?? true) ? "-" : (profile?.nationalities.joined(separator: "・") ?? "-"))
             Divider()
-            infoRow(label: "性別", value: profile?.gender?.label ?? "-")
             Divider()
             infoRow(label: "大学", value: university?.name ?? "-")
             Divider()
@@ -184,7 +156,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
 
         }
         .padding(.horizontal)
-        .onAppear { onSectionAppear?(.basicInfo) }
     }
     /// 基本情報の下に並ぶ趣味カード。横スクロールで一覧できる。
     var hobbyCardsSection: some View {
@@ -205,39 +176,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 24)
-                .onAppear { onSectionAppear?(.hobbyCards) }
-            }
-        }
-    }
-
-    var otherProfilesSection: some View {
-        Group {
-            if !otherProfiles.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("他のユーザーも見てみる")
-                        .font(.title3.bold())
-                    let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
-                    LazyVGrid(columns: columns, spacing: 10) {
-                        ForEach(Array(otherProfiles.enumerated()), id: \.element.id) { index, other in
-                            NavigationLink {
-                                SwipeableProfileView(profiles: otherProfiles, startIndex: index) { p in
-                                    QuickLikeButton(profile: p, photoURL: otherProfilePhotoURLs[p.id])
-                                }
-                            } label: {
-                                VStack(spacing: 4) {
-                                    SquarePhotoView(url: otherProfilePhotoURLs[other.id], cornerRadius: 10)
-                                    Text(other.ageLabel)
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 16)
-                .onAppear { onSectionAppear?(.otherProfiles) }
             }
         }
     }
@@ -267,7 +205,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
                         aboutSection
                         basicInfoSection
                         hobbyCardsSection
-                        otherProfilesSection
                         Color.clear.frame(height: 20)
                     }
                 }

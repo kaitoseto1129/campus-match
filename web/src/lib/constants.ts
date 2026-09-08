@@ -64,15 +64,7 @@ export const languageOptions = [
   "ヒンディー語", "アラビア語", "その他",
 ];
 
-export const genderOptions = [
-  { value: "male", label: "男性" },
-  { value: "female", label: "女性" },
-  { value: "other", label: "その他" },
-] as const;
 
-export function genderLabelToRawValue(label: string): string | undefined {
-  return genderOptions.find((g) => g.label === label)?.value;
-}
 
 export const gatheringCategoryOptions = [
   "ご飯",
@@ -83,8 +75,3 @@ export const gatheringCategoryOptions = [
   "その他",
 ];
 
-export function oppositeGenderRawValue(gender: string | null): string {
-  if (gender === "male") return "female";
-  if (gender === "female") return "male";
-  return "";
-}

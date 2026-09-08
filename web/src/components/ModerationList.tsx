@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { DetailHeader } from "@/components/DetailHeader";
-import { loadMainPhotoUrls } from "@/lib/discover";
+import { loadMainPhotoUrls } from "@/lib/photos";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 import type { Profile } from "@/lib/types";
 
