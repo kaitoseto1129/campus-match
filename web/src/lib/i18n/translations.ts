@@ -256,8 +256,7 @@ export const translations = {
       topicsTitle: "こんなときにご連絡ください",
       topic1: "迷惑行為・不適切な利用者",
       topic2: "アプリの不具合",
-      topic3: "購入・有料会員についての相談",
-      topic4: "個人情報の開示・訂正・削除請求",
+      topic3: "個人情報の開示・訂正・削除請求",
     },
     privacySettings: {
       showOnlineStatus: "オンライン状態を表示する",
@@ -520,8 +519,7 @@ export const translations = {
       topicsTitle: "Contact us about",
       topic1: "Harassment or inappropriate users",
       topic2: "App bugs",
-      topic3: "Purchases or paid membership",
-      topic4: "Requests to access, correct, or delete personal data",
+      topic3: "Requests to access, correct, or delete personal data",
     },
     privacySettings: {
       showOnlineStatus: "Show my online status",

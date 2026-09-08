@@ -117,7 +117,6 @@ struct ContactView: View {
                 .font(.subheadline.bold())
             topicRow(icon: "exclamationmark.triangle.fill", color: Color.brandOrange, text: "迷惑行為・不適切な利用者を見かけたとき")
             topicRow(icon: "ladybug.fill", color: .red, text: "アプリの不具合を見つけたとき")
-            topicRow(icon: "creditcard.fill", color: Color.brandTeal, text: "購入・有料会員についてのご相談")
             topicRow(icon: "lock.fill", color: Color(.systemGray), text: "個人情報の開示・訂正・削除のご請求")
         }
         .frame(maxWidth: .infinity, alignment: .leading)

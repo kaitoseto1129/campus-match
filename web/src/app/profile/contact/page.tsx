@@ -5,7 +5,7 @@ import { DetailHeader } from "@/components/DetailHeader";
 import { useTranslation } from "@/lib/i18n/LanguageProvider";
 
 const CONTACT_EMAIL = "kaitoseto1129@gmail.com";
-const TOPICS = [1, 2, 3, 4] as const;
+const TOPICS = [1, 2, 3] as const;
 
 export default function ContactPage() {
   const { t } = useTranslation();
