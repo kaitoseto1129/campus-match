@@ -104,6 +104,17 @@ $function$;
 
 grant execute on function public.delete_own_account() to authenticated;
 
+-- ---------------------------------------------------------------------------
+-- 4. 恋愛マッチング前提のプロフィール項目の中身を消す
+--    身長(height)と体型(body_type)はどちらのクライアントからも読み書きしなくなった。
+--    カラムを残したままでも動作に影響はないが、「異性交際に関する情報を保持していない」
+--    状態を明確にするため、中身は空にしておく。
+--    ※ body_type はWeb版が一時期「性格」として使っていたため、体型の語彙かどうかに
+--      関わらず一括で空にする(項目自体を廃止したため区別する意味がない)。
+-- ---------------------------------------------------------------------------
+update public.profiles set height = null where height is not null;
+update public.profiles set body_type = null where body_type is not null;
+
 commit;
 
 -- ---------------------------------------------------------------------------
@@ -127,6 +138,8 @@ commit;
 --   drop column if exists private_mode,
 --   drop column if exists share_bonus_claimed,
 --   drop column if exists membership_tier,
---   drop column if exists boost_expires_at;
+--   drop column if exists boost_expires_at,
+--   drop column if exists height,
+--   drop column if exists body_type;
 --
 -- alter table public.profiles drop column if exists gender;

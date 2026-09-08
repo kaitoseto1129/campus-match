@@ -107,7 +107,7 @@ struct LegalDocument {
             Section(heading: "1. 取得する情報", body: """
 【ご登録いただく情報】
 ・アカウント情報: 大学が発行するメールアドレス、パスワード(ハッシュ化して保管)
-・プロフィール情報: 氏名、生年月日、居住地、大学、専攻、身長、国籍、話せる言語、体型、飲酒・喫煙、自己紹介文、一言コメント、趣味カード
+・プロフィール情報: 氏名、生年月日、居住地、大学、専攻、国籍、話せる言語、飲酒・喫煙、自己紹介文、一言コメント、趣味カード
 ・写真: プロフィール写真
 ・集まりの情報: 主催した集まりの内容、応募内容、グループトークのメッセージ本文
 
@@ -140,7 +140,7 @@ struct LegalDocument {
             Section(heading: "4. 他の利用者に公開される情報", body: """
 以下の情報は、本アプリの性質上、他の利用者に公開されます。公開されたくない情報は登録しないでください。
 
-・氏名、年齢、居住地、大学、専攻、身長、国籍、話せる言語、体型、飲酒・喫煙
+・氏名、年齢、居住地、大学、専攻、国籍、話せる言語、飲酒・喫煙
 ・自己紹介文、一言コメント、趣味カード
 ・プロフィール写真
 ・オンライン状態(設定でオフにできます)
@@ -254,7 +254,7 @@ Contact: \(contactEmail)
             Section(heading: "1. Information We Collect", body: """
 [Information you provide]
 ・Account information: the email address issued by your university, and your password (stored hashed)
-・Profile information: full name, date of birth, place of residence, university, major, height, nationality, languages spoken, body type, drinking and smoking habits, self-introduction, short comment, hobby cards
+・Profile information: full name, date of birth, place of residence, university, major, nationality, languages spoken, drinking and smoking habits, self-introduction, short comment, hobby cards
 ・Photos: profile photos
 ・Meetup information: meetups you host, applications you send, and group chat messages
 
@@ -287,7 +287,7 @@ The servers of these services may be located outside Japan.
             Section(heading: "4. Information Shown to Other Users", body: """
 Given the nature of the App, the following information is visible to other users. Please do not register information you do not want to be seen.
 
-・Full name, age, place of residence, university, major, height, nationality, languages spoken, body type, drinking and smoking habits
+・Full name, age, place of residence, university, major, nationality, languages spoken, drinking and smoking habits
 ・Self-introduction, short comment, hobby cards
 ・Profile photos
 ・Online status (can be turned off in settings)

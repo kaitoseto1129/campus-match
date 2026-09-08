@@ -48,11 +48,6 @@ struct Profile: Codable, Identifiable {
         guard let city, !city.isEmpty else { return area ?? "-" }
         return "\(area) \(city)"
     }
-    let height: Int?
-    var heightLabel: String {
-        guard let height else { return "-" }
-        return String.appLocalized("%lldcm", height)
-    }
     let major: String?
     /// 旧・単一選択の国籍。表示のフォールバック用に残しているが、編集・絞り込みはnationalitiesを使う。
     let nationality: String?
@@ -63,7 +58,6 @@ struct Profile: Codable, Identifiable {
     let isAdmin: Bool
     let drinking: String?
     let smoking: String?
-    let bodyType: String?
     let languages: [String]
     /// 選択した趣味カードのID一覧。
     let hobbyCards: [String]
@@ -78,13 +72,12 @@ struct Profile: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, description, birthday, area, city, height, major, nationality, nationalities, tagline
+        case id, name, description, birthday, area, city, major, nationality, nationalities, tagline
         case profileImageUrlString = "profile_image_url"
         case universityId = "university_id"
         case showOnlineStatus = "show_online_status"
         case isAdmin = "is_admin"
         case drinking, smoking
-        case bodyType = "body_type"
         case languages
         case hobbyCards = "hobby_cards"
         case createdAtString = "created_at"
@@ -127,7 +120,6 @@ extension Profile {
         check("自己紹介200文字以上", (description ?? "").count >= 200)
         // 初回登録では聞かず、あとからゆっくり埋めてもらう項目。
         // ここに並ぶことで「やることリスト」から設定できる。
-        check("身長", height != nil)
         check("趣味カード", !hobbyCards.isEmpty)
         check("話せる言語", !languages.isEmpty)
         let percent = total == 0 ? 0 : Int((Double(done) / Double(total) * 100).rounded())
@@ -301,7 +293,6 @@ let unselectedOption = "-"
 
 let drinkingOptions: [String] = [unselectedOption, "飲む", "時々飲む", "飲まない"]
 let smokingOptions: [String] = [unselectedOption, "吸わない", "禁煙中", "たまに吸う", "吸う"]
-let bodyTypeOptions: [String] = [unselectedOption, "スリム", "やや細め", "普通", "グラマー", "筋肉質", "ややぽっちゃり", "太め"]
 /// 専攻。以前は自由入力だったため表記ゆれ(「コンピュータサイエンス」「コンピューターサイエンス」等)が
 /// 発生し、絞り込み機能で正しく一致しない・選択肢が荒れる問題があった。固定リストからの選択式にする。
 let majorOptions: [String] = [

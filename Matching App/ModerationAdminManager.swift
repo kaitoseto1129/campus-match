@@ -31,6 +31,18 @@ struct Report: Codable, Identifiable {
     }
 }
 
+/// 管理者が確認する集まりの募集1件。
+/// 利用規約 第5条3項で「募集内容とグループトークを継続的に確認する」と定めているため、
+/// 通報を待たずに新しい募集を一覧で見て回れるようにしている。
+struct AdminGatheringItem: Identifiable {
+    let gathering: Gathering
+    let hostProfile: Profile?
+    let hostPhotoURL: URL?
+    /// 投稿時のフィルタをすり抜けた、あるいはフィルタ導入前に投稿された疑わしい募集に印を付ける。
+    let flagged: NGWordFilter.Violation?
+    var id: UUID { gathering.id }
+}
+
 struct AdminReportItem: Identifiable {
     let report: Report
     let reporterProfile: Profile?
@@ -51,6 +63,7 @@ private struct ResolvePayload: Encodable {
 @MainActor
 final class ModerationAdminManager: ObservableObject {
     @Published var items: [AdminReportItem] = []
+    @Published var gatheringItems: [AdminGatheringItem] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -93,6 +106,52 @@ final class ModerationAdminManager: ObservableObject {
         } catch {
             errorMessage = "通報一覧を読み込めませんでした"
             print("admin reports load error: \(error)")
+        }
+        isLoading = false
+    }
+
+    /// 直近の集まりの募集を読み込む。疑わしいものを先頭に並べる。
+    func loadGatherings() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            let gatherings: [Gathering] = try await supabase()
+                .from("gatherings")
+                .select()
+                .order("created_at", ascending: false)
+                .limit(100)
+                .execute()
+                .value
+
+            let hostIds = Array(Set(gatherings.map(\.hostId)))
+            var profilesById: [UUID: Profile] = [:]
+            var photoURLs: [UUID: URL] = [:]
+            if !hostIds.isEmpty {
+                let profiles: [Profile] = try await supabase()
+                    .from("profiles")
+                    .select("*")
+                    .in("id", values: hostIds)
+                    .execute()
+                    .value
+                profilesById = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0) })
+                photoURLs = await loadMainPhotoURLs(userIds: hostIds)
+            }
+
+            var results = gatherings.map { gathering in
+                AdminGatheringItem(
+                    gathering: gathering,
+                    hostProfile: profilesById[gathering.hostId],
+                    hostPhotoURL: photoURLs[gathering.hostId],
+                    flagged: NGWordFilter.violation(inAny: [
+                        gathering.title, gathering.description ?? "", gathering.location
+                    ])
+                )
+            }
+            results.sort { ($0.flagged != nil) && ($1.flagged == nil) }
+            gatheringItems = results
+        } catch {
+            errorMessage = "集まりの一覧を読み込めませんでした"
+            print("admin gatherings load error: \(error)")
         }
         isLoading = false
     }

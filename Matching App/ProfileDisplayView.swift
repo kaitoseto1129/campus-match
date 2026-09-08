@@ -135,7 +135,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
             Divider()
             infoRow(label: "年齢", value: profile?.ageLabel ?? "-")
             Divider()
-            infoRow(label: "身長", value: profile?.heightLabel ?? "-")
             Divider()
             infoRow(label: "専攻", value: profile?.major ?? "-")
             Divider()
@@ -150,7 +149,6 @@ struct ProfileDisplayView<ActionContent: View>: View {
             Divider()
             infoRow(label: "タバコ", value: profile?.smoking ?? "-")
             Divider()
-            infoRow(label: "体型", value: profile?.bodyType ?? "-")
             Divider()
             infoRow(label: "話せる言語", value: (profile?.languages.isEmpty ?? true) ? "-" : (profile?.languages.joined(separator: "・") ?? "-"))
 

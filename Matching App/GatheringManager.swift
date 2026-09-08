@@ -144,6 +144,12 @@ final class GatheringManager: ObservableObject {
     @discardableResult
     func create(title: String, description: String, location: String, scheduledAt: Date, capacity: Int, category: String, durationHours: Int, deadlineAt: Date?, image: UIImage?) async -> Bool {
         guard let myId, let myUniversityId else { return false }
+        // 募集文は集まり一覧で誰でも読める。異性交際目的の募集や性別を指定した募集が
+        // ここに載ると本アプリの前提が崩れるため、投稿の時点で弾く(利用規約 第4条)。
+        if let violation = NGWordFilter.violation(inAny: [title, description, location]) {
+            errorMessage = violation.message
+            return false
+        }
         do {
             let inserted: Gathering = try await supabase()
                 .from("gatherings")
@@ -200,6 +206,10 @@ final class GatheringManager: ObservableObject {
         guard let myId else { return false }
         guard !gathering.isPastDeadline else {
             errorMessage = "応募の締切を過ぎています"
+            return false
+        }
+        if let violation = NGWordFilter.violation(in: comment) {
+            errorMessage = violation.message
             return false
         }
         do {

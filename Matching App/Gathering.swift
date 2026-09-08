@@ -8,8 +8,8 @@ import Foundation
 /// 集まりのカテゴリ。自由入力ではなく固定リストにして、絞り込みで使いやすくしている。
 let gatheringCategoryOptions: [String] = ["ご飯", "カフェ・勉強", "スポーツ・アウトドア", "遊び・観光", "イベント参加", "その他"]
 
-/// 恋愛マッチングとは別の、同じ大学の人同士で「ご飯行きませんか」のような
-/// 少人数の集まりを募集・応募できる機能。性別は問わず、同じ大学の人なら誰でも応募できる。
+/// 同じ大学の人同士で「ご飯行きませんか」のような少人数の集まりを募集・応募できる機能。
+/// 性別は問わず、同じ大学の人なら誰でも応募できる。
 struct Gathering: Codable, Identifiable, Equatable {
     let id: UUID
     let hostId: UUID
@@ -45,6 +45,7 @@ struct Gathering: Codable, Identifiable, Equatable {
         case deadlineNotified = "deadline_notified"
     }
 
+    var createdAt: Date { ISO8601DateFormatter.matchingApp.date(from: createdAtString) ?? Date() }
     var scheduledAt: Date { ISO8601DateFormatter.matchingApp.date(from: scheduledAtString) ?? Date() }
     var isOpen: Bool { status == "open" }
     var isCanceled: Bool { status == "canceled" }

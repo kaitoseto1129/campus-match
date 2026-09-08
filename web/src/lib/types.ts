@@ -28,7 +28,6 @@ export interface Profile {
   show_online_status: boolean;
   drinking: string | null;
   smoking: string | null;
-  body_type: string | null; // 「性格」。DBのカラム名は旧仕様のまま(body_type)。
   languages: string[];
   hobby_cards: string[];
   last_active_at: string;

@@ -10,7 +10,6 @@ import {
   languageOptions,
   majorOptions,
   nationalities as nationalityOptions,
-  personalityOptions,
   smokingOptions,
   UNSELECTED_OPTION,
 } from "@/lib/constants";
@@ -115,7 +114,6 @@ export default function ProfileEditPage() {
         tagline: profile.tagline,
         drinking: profile.drinking === UNSELECTED_OPTION ? null : profile.drinking,
         smoking: profile.smoking === UNSELECTED_OPTION ? null : profile.smoking,
-        body_type: profile.body_type === UNSELECTED_OPTION ? null : profile.body_type,
         languages: profile.languages,
       })
       .eq("id", userId);
@@ -340,13 +338,6 @@ export default function ProfileEditPage() {
         onChange={(v) => update("major", v)}
       />
 
-      <SelectField
-        label={t("profile.personality")}
-        value={profile.body_type ?? UNSELECTED_OPTION}
-        options={personalityOptions}
-        unsetLabel={t("profile.unset")}
-        onChange={(v) => update("body_type", v)}
-      />
 
       <SelectField
         label={t("profile.drinking")}

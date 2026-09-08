@@ -31,14 +31,12 @@ struct ProfileEditView: View {
     @State var area: String = ""
     @State var city: String = ""
     private var areaLabel: String { area.isEmpty ? unselectedOption : (city.isEmpty ? area : "\(area) \(city)") }
-    @State var height: Int? = nil
     @State var major: String = unselectedOption
     @State var showingMajorPicker: Bool = false
     @State var nationalities: Set<String> = []
     @State var tagline: String = ""
     @State var drinking: String = unselectedOption
     @State var smoking: String = unselectedOption
-    @State var bodyType: String = unselectedOption
     @State var languages: Set<String> = []
     @State var universityId: UUID? = nil
     @State var universityName: String = ""
@@ -59,7 +57,6 @@ struct ProfileEditView: View {
     @State var showingLanguagePicker: Bool = false
     @State var showingNationalityPicker: Bool = false
     @State var showingAreaPicker: Bool = false
-    @State var showingHeightPicker: Bool = false
     @State var showingUniversityPicker: Bool = false
     @State var showingChangePhotoPicker: Bool = false
     @State var draggingSlot: Int? = nil
@@ -83,7 +80,7 @@ struct ProfileEditView: View {
         if missingLabel.contains("写真") { return "photos" }
         if missingLabel.contains("一言コメント") { return "tagline" }
         // 初回登録では聞かず、あとから埋めてもらう項目。
-        if missingLabel.contains("専攻") || missingLabel.contains("身長") { return "details" }
+        if missingLabel.contains("専攻") { return "details" }
         if missingLabel.contains("話せる言語") { return "lifestyle" }
         return "basic"
     }
@@ -338,7 +335,6 @@ struct ProfileEditView: View {
             formRow(title: "専攻", value: major) {
                 showingMajorPicker = true
             }
-            formRow(title: "身長", value: height.map { "\($0)cm" } ?? "未設定") { showingHeightPicker = true }
             formRow(title: "国籍(複数選択可)", value: nationalities.isEmpty ? "未設定" : nationalities.sorted().joined(separator: "・")) {
                 showingNationalityPicker = true
             }
@@ -363,9 +359,6 @@ struct ProfileEditView: View {
             }
             Picker("タバコ", selection: $smoking) {
                 ForEach(smokingOptions, id: \.self) { Text(LocalizedStringKey($0)).tag($0) }
-            }
-            Picker("体型", selection: $bodyType) {
-                ForEach(bodyTypeOptions, id: \.self) { Text(LocalizedStringKey($0)).tag($0) }
             }
             formRow(title: "話せる言語", value: languages.isEmpty ? "-" : languages.sorted().joined(separator: "・")) {
                 showingLanguagePicker = true
@@ -514,13 +507,11 @@ struct ProfileEditView: View {
                 self.birthday = profile.birthday ?? (Calendar.current.date(byAdding: .year, value: -20, to: Date()) ?? Date())
                 self.area = profile.area ?? ""
                 self.city = profile.city ?? ""
-                self.height = profile.height
                 self.major = profile.major ?? unselectedOption
                 self.nationalities = Set(profile.nationalities)
                 self.tagline = profile.tagline ?? ""
                 self.drinking = profile.drinking ?? unselectedOption
                 self.smoking = profile.smoking ?? unselectedOption
-                self.bodyType = profile.bodyType ?? unselectedOption
                 self.languages = Set(profile.languages)
                 self.universityId = profile.universityId
                 self.universityName = profileManager.university?.name ?? ""
@@ -615,9 +606,6 @@ struct ProfileEditView: View {
         }
         .sheet(isPresented: $showingAreaPicker) {
             ResidencePickerView(area: $area, city: $city)
-        }
-        .sheet(isPresented: $showingHeightPicker) {
-            HeightPickerView(height: $height)
         }
         .sheet(isPresented: $showingUniversityPicker) {
             UniversityPickerView(universityId: $universityId, universityName: $universityName, area: area)
@@ -714,7 +702,6 @@ struct ProfileEditView: View {
             profileImageUrlString: base?.profileImageUrlString,
             area: area,
             city: city.isEmpty ? nil : city,
-            height: height,
             major: major,
             nationality: nationalities.first,
             nationalities: Array(nationalities),
@@ -723,7 +710,6 @@ struct ProfileEditView: View {
             isAdmin: base?.isAdmin ?? false,
             drinking: drinking,
             smoking: smoking,
-            bodyType: bodyType,
             languages: Array(languages),
             hobbyCards: base?.hobbyCards ?? [],
             createdAtString: base?.createdAtString
@@ -751,8 +737,8 @@ struct ProfileEditView: View {
             showingValidationAlert = true
             return
         }
-        if NGWordFilter.containsNGWord(description) || NGWordFilter.containsNGWord(tagline) {
-            validationMessage = "自己紹介または一言コメントに使用できない表現が含まれています"
+        if let violation = NGWordFilter.violation(inAny: [description, tagline]) {
+            validationMessage = violation.message
             showingValidationAlert = true
             return
         }
@@ -779,7 +765,7 @@ struct ProfileEditView: View {
         guard !isSaving else { return }
         isSaving = true
         Task {
-            let suceeded = await profileManager.save(name: name, description: description, birthday: birthday, area: area, city: city.isEmpty ? nil : city, height: height, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, bodyType: bodyType, languages: Array(languages), universityId: universityId)
+            let suceeded = await profileManager.save(name: name, description: description, birthday: birthday, area: area, city: city.isEmpty ? nil : city, major: major, nationalities: Array(nationalities), tagline: tagline, drinking: drinking, smoking: smoking, languages: Array(languages), universityId: universityId)
             isSaving = false
             if suceeded {
                 dismiss()
@@ -838,44 +824,6 @@ struct BirthdayPickerView: View {
     }
 }
 
-/// 身長をホイールで選ぶ画面。
-struct HeightPickerView: View {
-    @Binding var height: Int?
-    @Environment(\.dismiss) private var dismiss
-    @State private var draft: Int
-
-    init(height: Binding<Int?>) {
-        self._height = height
-        self._draft = State(initialValue: height.wrappedValue ?? 165)
-    }
-
-    var body: some View {
-        NavigationStack {
-            Picker("身長", selection: $draft) {
-                ForEach(140...200, id: \.self) { cm in
-                    Text("\(cm)cm").tag(cm)
-                }
-            }
-            .pickerStyle(.wheel)
-            .labelsHidden()
-            .padding()
-            .navigationTitle("身長")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("決定") {
-                        height = draft
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.height(340)])
-    }
-}
 
 /// 話せる言語の検索・複数選択画面。
 struct LanguageMultiSelectView: View {

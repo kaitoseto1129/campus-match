@@ -78,8 +78,8 @@ final class GatheringChatManager: ObservableObject {
         guard let myId = supabase().auth.currentUser?.id else { return false }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
-        guard !NGWordFilter.containsNGWord(trimmed) else {
-            errorMessage = "使用できない表現が含まれているため送信できません"
+        if let violation = NGWordFilter.violation(in: trimmed) {
+            errorMessage = violation.message
             return false
         }
         isSending = true

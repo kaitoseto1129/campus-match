@@ -17,14 +17,6 @@ export const smokingOptions = [
   "吸う",
 ];
 
-export const personalityOptions = [
-  UNSELECTED_OPTION,
-  "明るい・社交的",
-  "真面目・誠実",
-  "優しい・思いやりがある",
-  "面白い・ユーモアがある",
-  "落ち着いている・マイペース",
-];
 
 export const majorOptions = [
   UNSELECTED_OPTION,

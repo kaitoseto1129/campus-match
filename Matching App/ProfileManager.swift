@@ -159,7 +159,7 @@ class ProfileManager: ObservableObject {
             print("university load error: \(error)")
         }
     }
-    func save(name: String, description: String, birthday: Date, area: String, city: String?, height: Int?, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, bodyType: String, languages: [String], universityId: UUID) async -> Bool{
+    func save(name: String, description: String, birthday: Date, area: String, city: String?, major: String, nationalities: [String], tagline: String, drinking: String, smoking: String, languages: [String], universityId: UUID) async -> Bool{
         guard let uid = supabase().auth.currentUser?.id else { return false}
         isLoading = true
         defer { isLoading = false }
@@ -171,20 +171,16 @@ class ProfileManager: ObservableObject {
             let birthday: String   // ← String に変更
             let area: String
             let city: String?
-            /// 身長は必須ではなくなったため、未設定(nil)を許容する。
-            let height: Int?
             let major: String
             let nationality: String
             let nationalities: [String]
             let tagline: String
             let drinking: String
             let smoking: String
-            let bodyType: String
             let languages: [String]
             let universityId: UUID
             enum CodingKeys: String, CodingKey {
-                case name, description, birthday, area, city, height, major, nationality, nationalities, tagline, drinking, smoking, languages
-                case bodyType = "body_type"
+                case name, description, birthday, area, city, major, nationality, nationalities, tagline, drinking, smoking, languages
                 case universityId = "university_id"
             }
         }
@@ -201,7 +197,6 @@ class ProfileManager: ObservableObject {
             birthday: formatter.string(from: birthday),
             area: area,
             city: city,
-            height: height,
             major: major,
             // 旧・単一nationality列は表示フォールバック用に、複数選択の先頭値だけ入れておく。
             nationality: nationalities.first ?? "",
@@ -209,7 +204,6 @@ class ProfileManager: ObservableObject {
             tagline: tagline,
             drinking: drinking,
             smoking: smoking,
-            bodyType: bodyType,
             languages: languages,
             universityId: universityId
         )
@@ -267,7 +261,7 @@ class ProfileManager: ObservableObject {
     static var preview: ProfileManager {
         let manager = ProfileManager()
         let uid = UUID()
-        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", birthday: Date(), profileImageUrlString: nil, area: "sample", city: nil, height: 165, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showOnlineStatus: true, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", bodyType: "普通", languages: ["日本語", "英語"], hobbyCards: ["movie", "cafe", "music"], createdAtString: nil)
+        manager.profile = Profile(id: uid, universityId: UUID(), name: "sample", description: "sample", birthday: Date(), profileImageUrlString: nil, area: "sample", city: nil, major: "情報科学", nationality: "日本", nationalities: ["日本"], tagline: "よろしくお願いします!", showOnlineStatus: true, isAdmin: false, drinking: "時々飲む", smoking: "吸わない", languages: ["日本語", "英語"], hobbyCards: ["movie", "cafe", "music"], createdAtString: nil)
         manager.university = University(id: UUID(), name: "サンプル大学", domain: "example.ac.jp", country: "日本", prefecture: "東京都")
 
             manager.photos = [
