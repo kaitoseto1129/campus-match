@@ -1,0 +1,10 @@
+# 認証情報。SupabaseのDB接続文字列などをここに置くため、絶対にコミットしない。
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+build/

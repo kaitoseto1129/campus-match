@@ -1,0 +1,9 @@
+{
+  "name": "campus-match-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Supabaseに対してSQLファイルを適用するための小さなツール群。",
+  "dependencies": {
+    "postgres": "^3.4.5"
+  }
+}
