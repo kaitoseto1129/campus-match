@@ -28,6 +28,7 @@ struct CreateGatheringView: View {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && scheduledAt > Date()
+            && selectedImage != nil
     }
 
     var body: some View {
@@ -43,21 +44,31 @@ struct CreateGatheringView: View {
                         }
                     }
                 }
-                Section("写真(任意)") {
+                Section {
                     PhotosPicker(selection: $pickerItem, matching: .images) {
                         if let selectedImage {
                             Image(uiImage: selectedImage)
                                 .resizable()
                                 .scaledToFill()
-                                .frame(height: 160)
+                                .aspectRatio(16 / 9, contentMode: .fill)
                                 .frame(maxWidth: .infinity)
+                                .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         } else {
-                            HStack {
-                                Image(systemName: "photo")
-                                Text("写真を追加")
+                            // 一覧では16:9のサムネイルとして出るので、選ぶ段階から同じ形で見せる。
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.systemGray6))
+                                VStack(spacing: 6) {
+                                    Image(systemName: "photo.badge.plus")
+                                        .font(.title2)
+                                    Text("写真を追加")
+                                        .font(.subheadline.bold())
+                                }
+                                .foregroundStyle(Color.brandPurple)
                             }
-                            .foregroundStyle(Color.brandPurple)
+                            .aspectRatio(16 / 9, contentMode: .fit)
+                            .frame(maxWidth: .infinity)
                         }
                     }
                     if selectedImage != nil {
@@ -65,9 +76,13 @@ struct CreateGatheringView: View {
                             selectedImage = nil
                             pickerItem = nil
                         } label: {
-                            Text("写真を削除")
+                            Text("写真を選び直す")
                         }
                     }
+                } header: {
+                    Text("写真")
+                } footer: {
+                    Text("一覧では写真が大きく表示されます。どんな集まりか伝わる1枚を選んでください。")
                 }
                 Section("いつ・どこで?") {
                     DatePicker("日時", selection: $scheduledAt, in: Date()..., displayedComponents: [.date, .hourAndMinute])
@@ -114,6 +129,7 @@ struct CreateGatheringView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
+                        guard let image = selectedImage else { return }
                         Task {
                             isSubmitting = true
                             let succeeded = await manager.create(
@@ -125,7 +141,7 @@ struct CreateGatheringView: View {
                                 category: category,
                                 durationHours: durationHours,
                                 deadlineAt: hasDeadline ? deadlineAt : nil,
-                                image: selectedImage
+                                image: image
                             )
                             isSubmitting = false
                             if succeeded {

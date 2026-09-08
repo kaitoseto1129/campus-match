@@ -84,7 +84,9 @@ struct GatheringListView: View {
                     } else if visibleSummaries.isEmpty {
                         emptyState
                     } else {
-                        LazyVStack(spacing: 12) {
+                        // YouTubeの一覧と同じく、サムネイルを左右いっぱいに使い、
+                        // カードの枠や影は付けずに並べる。
+                        LazyVStack(spacing: 24) {
                             ForEach(visibleSummaries) { summary in
                                 NavigationLink(value: summary.gathering.id) {
                                     GatheringCard(summary: summary)
@@ -92,12 +94,11 @@ struct GatheringListView: View {
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(.horizontal)
                     }
                 }
                 .padding(.bottom, 24)
             }
-            .background(Color.appListBackground.ignoresSafeArea())
+            .background(Color(.systemBackground).ignoresSafeArea())
             .navigationTitle("集まり")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -213,13 +214,14 @@ struct GatheringListView: View {
     }
 }
 
+/// 集まり1件のカード。YouTubeの一覧と同じ組み立てにしている。
+/// 16:9のサムネイルを大きく見せ、その下にアバターとテキストを置く。
+/// 写真は募集時の必須項目なので、基本的にサムネイルは必ず入る
+/// (写真必須になる前に作られた集まりのためにプレースホルダーは残してある)。
 private struct GatheringCard: View {
     let summary: GatheringSummary
 
     /// 主催している集まりに承認待ちの応募が来ているかどうか。
-    /// 他のステータス表示(承認待ち/参加確定など)と同じ薄いピル型バッジだと、
-    /// 「対応が必要な通知」なのか「単なる状態表示」なのか見分けがつかず気付きにくかったため、
-    /// これだけは別枠の目立つ丸バッジで出す。
     private var pendingApplicationBadge: Int? {
         guard summary.isHost, !summary.gathering.isCanceled, summary.pendingCount > 0 else { return nil }
         return summary.pendingCount
@@ -237,91 +239,112 @@ private struct GatheringCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 0) {
+            thumbnail
+            details
+        }
+    }
+
+    private var thumbnail: some View {
+        ZStack {
             if let imageURL = summary.gathering.imageURL {
                 AsyncImage(url: imageURL) { phase in
                     switch phase {
                     case .success(let image):
                         image.resizable().scaledToFill()
+                    case .failure:
+                        placeholder
                     default:
                         Color(.systemGray6)
                     }
                 }
-                .frame(height: 120)
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(summary.gathering.title)
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                    if let category = summary.gathering.category {
-                        Text(LocalizedStringKey(category))
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Color.brandTeal.opacity(0.15), in: Capsule())
-                            .foregroundStyle(Color.brandTeal)
-                    }
-                }
-                Spacer()
-                if let pendingApplicationBadge {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bell.fill")
-                        Text(String.appLocalized("応募%lld件", pendingApplicationBadge))
-                    }
-                    .font(.caption.bold())
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color.brandOrange, in: Capsule())
-                    .shadow(color: Color.brandOrange.opacity(0.4), radius: 4, y: 2)
-                } else if let statusBadge {
-                    Text(LocalizedStringKey(statusBadge.text))
-                        .font(.caption2.bold())
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(statusBadge.color.opacity(0.15), in: Capsule())
-                        .foregroundStyle(statusBadge.color)
-                }
-            }
-
-            HStack(spacing: 12) {
-                Label {
-                    Text(summary.gathering.scheduledAt, format: .dateTime.month().day().hour().minute())
-                } icon: {
-                    Image(systemName: "clock")
-                }
-                Label {
-                    Text(summary.gathering.location)
-                        .lineLimit(1)
-                } icon: {
-                    Image(systemName: "mappin.and.ellipse")
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-
-            HStack(spacing: 10) {
-                IconImage(url: summary.hostPhotoURL, size: 28)
-                Text(summary.hostProfile?.name.displayNameForCurrentLanguage ?? "-")
-                    .font(.caption.bold())
-                Spacer()
-                HStack(spacing: 4) {
-                    Image(systemName: "person.2.fill")
-                    Text(String.appLocalized("%lld/%lld人", summary.currentMemberCount, summary.gathering.capacity))
-                }
-                .font(.caption.bold())
-                .foregroundStyle(summary.isFull ? Color(.systemGray) : Color.brandPurple)
+            } else {
+                placeholder
             }
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
+        .aspectRatio(16 / 9, contentMode: .fill)
+        .frame(maxWidth: .infinity)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        // 状態は写真の上に重ねる。YouTubeの「ライブ」バッジと同じ位置・見た目。
+        .overlay(alignment: .topLeading) {
+            if let pendingApplicationBadge {
+                overlayChip(
+                    text: String.appLocalized("応募%lld件", pendingApplicationBadge),
+                    systemImage: "bell.fill",
+                    background: Color.brandOrange
+                )
+                .padding(8)
+            } else if let statusBadge {
+                overlayChip(text: statusBadge.text, systemImage: nil, background: statusBadge.color)
+                    .padding(8)
+            }
+        }
+        // 参加人数は、YouTubeで動画の長さが出る位置に置く。
+        .overlay(alignment: .bottomTrailing) {
+            overlayChip(
+                text: String.appLocalized("%lld/%lld人", summary.currentMemberCount, summary.gathering.capacity),
+                systemImage: "person.2.fill",
+                background: .black.opacity(0.75)
+            )
+            .padding(8)
+        }
+    }
+
+    private var placeholder: some View {
+        ZStack {
+            Color(.systemGray6)
+            Image(systemName: "photo")
+                .font(.title)
+                .foregroundStyle(Color(.systemGray3))
+        }
+    }
+
+    private func overlayChip(text: String, systemImage: String?, background: Color) -> some View {
+        HStack(spacing: 4) {
+            if let systemImage { Image(systemName: systemImage) }
+            Text(LocalizedStringKey(text))
+        }
+        .font(.caption2.bold())
+        .foregroundStyle(.white)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(background, in: RoundedRectangle(cornerRadius: 6))
+    }
+
+    private var details: some View {
+        HStack(alignment: .top, spacing: 12) {
+            IconImage(url: summary.hostPhotoURL, size: 36)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(summary.gathering.title)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(summary.hostProfile?.name.displayNameForCurrentLanguage ?? "-")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                // 日時・場所・カテゴリを、YouTubeの「再生回数・投稿日」と同じ1行のメタ情報にまとめる。
+                HStack(spacing: 4) {
+                    Text(summary.gathering.scheduledAt, format: .dateTime.month().day().hour().minute())
+                    Text("・")
+                    Text(summary.gathering.location)
+                    if let category = summary.gathering.category {
+                        Text("・")
+                        Text(LocalizedStringKey(category))
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 10)
+        .padding(.horizontal, 12)
     }
 }
 

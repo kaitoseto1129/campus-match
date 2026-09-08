@@ -158,7 +158,7 @@ export default function GatheringsPage() {
 
   return (
     <div className="app-list-background flex min-h-screen flex-col">
-    <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-7 sm:px-8">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-7 sm:px-8">
       <PageHeader
         title={t("gatherings.title")}
         action={
@@ -236,7 +236,7 @@ export default function GatheringsPage() {
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((summary) => (
             <GatheringCard key={summary.gathering.id} summary={summary} />
           ))}
@@ -285,68 +285,72 @@ export default function GatheringsPage() {
   );
 }
 
+// 集まり1件のカード。YouTubeの一覧と同じ組み立てで、16:9のサムネイルを大きく見せ、
+// その下にアバターとテキストを置く。写真は募集時の必須項目なので基本的に必ず入るが、
+// 写真必須になる前に作られた集まりのためにプレースホルダーは残してある。
 function GatheringCard({ summary }: { summary: Summary }) {
   const { t } = useTranslation();
   const { gathering } = summary;
   const currentMembers = summary.acceptedCount + 1;
   const scheduledDate = new Date(gathering.scheduled_at);
 
+  // 状態はサムネイルに重ねる。YouTubeの「ライブ」バッジと同じ位置。
   let statusBadge: { text: string; className: string } | null = null;
   if (summary.isHost && gathering.status !== "canceled" && summary.pendingCount > 0) {
-    statusBadge = { text: t("gatherings.pendingBadge", { n: summary.pendingCount }), className: "bg-orange-500 text-white" };
+    statusBadge = { text: t("gatherings.pendingBadge", { n: summary.pendingCount }), className: "bg-orange-500" };
   } else if (gathering.status === "canceled") {
-    statusBadge = { text: t("gatherings.canceled"), className: "bg-gray-400 text-white" };
+    statusBadge = { text: t("gatherings.canceled"), className: "bg-gray-500" };
   } else if (!summary.isHost && summary.myApplication) {
     const map: Record<string, { text: string; className: string }> = {
-      pending: { text: t("gatherings.pending"), className: "bg-orange-100 text-orange-600" },
-      accepted: { text: t("gatherings.accepted"), className: "bg-teal-100 text-teal-600" },
-      declined: { text: t("gatherings.declined"), className: "bg-gray-100 text-gray-500" },
+      pending: { text: t("gatherings.pending"), className: "bg-orange-500" },
+      accepted: { text: t("gatherings.accepted"), className: "bg-teal-500" },
+      declined: { text: t("gatherings.declined"), className: "bg-gray-500" },
     };
     statusBadge = map[summary.myApplication.status] ?? null;
   }
 
+  const meta = [
+    scheduledDate.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+    gathering.location,
+    gathering.category,
+  ].filter(Boolean).join(" ・ ");
+
   return (
-    <Link href={`/gatherings/${gathering.id}`} className="card block p-4 transition hover:-translate-y-0.5">
-      {gathering.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={gathering.image_url}
-          alt=""
-          className="mb-3 h-32 w-full rounded-xl object-cover"
-        />
-      )}
-      <div className="mb-1 flex items-start justify-between gap-2">
-        <div>
-          <p className="font-bold text-[var(--brand-navy)]">{gathering.title}</p>
-          {gathering.category && (
-            <span className="mt-1 inline-block rounded-full bg-[var(--brand-teal)]/15 px-2 py-0.5 text-xs font-bold text-[var(--brand-teal)]">
-              {gathering.category}
-            </span>
-          )}
-        </div>
+    <Link href={`/gatherings/${gathering.id}`} className="group block">
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-[#f1eff9]">
+        {gathering.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={gathering.image_url}
+            alt=""
+            className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-3xl text-gray-300">🖼</div>
+        )}
         {statusBadge && (
-          <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-bold ${statusBadge.className}`}>
+          <span className={`absolute top-2 left-2 rounded-md px-1.5 py-1 text-[11px] font-bold text-white ${statusBadge.className}`}>
             {statusBadge.text}
           </span>
         )}
+        {/* 参加人数は、YouTubeで動画の長さが出る位置に置く。 */}
+        <span className="absolute right-2 bottom-2 rounded-md bg-black/75 px-1.5 py-1 text-[11px] font-bold text-white">
+          {t("gatherings.members", { current: currentMembers, capacity: gathering.capacity })}
+        </span>
       </div>
-      <p className="text-xs text-gray-400">
-        🕒 {scheduledDate.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-        {"  "}📍 {gathering.location}
-      </p>
-      <div className="mt-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 overflow-hidden rounded-full bg-[#f1eff9]">
-            {summary.hostPhotoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={summary.hostPhotoUrl} alt="" className="h-full w-full object-cover" />
-            )}
-          </div>
-          <p className="text-xs font-bold text-gray-600">{summary.hostProfile?.name ?? "-"}</p>
+
+      <div className="mt-3 flex items-start gap-3">
+        <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[#f1eff9]">
+          {summary.hostPhotoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={summary.hostPhotoUrl} alt="" className="h-full w-full object-cover" />
+          )}
         </div>
-        <p className="text-xs font-bold text-[var(--brand-purple-dark)]">
-          👥 {t("gatherings.members", { current: currentMembers, capacity: gathering.capacity })}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-sm font-bold text-[var(--brand-navy)]">{gathering.title}</p>
+          <p className="mt-1 truncate text-xs text-gray-500">{summary.hostProfile?.name ?? "-"}</p>
+          <p className="truncate text-xs text-gray-500">{meta}</p>
+        </div>
       </div>
     </Link>
   );
@@ -373,7 +377,7 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
   }
 
   async function handleCreate() {
-    if (!title || !location || !scheduledAt) {
+    if (!title || !location || !scheduledAt || !photoFile) {
       setErrorMessage(t("gatherings.requiredFields"));
       return;
     }
@@ -419,18 +423,21 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
       return;
     }
 
-    // 写真は任意項目。アップロードに失敗しても集まり自体の作成は失敗させない
-    // (iOS版 GatheringManager.uploadImage と同じ考え方)。
-    if (photoFile) {
-      const path = `${inserted.id}/${crypto.randomUUID()}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("gathering_photos").upload(path, photoFile);
-      if (!uploadError) {
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("gathering_photos").getPublicUrl(path);
-        await supabase.from("gatherings").update({ image_url: publicUrl }).eq("id", inserted.id);
-      }
+    // 写真は必須。Storageのポリシーが「既存のgatheringのidをフォルダ名に持つこと」を求めるため、
+    // 先に行を作ってからアップロードするしかない。そのため、アップロードに失敗した場合は
+    // 写真のない集まりが残らないよう、作った行を取り消す(iOS版 GatheringManager.create と同じ)。
+    const path = `${inserted.id}/${crypto.randomUUID()}.jpg`;
+    const { error: uploadError } = await supabase.storage.from("gathering_photos").upload(path, photoFile);
+    if (uploadError) {
+      await supabase.from("gatherings").delete().eq("id", inserted.id);
+      setErrorMessage(t("gatherings.photoUploadError"));
+      setIsSaving(false);
+      return;
     }
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("gathering_photos").getPublicUrl(path);
+    await supabase.from("gatherings").update({ image_url: publicUrl }).eq("id", inserted.id);
 
     setIsSaving(false);
     onCreated();
@@ -442,9 +449,9 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200 sm:hidden" />
         <h2 className="mb-5 text-lg font-bold text-[var(--brand-navy)]">{t("gatherings.createTitle")}</h2>
         <div className="mb-3">
-          <label className="mb-1 block text-sm font-bold text-gray-500">{t("gatherings.photoOptional")}</label>
+          <label className="mb-1 block text-sm font-bold text-gray-500">{t("gatherings.photoRequired")}</label>
           {photoPreviewUrl ? (
-            <div className="relative h-32 w-full overflow-hidden rounded-xl">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photoPreviewUrl} alt="" className="h-full w-full object-cover" />
               <button
@@ -460,7 +467,7 @@ function CreateGatheringSheet({ onClose, onCreated }: { onClose: () => void; onC
               </button>
             </div>
           ) : (
-            <label className="flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[#e7e4f5] text-sm text-[var(--brand-purple)] transition hover:bg-[#f8f7fd]">
+            <label className="flex aspect-video w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[#e7e4f5] text-sm font-bold text-[var(--brand-purple)] transition hover:bg-[#f8f7fd]">
               {t("gatherings.addPhoto")}
               <input
                 type="file"
