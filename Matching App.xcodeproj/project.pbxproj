@@ -15,11 +15,27 @@
 		F0DEAF0030199F2E002CDF7B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F0DEAEFF30199F2E002CDF7B /* Supabase */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		A11E57000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F0DEAEDE30199E6D002CDF7B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F0DEAEE530199E6D002CDF7B;
+			remoteInfo = "Matching App";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		A11E57000000000000000001 /* Matching AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Matching AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0DEAEE630199E6D002CDF7B /* Matching App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Matching App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		A11E57000000000000000002 /* Matching AppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Matching AppUITests";
+			sourceTree = "<group>";
+		};
 		F0DEAEE830199E6D002CDF7B /* Matching App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Matching App";
@@ -28,6 +44,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A11E57000000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F0DEAEE330199E6D002CDF7B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -48,6 +71,7 @@
 			isa = PBXGroup;
 			children = (
 				F0DEAEE830199E6D002CDF7B /* Matching App */,
+				A11E57000000000000000002 /* Matching AppUITests */,
 				F0DEAEE730199E6D002CDF7B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -56,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				F0DEAEE630199E6D002CDF7B /* Matching App.app */,
+				A11E57000000000000000001 /* Matching AppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -63,6 +88,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A11E57000000000000000008 /* Matching AppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A11E5700000000000000000B /* Build configuration list for PBXNativeTarget "Matching AppUITests" */;
+			buildPhases = (
+				A11E57000000000000000005 /* Sources */,
+				A11E57000000000000000006 /* Frameworks */,
+				A11E57000000000000000007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A11E57000000000000000004 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A11E57000000000000000002 /* Matching AppUITests */,
+			);
+			name = "Matching AppUITests";
+			packageProductDependencies = (
+			);
+			productName = "Matching AppUITests";
+			productReference = A11E57000000000000000001 /* Matching AppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		F0DEAEE530199E6D002CDF7B /* Matching App */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F0DEAEF130199E6E002CDF7B /* Build configuration list for PBXNativeTarget "Matching App" */;
@@ -101,6 +149,10 @@
 				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 2660;
 				TargetAttributes = {
+					A11E57000000000000000008 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = F0DEAEE530199E6D002CDF7B;
+					};
 					F0DEAEE530199E6D002CDF7B = {
 						CreatedOnToolsVersion = 26.6;
 					};
@@ -125,11 +177,19 @@
 			projectRoot = "";
 			targets = (
 				F0DEAEE530199E6D002CDF7B /* Matching App */,
+				A11E57000000000000000008 /* Matching AppUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A11E57000000000000000007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F0DEAEE430199E6D002CDF7B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -140,6 +200,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A11E57000000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F0DEAEE230199E6D002CDF7B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -149,7 +216,55 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		A11E57000000000000000004 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F0DEAEE530199E6D002CDF7B /* Matching App */;
+			targetProxy = A11E57000000000000000003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		A11E57000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3TY2429N25;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cammatch.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Matching App";
+			};
+			name = Debug;
+		};
+		A11E5700000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3TY2429N25;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cammatch.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Matching App";
+			};
+			name = Release;
+		};
 		F0DEAEEF30199E6E002CDF7B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -359,6 +474,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A11E5700000000000000000B /* Build configuration list for PBXNativeTarget "Matching AppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A11E57000000000000000009 /* Debug */,
+				A11E5700000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F0DEAEE130199E6D002CDF7B /* Build configuration list for PBXProject "Matching App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

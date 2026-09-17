@@ -109,6 +109,7 @@ struct GatheringListView: View {
                             .font(.title2)
                             .foregroundStyle(Color.brandPurple)
                     }
+                    .accessibilityIdentifier("createGatheringButton")
                     .tutorialAnchor("gatheringCreate")
                 }
             }

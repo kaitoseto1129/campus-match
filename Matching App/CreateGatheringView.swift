@@ -126,6 +126,7 @@ struct CreateGatheringView: View {
                     } label: {
                         Image(systemName: "xmark")
                     }
+                    .accessibilityIdentifier("closeCreateGatheringButton")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
