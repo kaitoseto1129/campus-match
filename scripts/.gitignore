@@ -1,2 +1,4 @@
 node_modules/
 package-lock.json
+# 生成物(swift scripts/render_demo_thumbs.swift で作る)
+demo_img/g_*.jpg
