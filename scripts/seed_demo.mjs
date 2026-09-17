@@ -52,6 +52,10 @@ const ago = (minutes) => new Date(Date.now() - minutes * 60_000).toISOString();
 const people = [
   { key: "reviewer", email: "applereview@example.ac.jp", name: "佐藤 陽菜", birthday: "2005-04-18", major: "社会学", tagline: "ご飯行ける人募集中🍜", hobby: ["cafe", "gourmet", "reading", "movie"],
     description: "社会学部の2年です。人と話すのが好きで、色々な学科の人と知り合いたくてこのアプリを始めました。週末はカフェで本を読んでいることが多いです。ご飯や勉強会など、気軽に誘ってください！", drinking: "時々飲む", smoking: "吸わない", languages: ["日本語", "英語"], seed: "hina" },
+  // 審査員が「退会」を試すための2つ目のアカウント。集まりには一切関わらせない
+  // (審査用アカウント本体を退会されるとデモデータが丸ごと消えてしまうため)。
+  { key: "reviewer2", email: "applereview2@example.ac.jp", name: "山本 大地", birthday: "2005-09-21", major: "法学", tagline: "よろしくお願いします", hobby: ["movie", "music"],
+    description: "法学部2年です。まだ始めたばかりですが、いろいろな集まりに参加してみたいと思っています。映画と音楽が好きです。気軽に声をかけてください。", drinking: "時々飲む", smoking: "吸わない", languages: ["日本語"], seed: "daichi" },
   { key: "tanaka", email: "ren.tanaka@example.ac.jp", name: "田中 蓮", birthday: "2004-11-02", major: "機械工学", tagline: "ラーメン屋を開拓中", hobby: ["gourmet", "running", "game"],
     description: "工学部3年。研究室が忙しいので、息抜きに誰かとご飯に行くのが楽しみです。ラーメンは月10杯ペース。駅周辺の店はだいたい把握してるので案内できます。", drinking: "飲む", smoking: "吸わない", languages: ["日本語"], seed: "ren" },
   { key: "suzuki", email: "misaki.suzuki@example.ac.jp", name: "鈴木 美咲", birthday: "2005-07-25", major: "国際関係学", tagline: "山とカメラ📷", hobby: ["camp", "photo", "travel", "cafe"],
