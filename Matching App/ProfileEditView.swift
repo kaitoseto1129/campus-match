@@ -310,7 +310,7 @@ struct ProfileEditView: View {
             HStack(spacing: 10) {
                 Image(systemName: name.isEmpty ? "circle" : "checkmark.circle.fill")
                     .foregroundStyle(name.isEmpty ? Color(.systemGray3) : Color.brandTeal)
-                Text("ニックネーム")
+                Text("名前")
                 Spacer()
                 TextField("未入力", text: $name)
                     .multilineTextAlignment(.trailing)
@@ -387,7 +387,7 @@ struct ProfileEditView: View {
     private var requiredItems: [(label: String, isFilled: Bool)] {
         [
             ("メイン写真", photo(forSlot: 0) != nil),
-            ("ニックネーム", !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty),
+            ("名前", !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty),
             ("誕生日", hasChosenBirthday),
             ("居住地", !area.isEmpty),
             ("大学", universityId != nil),
@@ -722,7 +722,7 @@ struct ProfileEditView: View {
 
     func save() {
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            validationMessage = "ニックネームを入力してください"
+            validationMessage = "名前を入力してください"
             showingValidationAlert = true
             return
         }

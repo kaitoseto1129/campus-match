@@ -17,7 +17,7 @@ struct Report: Codable, Identifiable {
     let resolvedAtString: String?
 
     var createdAt: Date {
-        ISO8601DateFormatter.matchingApp.date(from: createdAtString) ?? Date()
+        Date.fromSupabase(createdAtString) ?? Date()
     }
 
     enum CodingKeys: String, CodingKey {

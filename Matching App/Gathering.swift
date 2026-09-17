@@ -45,13 +45,13 @@ struct Gathering: Codable, Identifiable, Equatable {
         case deadlineNotified = "deadline_notified"
     }
 
-    var createdAt: Date { ISO8601DateFormatter.matchingApp.date(from: createdAtString) ?? Date() }
-    var scheduledAt: Date { ISO8601DateFormatter.matchingApp.date(from: scheduledAtString) ?? Date() }
+    var createdAt: Date { Date.fromSupabase(createdAtString) ?? Date() }
+    var scheduledAt: Date { Date.fromSupabase(scheduledAtString) ?? Date() }
     var isOpen: Bool { status == "open" }
     var isCanceled: Bool { status == "canceled" }
     var isPast: Bool { scheduledAt < Date() }
     var imageURL: URL? { imageUrlString.flatMap(URL.init(string:)) }
-    var deadlineAt: Date? { deadlineAtString.flatMap { ISO8601DateFormatter.matchingApp.date(from: $0) } }
+    var deadlineAt: Date? { deadlineAtString.flatMap { Date.fromSupabase($0) } }
     var isPastDeadline: Bool { deadlineAt.map { $0 < Date() } ?? false }
 }
 
@@ -73,7 +73,7 @@ struct GatheringApplication: Codable, Identifiable, Equatable {
         case respondedAtString = "responded_at"
     }
 
-    var createdAt: Date { ISO8601DateFormatter.matchingApp.date(from: createdAtString) ?? Date() }
+    var createdAt: Date { Date.fromSupabase(createdAtString) ?? Date() }
 }
 
 struct GatheringMessage: Codable, Identifiable, Equatable {
@@ -91,7 +91,7 @@ struct GatheringMessage: Codable, Identifiable, Equatable {
         case createdAtString = "created_at"
     }
 
-    var createdAt: Date { ISO8601DateFormatter.matchingApp.date(from: createdAtString) ?? Date() }
+    var createdAt: Date { Date.fromSupabase(createdAtString) ?? Date() }
 }
 
 struct GatheringInsertPayload: Encodable {

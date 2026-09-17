@@ -131,7 +131,7 @@ struct ProfileDisplayView<ActionContent: View>: View {
             Text("基本情報")
                 .font(.title3.bold())
                 .padding(.bottom, 8)
-            infoRow(label: "ニックネーム", value: profile?.name.displayNameForCurrentLanguage ?? "-")
+            infoRow(label: "名前", value: profile?.name.displayNameForCurrentLanguage ?? "-")
             Divider()
             infoRow(label: "年齢", value: profile?.ageLabel ?? "-")
             Divider()

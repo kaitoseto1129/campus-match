@@ -46,7 +46,8 @@ struct Profile: Codable, Identifiable {
     /// 表示用に「都道府県 市区町村」を組み立てる。市区町村が無ければ都道府県のみ。
     var areaLabel: String {
         guard let city, !city.isEmpty else { return area ?? "-" }
-        return "\(area) \(city)"
+        // area は Optional なので、そのまま補間すると Optional("東京都") と表示されてしまう。
+        return "\(area ?? "") \(city)"
     }
     let major: String?
     /// 旧・単一選択の国籍。表示のフォールバック用に残しているが、編集・絞り込みはnationalitiesを使う。
@@ -64,7 +65,7 @@ struct Profile: Codable, Identifiable {
     let createdAtString: String?
     var joinBadgeLabel: String? {
         guard let createdAtString,
-              let createdAt = ISO8601DateFormatter.matchingApp.date(from: createdAtString) else { return nil }
+              let createdAt = Date.fromSupabase(createdAtString) else { return nil }
         let days = Calendar.current.dateComponents([.day], from: createdAt, to: Date()).day ?? Int.max
         if days <= 7 { return String.appLocalized("今週入会") }
         if days <= 30 { return String.appLocalized("今月入会") }
@@ -134,6 +135,22 @@ extension ISO8601DateFormatter {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
+    /// 秒の小数部が無い形式("2026-09-27T05:00:00+00:00")用。
+    /// PostgreSQLは小数部が0のとき省略して返すため、Web版で作った集まり(秒が常に0)や
+    /// SQLで直接入れた行は matchingApp では解釈できず、日時が現在時刻に化けていた。
+    static let matchingAppWithoutFraction: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+}
+
+extension Date {
+    /// Supabaseから返ってきたタイムスタンプ文字列を、小数部の有無に関わらず解釈する。
+    static func fromSupabase(_ string: String) -> Date? {
+        ISO8601DateFormatter.matchingApp.date(from: string)
+            ?? ISO8601DateFormatter.matchingAppWithoutFraction.date(from: string)
+    }
 }
 struct ProfilePhoto: Codable, Identifiable {
     let id: UUID
